@@ -27,6 +27,7 @@ Rails.application.routes.draw do
       post :mark_all_read, on: :collection
     end
     resources :drafts, except: :show
+    resource :search, only: :show
     resources :tasks, only: %i[index create update destroy]
     resources :messages, only: :show do
       resources :attachments, only: %i[show create]

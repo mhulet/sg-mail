@@ -65,6 +65,13 @@ pendant la phase 0 se retrouvent dans un client « Compte initial », dont ce co
 - **Notes internes** (`Note`) : sous le fil, visibles de l'équipe seulement, jamais envoyées.
   Seule l'autrice ou l'auteur peut supprimer sa note.
 
+## Recherche
+
+Champ « Rechercher… » en haut de chaque page : cherche dans l'objet, l'expéditeur, les destinataires
+et le corps des messages des boîtes accessibles, et rend les fils. Sans accents et en début de mot
+(« inscri ete » trouve « Inscription formation d'été »). Filtres : `de:anne`, `a:formations`, `avec:pj`.
+Index plein texte Postgres (`messages.search_vector`, colonne calculée, extension `unaccent`).
+
 ## Synchros
 
 - Les synchros tournent dans Solid Queue, hors du processus web : `bin/dev` lance Puma avec son

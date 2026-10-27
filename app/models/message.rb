@@ -1,4 +1,7 @@
 class Message < ApplicationRecord
+  # Colonne calculée par Postgres pour la recherche (voir MessageSearch) : inutile à charger.
+  self.ignored_columns += %w[search_vector]
+
   acts_as_tenant :account
   belongs_to :mailbox
   belongs_to :mail_folder, optional: true
