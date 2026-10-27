@@ -17,7 +17,7 @@ class MailboxesController < ApplicationController
 
   # Connexion d'une boîte IMAP : on vérifie l'identification avant d'enregistrer.
   def create
-    credentials = params.require(:imap).permit(:host, :port, :username, :password, :ssl).to_h
+    credentials = params.require(:imap).permit(:host, :port, :username, :password, :ssl, :smtp_host, :smtp_port).to_h
     credentials["ssl"] = credentials["ssl"] != "0"
     @mailbox = Mailbox.new(provider: "imap", address: params.dig(:imap, :address).presence || credentials["username"], credentials: credentials, connected_by: Current.user)
 

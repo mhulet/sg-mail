@@ -24,6 +24,7 @@ Rails.application.routes.draw do
       post :unread, on: :member
       post :mark_all_read, on: :collection
     end
+    resources :drafts, except: :show
     resources :messages, only: :show do
       resources :attachments, only: %i[show create]
     end

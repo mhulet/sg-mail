@@ -1,0 +1,4 @@
+<% content_for :title, "Écrire · SG Mail" %>
+<h1><%= { "reply" => "Répondre", "reply_all" => "Répondre à tous", "forward" => "Transférer" }.fetch(@draft.kind, "Nouveau message") %></h1>
+<% if @draft.conversation %><p class="muted">Dans le fil « <%= link_to @draft.conversation.title, conversation_path(@draft.conversation) %> »</p><% end %>
+<%= render "form", draft: @draft %>

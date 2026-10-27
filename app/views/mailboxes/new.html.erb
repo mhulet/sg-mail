@@ -13,5 +13,9 @@
   <%= f.label :password, "Mot de passe (ou mot de passe d'application)" %>
   <%= f.password_field :password, required: true %>
   <label><%= f.check_box :ssl, checked: true %> SSL/TLS</label>
+  <%= f.label :smtp_host, "Serveur d'envoi (SMTP), si différent du serveur IMAP" %>
+  <%= f.text_field :smtp_host, placeholder: "mail.infomaniak.com", value: params.dig(:imap, :smtp_host) %>
+  <%= f.label :smtp_port, "Port d'envoi" %>
+  <%= f.number_field :smtp_port, value: params.dig(:imap, :smtp_port) || 587 %>
   <p><%= f.submit "Tester et connecter" %></p>
 <% end %>

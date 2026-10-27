@@ -1,0 +1,28 @@
+<%= render "shared/errors", record: draft %>
+<% if draft.status == "failed" %><p class="flash alert">L'envoi a échoué : <%= draft.error %></p><% end %>
+
+<%= form_with model: draft, url: draft.new_record? ? drafts_path : draft_path(draft), class: "stacked compose" do |f| %>
+  <%= f.hidden_field :kind %>
+  <%= hidden_field_tag "draft[source_message_id]", draft.source_message_id if draft.new_record? && draft.source_message_id %>
+
+  <%= f.label :mailbox_id, "De" %>
+  <%= f.select :mailbox_id, @mailboxes.map { |m| [ m.address, m.id ] } %>
+  <%= f.label :to_list, "À" %>
+  <%= f.text_field :to_list, placeholder: "prenom@exemple.be, autre@exemple.be" %>
+  <%= f.label :cc_list, "Cc" %>
+  <%= f.text_field :cc_list %>
+  <%= f.label :bcc_list, "Cci" %>
+  <%= f.text_field :bcc_list %>
+  <%= f.label :subject, "Objet" %>
+  <%= f.text_field :subject %>
+  <%= f.label :body, "Message" %>
+  <%= f.text_area :body, rows: 16, autofocus: true %>
+  <% if draft.forward? && draft.source_message&.has_attachments %>
+    <p class="muted">Les pièces jointes du message d'origine seront jointes à l'envoi.</p>
+  <% end %>
+
+  <p class="actions">
+    <%= f.submit "Envoyer", name: "send", value: "Envoyer" %>
+    <%= f.submit "Enregistrer le brouillon" %>
+  </p>
+<% end %>

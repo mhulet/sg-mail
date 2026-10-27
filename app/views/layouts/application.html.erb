@@ -30,6 +30,8 @@
         <span><%= Current.account.name %></span>
         <nav>
           <%= link_to "Réception", account_root_path %>
+          <%= link_to "Écrire", new_draft_path %>
+          <%= link_to "Brouillons", drafts_path %>
           <%= link_to "Boîtes", mailboxes_path %>
           <%= link_to "Membres", memberships_path %>
         </nav>

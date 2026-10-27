@@ -1,0 +1,5 @@
+<% content_for :title, "Brouillon · SG Mail" %>
+<h1>Brouillon</h1>
+<% if @draft.conversation %><p class="muted">Dans le fil « <%= link_to @draft.conversation.title, conversation_path(@draft.conversation) %> »</p><% end %>
+<%= render "form", draft: @draft %>
+<%= button_to "Supprimer ce brouillon", draft_path(@draft), method: :delete, class: "link", form: { data: { turbo_confirm: "Supprimer ce brouillon ?" } } %>
