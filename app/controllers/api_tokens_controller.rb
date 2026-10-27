@@ -5,6 +5,8 @@ class ApiTokensController < ApplicationController
   def index
     @api_tokens = tokens.order(created_at: :desc)
     @api_token = ApiToken.new
+    @connections = Oauth::Token.active.where(user: Current.user, account: Current.account).includes(:client)
+      .group_by(&:client).transform_values { |tokens| tokens.filter_map(&:last_used_at).max || tokens.map(&:created_at).max }
   end
 
   # Le jeton n'est affiché qu'ici, une seule fois.

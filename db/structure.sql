@@ -474,6 +474,117 @@ ALTER SEQUENCE public.notes_id_seq OWNED BY public.notes.id;
 
 
 --
+-- Name: oauth_authorization_codes; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.oauth_authorization_codes (
+    id bigint NOT NULL,
+    oauth_client_id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    account_id bigint NOT NULL,
+    code_digest character varying NOT NULL,
+    redirect_uri character varying NOT NULL,
+    code_challenge character varying NOT NULL,
+    resource character varying,
+    expires_at timestamp(6) without time zone NOT NULL,
+    used_at timestamp(6) without time zone,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: oauth_authorization_codes_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.oauth_authorization_codes_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: oauth_authorization_codes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.oauth_authorization_codes_id_seq OWNED BY public.oauth_authorization_codes.id;
+
+
+--
+-- Name: oauth_clients; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.oauth_clients (
+    id bigint NOT NULL,
+    uid character varying NOT NULL,
+    name character varying NOT NULL,
+    redirect_uris jsonb DEFAULT '[]'::jsonb NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: oauth_clients_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.oauth_clients_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: oauth_clients_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.oauth_clients_id_seq OWNED BY public.oauth_clients.id;
+
+
+--
+-- Name: oauth_tokens; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.oauth_tokens (
+    id bigint NOT NULL,
+    oauth_client_id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    account_id bigint NOT NULL,
+    access_token_digest character varying NOT NULL,
+    refresh_token_digest character varying NOT NULL,
+    access_expires_at timestamp(6) without time zone NOT NULL,
+    refresh_expires_at timestamp(6) without time zone NOT NULL,
+    revoked_at timestamp(6) without time zone,
+    last_used_at timestamp(6) without time zone,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: oauth_tokens_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.oauth_tokens_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: oauth_tokens_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.oauth_tokens_id_seq OWNED BY public.oauth_tokens.id;
+
+
+--
 -- Name: readings; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -703,6 +814,27 @@ ALTER TABLE ONLY public.notes ALTER COLUMN id SET DEFAULT nextval('public.notes_
 
 
 --
+-- Name: oauth_authorization_codes id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.oauth_authorization_codes ALTER COLUMN id SET DEFAULT nextval('public.oauth_authorization_codes_id_seq'::regclass);
+
+
+--
+-- Name: oauth_clients id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.oauth_clients ALTER COLUMN id SET DEFAULT nextval('public.oauth_clients_id_seq'::regclass);
+
+
+--
+-- Name: oauth_tokens id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.oauth_tokens ALTER COLUMN id SET DEFAULT nextval('public.oauth_tokens_id_seq'::regclass);
+
+
+--
 -- Name: readings id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -824,6 +956,30 @@ ALTER TABLE ONLY public.messages
 
 ALTER TABLE ONLY public.notes
     ADD CONSTRAINT notes_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: oauth_authorization_codes oauth_authorization_codes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.oauth_authorization_codes
+    ADD CONSTRAINT oauth_authorization_codes_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: oauth_clients oauth_clients_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.oauth_clients
+    ADD CONSTRAINT oauth_clients_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: oauth_tokens oauth_tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.oauth_tokens
+    ADD CONSTRAINT oauth_tokens_pkey PRIMARY KEY (id);
 
 
 --
@@ -1147,6 +1303,76 @@ CREATE INDEX index_notes_on_user_id ON public.notes USING btree (user_id);
 
 
 --
+-- Name: index_oauth_authorization_codes_on_account_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_oauth_authorization_codes_on_account_id ON public.oauth_authorization_codes USING btree (account_id);
+
+
+--
+-- Name: index_oauth_authorization_codes_on_code_digest; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_oauth_authorization_codes_on_code_digest ON public.oauth_authorization_codes USING btree (code_digest);
+
+
+--
+-- Name: index_oauth_authorization_codes_on_oauth_client_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_oauth_authorization_codes_on_oauth_client_id ON public.oauth_authorization_codes USING btree (oauth_client_id);
+
+
+--
+-- Name: index_oauth_authorization_codes_on_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_oauth_authorization_codes_on_user_id ON public.oauth_authorization_codes USING btree (user_id);
+
+
+--
+-- Name: index_oauth_clients_on_uid; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_oauth_clients_on_uid ON public.oauth_clients USING btree (uid);
+
+
+--
+-- Name: index_oauth_tokens_on_access_token_digest; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_oauth_tokens_on_access_token_digest ON public.oauth_tokens USING btree (access_token_digest);
+
+
+--
+-- Name: index_oauth_tokens_on_account_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_oauth_tokens_on_account_id ON public.oauth_tokens USING btree (account_id);
+
+
+--
+-- Name: index_oauth_tokens_on_oauth_client_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_oauth_tokens_on_oauth_client_id ON public.oauth_tokens USING btree (oauth_client_id);
+
+
+--
+-- Name: index_oauth_tokens_on_refresh_token_digest; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_oauth_tokens_on_refresh_token_digest ON public.oauth_tokens USING btree (refresh_token_digest);
+
+
+--
+-- Name: index_oauth_tokens_on_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_oauth_tokens_on_user_id ON public.oauth_tokens USING btree (user_id);
+
+
+--
 -- Name: index_readings_on_account_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1280,6 +1506,14 @@ ALTER TABLE ONLY public.readings
 
 
 --
+-- Name: oauth_authorization_codes fk_rails_2df019e87a; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.oauth_authorization_codes
+    ADD CONSTRAINT fk_rails_2df019e87a FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
 -- Name: messages fk_rails_32bdc0a6b3; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1288,11 +1522,27 @@ ALTER TABLE ONLY public.messages
 
 
 --
+-- Name: oauth_tokens fk_rails_3f041eeead; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.oauth_tokens
+    ADD CONSTRAINT fk_rails_3f041eeead FOREIGN KEY (oauth_client_id) REFERENCES public.oauth_clients(id) ON DELETE CASCADE;
+
+
+--
 -- Name: tasks fk_rails_43dfabfaca; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.tasks
     ADD CONSTRAINT fk_rails_43dfabfaca FOREIGN KEY (account_id) REFERENCES public.accounts(id);
+
+
+--
+-- Name: oauth_authorization_codes fk_rails_46f7342106; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.oauth_authorization_codes
+    ADD CONSTRAINT fk_rails_46f7342106 FOREIGN KEY (oauth_client_id) REFERENCES public.oauth_clients(id) ON DELETE CASCADE;
 
 
 --
@@ -1384,6 +1634,14 @@ ALTER TABLE ONLY public.api_tokens
 
 
 --
+-- Name: oauth_tokens fk_rails_8bbd4293ae; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.oauth_tokens
+    ADD CONSTRAINT fk_rails_8bbd4293ae FOREIGN KEY (account_id) REFERENCES public.accounts(id) ON DELETE CASCADE;
+
+
+--
 -- Name: notes fk_rails_9259470eb1; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1448,6 +1706,14 @@ ALTER TABLE ONLY public.readings
 
 
 --
+-- Name: oauth_authorization_codes fk_rails_c65da3b550; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.oauth_authorization_codes
+    ADD CONSTRAINT fk_rails_c65da3b550 FOREIGN KEY (account_id) REFERENCES public.accounts(id) ON DELETE CASCADE;
+
+
+--
 -- Name: mailbox_accesses fk_rails_d78c2686fc; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1469,6 +1735,14 @@ ALTER TABLE ONLY public.invitations
 
 ALTER TABLE ONLY public.mailbox_accesses
     ADD CONSTRAINT fk_rails_dce3c5a45c FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
+-- Name: oauth_tokens fk_rails_dd28cc2ffe; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.oauth_tokens
+    ADD CONSTRAINT fk_rails_dd28cc2ffe FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
 
 
 --
@@ -1643,6 +1917,7 @@ ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261027224500'),
 ('20261027223000'),
 ('20261027220000'),
 ('20261027213000'),

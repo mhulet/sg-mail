@@ -1,0 +1,22 @@
+<% content_for :title, "Autoriser #{@client.name} · SG Mail" %>
+<h1>Autoriser l'accès à SG Mail</h1>
+<p><strong><%= @client.name %></strong> demande à lire tes emails et à agir en ton nom : marquer comme lu, assigner,
+  ajouter des notes et des tâches, préparer des brouillons. Il ne verra que les boîtes auxquelles tu as accès,
+  et n'enverra un email que si tu le lui demandes.</p>
+<p class="muted">Connecté en tant que <%= Current.user.email_address %>. Retour vers <strong><%= URI.parse(@params[:redirect_uri]).host %></strong>.</p>
+
+<%= form_with url: oauth_authorization_path(account_id: nil), method: :post do |form| %>
+  <% @params.each do |name, value| %>
+    <%= hidden_field_tag name, value %>
+  <% end %>
+  <% if @memberships.many? %>
+    <p>
+      <%= label_tag :sg_account_id, "Client" %>
+      <%= select_tag :sg_account_id, options_for_select(@memberships.map { |m| [ m.account.name, m.account_id ] }) %>
+    </p>
+  <% end %>
+  <div class="actions">
+    <%= form.button "Autoriser", name: "decision", value: "approve" %>
+    <%= form.button "Refuser", name: "decision", value: "deny", class: "link" %>
+  </div>
+<% end %>

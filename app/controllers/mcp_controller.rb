@@ -1,5 +1,5 @@
 # Serveur MCP distant (HTTP « streamable », sans état, réponses JSON seulement).
-# Chaque requête porte un jeton personnel ; elle s'exécute dans le client de ce jeton.
+# Chaque requête porte un jeton personnel ou un jeton OAuth ; elle s'exécute dans le client de ce jeton.
 class McpController < ActionController::API
   around_action :authenticate
 
@@ -18,7 +18,10 @@ class McpController < ActionController::API
 
   def authenticate(&block)
     Current.membership = BearerAuth.membership_for(request)
-    return render(json: { error: "invalid_token" }, status: :unauthorized) unless Current.membership
+    unless Current.membership
+      response.set_header("WWW-Authenticate", %(Bearer resource_metadata="#{oauth_protected_resource_url}"))
+      return render(json: { error: "invalid_token" }, status: :unauthorized)
+    end
 
     Tenancy.with_account(Current.account, &block)
   end
