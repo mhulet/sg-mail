@@ -1,5 +1,5 @@
-<% content_for :title, "Jetons d'API · SG Mail" %>
-<h1>Jetons d'API</h1>
+<% content_for :title, "Jetons et connecteurs · SG Mail" %>
+<h1>Jetons d'API et connecteurs</h1>
 <p class="muted">Un jeton agit en ton nom dans <%= current_account.name %>, avec tes droits : pour le CLI <code>sg-mail</code>,
   un script ou Claude Code. Garde-le comme un mot de passe.</p>
 
@@ -20,6 +20,24 @@
       </tr>
     <% end %>
   </table>
+<% end %>
+
+<h2>Connecteurs Claude</h2>
+<p class="muted">Pour ajouter SG Mail dans claude.ai : Paramètres → Connecteurs → Ajouter un connecteur personnalisé,
+  adresse <code><%= mcp_url(account_id: nil) %></code>. Claude te renverra ici pour autoriser l'accès.</p>
+<% if @connections.any? %>
+  <table>
+    <% @connections.each do |client, last_activity| %>
+      <tr>
+        <td><%= client.name %></td>
+        <td class="muted">dernière activité le <%= l(last_activity, format: :short) %></td>
+        <td><%= button_to "Déconnecter", oauth_connection_path(client), method: :delete, class: "link",
+              form: { data: { turbo_confirm: "Déconnecter #{client.name} ?" } } %></td>
+      </tr>
+    <% end %>
+  </table>
+<% else %>
+  <p class="muted">Aucun connecteur.</p>
 <% end %>
 
 <h2>Utilisation</h2>

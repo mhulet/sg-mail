@@ -84,7 +84,12 @@ sans action explicite.
   `tasks`, `drafts` (+ `deliver` pour envoyer).
 - **MCP** `/mcp` (HTTP « streamable », sans état) : `whoami`, `search_conversations`, `get_conversation`,
   `mark_read`, `mark_unread`, `assign`, `add_note`, `list_tasks`, `create_task`, `update_task`,
-  `list_drafts`, `create_draft`, `update_draft`, `send_draft`. Dans Claude Code :
+  `list_drafts`, `create_draft`, `update_draft`, `send_draft`.
+  - **claude.ai** (connecteur personnalisé, adresse `https://<hôte>/mcp`) : serveur OAuth 2.1 intégré
+    (`app/controllers/oauth/`) avec découverte (RFC 9728 et 8414), enregistrement dynamique (RFC 7591),
+    PKCE S256, jeton d'accès d'une heure et rafraîchissement par rotation. À l'autorisation, la personne
+    choisit le client ; les connecteurs se déconnectent depuis « Jetons d'API ».
+  - **Claude Code**, avec un jeton personnel :
 
   ```sh
   claude mcp add --transport http sg-mail https://<hôte>/mcp --header "Authorization: Bearer sgm_…"

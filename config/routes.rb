@@ -35,6 +35,7 @@ Rails.application.routes.draw do
     resources :memberships, only: %i[index update destroy]
     resources :invitations, only: %i[create destroy]
     resources :api_tokens, only: %i[index create destroy]
+    resources :oauth_connections, only: :destroy
     get "auth/google_oauth2" => "google_oauth#new", as: :google_oauth
     get "/" => "conversations#index", as: :account_root
   end
@@ -55,9 +56,18 @@ Rails.application.routes.draw do
     end
   end
 
-  # Serveur MCP pour Claude (même jeton que l'API).
+  # Serveur MCP pour Claude : jeton personnel, ou OAuth 2.1 pour les connecteurs claude.ai.
   post "mcp" => "mcp#create", as: :mcp
   match "mcp" => "mcp#unsupported", via: %i[get delete]
+  get ".well-known/oauth-protected-resource(/mcp)" => "oauth/metadata#protected_resource", as: :oauth_protected_resource
+  get ".well-known/oauth-authorization-server" => "oauth/metadata#authorization_server", as: :oauth_authorization_server
+  namespace :oauth do
+    get "authorize" => "authorizations#new", as: :authorization
+    post "authorize" => "authorizations#create"
+    post "token" => "tokens#create", as: :token
+    post "revoke" => "tokens#revoke", as: :revocation
+    post "register" => "registrations#create", as: :registration
+  end
 
   root "accounts#index"
 end
