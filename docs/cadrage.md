@@ -59,7 +59,7 @@ Un compte Google avec validation en deux étapes peut générer un mot de passe 
 
 ## 4. Multi-tenant et confidentialité
 
-Un **client** (tenant) = une organisation : Semisto, Sylvia, Super Génial… Un utilisateur peut appartenir à plusieurs clients (Michael chez Semisto et chez Super Génial).
+Un **client** (tenant) = une organisation : Semisto, Silvéa, Super Génial… Un utilisateur peut appartenir à plusieurs clients (Michael chez Semisto et chez Super Génial).
 
 ### 4.1 Les trois options
 
