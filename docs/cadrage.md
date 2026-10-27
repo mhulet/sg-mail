@@ -165,7 +165,7 @@ Sans MCP, la même `Integration` peut viser une API REST classique (webhook ou a
 
 | Risque | Parade |
 |---|---|
-| Google durcit sa politique ou refuse la vérification | IMAP + mot de passe d'application en secours ; rester sous 100 utilisateurs. |
+| Google durcit sa politique ou refuse la vérification | IMAP + mot de passe d'application en secours ; rester sous 100 utilisateurs (volume attendu : bien en deçà, selon Michael). |
 | Synchro IMAP fragile selon les hébergeurs | Tester tôt avec les vrais fournisseurs des clientes. |
 | Dispersion : le périmètre ressemble à Hey + Front + un assistant IA | Tenir le MVP de la phase 1, le reste attend un usage réel. |
 | Données sensibles chez Super Génial | Chiffrement, hébergement UE, accord de traitement, journal d'accès. |
