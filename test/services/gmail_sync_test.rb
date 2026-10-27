@@ -5,12 +5,13 @@ class GmailSyncTest < ActiveSupport::TestCase
 
   # Imite le strict nécessaire de Google::Apis::GmailV1::GmailService.
   class FakeGmail
-    attr_accessor :messages, :history_id, :histories, :history_error
+    attr_accessor :messages, :history_id, :histories, :history_error, :quota_errors
 
     def initialize
       @messages = {}
       @history_id = 100
       @histories = []
+      @quota_errors = 0
     end
 
     def get_user_profile(_user) = G::Profile.new(email_address: "formations@semisto.org", history_id: history_id)
@@ -26,7 +27,10 @@ class GmailSyncTest < ActiveSupport::TestCase
     def batch = yield(self)
 
     def get_user_message(_user, id, format:)
-      if (message = messages[id])
+      if quota_errors.positive?
+        self.quota_errors -= 1
+        yield nil, Google::Apis::ClientError.new("PERMISSION_DENIED: Quota exceeded for quota metric 'Total Query Cost'", status_code: 403)
+      elsif (message = messages[id])
         yield message, nil
       else
         yield nil, Google::Apis::ClientError.new("Not Found", status_code: 404)
@@ -57,8 +61,11 @@ class GmailSyncTest < ActiveSupport::TestCase
     %w[m1 m2 m3].each_with_index { |id, i| @gmail.add(id, "Message #{i + 1}") }
   end
 
-  def sync
-    GmailSync.new(@mailbox.reload).tap { |s| s.instance_variable_set(:@service, @gmail) }.call
+  def sync(**options)
+    GmailSync.new(@mailbox.reload, **options).tap do |sync|
+      sync.instance_variable_set(:@service, @gmail)
+      sync.define_singleton_method(:sleep) { |_seconds| } # pas d'attente réelle en test
+    end.call
   end
 
   test "import complet paginé puis historique incrémental" do
@@ -92,8 +99,19 @@ class GmailSyncTest < ActiveSupport::TestCase
     assert_equal "200", @mailbox.reload.sync_state["history_id"].to_s
   end
 
+  test "quota dépassé : attend puis reprend" do
+    @gmail.quota_errors = 2
+    sync
+    assert_equal 3, @mailbox.messages.count
+  end
+
+  test "quota toujours dépassé : abandonne avec l'erreur de Google" do
+    @gmail.quota_errors = 1_000
+    assert_raises(Google::Apis::ClientError) { sync }
+  end
+
   test "limite d'import" do
-    GmailSync.new(@mailbox, import_limit: 2).tap { |s| s.instance_variable_set(:@service, @gmail) }.call
+    sync(import_limit: 2)
     assert_equal 2, @mailbox.messages.count
   end
 end

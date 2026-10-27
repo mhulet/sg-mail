@@ -3,7 +3,11 @@
 # Import initial paginé et reprenable (sync_state["full_page_token"]),
 # puis history.list à partir du dernier historyId connu.
 class GmailSync
-  BATCH_SIZE = 25 # messages.get coûte 5 unités, le quota est de 250 unités/s par utilisateur
+  BATCH_SIZE = 25
+  # messages.get coûte 5 unités et Google limite à 15 000 unités par minute et par utilisateur.
+  # On vise 2 000 messages par minute : un lot de 25 toutes les 0,75 s au plus vite.
+  MIN_BATCH_INTERVAL = 0.75
+  MAX_ATTEMPTS = 6
 
   def initialize(mailbox, import_limit: ENV["GMAIL_IMPORT_LIMIT"].presence&.to_i)
     @mailbox = mailbox
@@ -105,14 +109,17 @@ class GmailSync
         end
 
         pending = throttled
+        next if pending.empty?
+
         attempt += 1
-        raise Google::Apis::RateLimitError, "Quota Gmail dépassé" if attempt > 5 && pending.any?
-        sleep(2**attempt) if pending.any?
+        raise results[pending.first] if attempt >= MAX_ATTEMPTS
+        backoff(attempt)
       end
     end
   end
 
   def fetch_batch(ids)
+    pace
     results = {}
     service.batch do |batch|
       ids.each do |id|
@@ -120,11 +127,29 @@ class GmailSync
       end
     end
     results
+  rescue Google::Apis::Error => e
+    raise unless rate_limited?(e)
+
+    ids.index_with(e) # tout le lot a été refusé : on le retente en entier
+  end
+
+  # Le quota se compte à la minute : on attend jusqu'à une minute avant de réessayer.
+  def backoff(attempt)
+    sleep([ 2**(attempt + 1), 60 ].min)
+  end
+
+  def pace
+    if @last_batch_at
+      wait = MIN_BATCH_INTERVAL - (Process.clock_gettime(Process::CLOCK_MONOTONIC) - @last_batch_at)
+      sleep(wait) if wait.positive?
+    end
+    @last_batch_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
   end
 
   def rate_limited?(result)
     result.is_a?(Google::Apis::RateLimitError) ||
-      (result.is_a?(Google::Apis::ClientError) && result.status_code.in?([ 403, 429 ]) && result.message.to_s.match?(/rate ?limit/i))
+      (result.is_a?(Google::Apis::ClientError) && result.status_code.in?([ 403, 429 ]) &&
+        result.message.to_s.match?(/rate ?limit|quota exceeded|RESOURCE_EXHAUSTED/i))
   end
 
   def store(gmail_message)
