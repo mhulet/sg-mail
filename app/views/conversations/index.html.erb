@@ -1,0 +1,43 @@
+<% content_for :title, "#{@mailbox&.address || "Réception"} · #{current_account.name} · SG Mail" %>
+<h1><%= @mailbox ? @mailbox.address : "Réception" %></h1>
+
+<div class="actions">
+  <% if @mailboxes.many? || @mailbox %>
+    <%= form_with url: conversations_path, method: :get, class: "inline" do |f| %>
+      <%= f.select :mailbox_id, [ [ "Toutes les boîtes (réception)", "" ] ] + @mailboxes.map { |m| [ m.address, m.id ] },
+            { selected: @mailbox&.id }, onchange: "this.form.requestSubmit()", aria: { label: "Boîte" } %>
+      <%= f.hidden_field :unread, value: params[:unread] if params[:unread].present? %>
+    <% end %>
+  <% end %>
+  <% if params[:unread] == "1" %>
+    <%= link_to "Tous les fils", conversations_path(mailbox_id: @mailbox&.id) %>
+  <% else %>
+    <%= link_to "Non lus seulement", conversations_path(mailbox_id: @mailbox&.id, unread: 1) %>
+  <% end %>
+  <%= button_to "Tout marquer comme lu", mark_all_read_conversations_path(mailbox_id: @mailbox&.id), class: "link",
+        form: { data: { turbo_confirm: "Marquer comme lus tous les messages#{" de #{@mailbox.address}" if @mailbox} ?" } } %>
+</div>
+
+<% if @mailboxes.none? %>
+  <p class="muted">Aucune boîte encore. <%= link_to "Connecte une boîte", mailboxes_path %> pour commencer.</p>
+<% elsif @conversations.none? %>
+  <p class="muted">Rien ici.</p>
+<% end %>
+
+<table class="conversations">
+  <% @conversations.each do |conversation| %>
+    <tr class="<%= "unread" if conversation.unread %>">
+      <td><%= conversation.last_sender %><%= tag.span(" (#{conversation.messages_count})", class: "muted") if conversation.messages_count > 1 %></td>
+      <td>
+        <%= link_to conversation.title, conversation_path(conversation) %>
+        <span class="muted"><%= conversation.snippet&.truncate(90) %></span>
+      </td>
+      <% unless @mailbox || @mailboxes.one? %><td class="muted"><%= conversation.mailbox.address %></td><% end %>
+      <td class="muted nowrap"><%= conversation.last_message_at && l(conversation.last_message_at, format: :short) %></td>
+    </tr>
+  <% end %>
+</table>
+
+<% if @conversations.size == ConversationsController::PER_PAGE && @conversations.last.last_message_at %>
+  <p><%= link_to "Plus anciens →", conversations_path(mailbox_id: @mailbox&.id, unread: params[:unread].presence, before: @conversations.last.last_message_at.iso8601(6)) %></p>
+<% end %>

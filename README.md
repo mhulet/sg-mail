@@ -43,6 +43,18 @@ pendant la phase 0 se retrouvent dans un client « Compte initial », dont ce co
   lecture, lecture et envoi, ou gestion (partage et déconnexion). Il reste toujours au moins un gestionnaire.
 - Quitter un client retire ses accès aux boîtes de ce client.
 
+## Lecture
+
+- **Réception** (page d'accueil d'un client) : les fils de toutes les boîtes accessibles qui ont un message
+  dans INBOX ; filtre par boîte (tous ses fils) et « non lus seulement ».
+- **Fils** (`Conversation`) : recalculés après chaque synchro (`Conversation.rebuild_for`), par threadId Gmail
+  ou par en-têtes `References` en IMAP. Après la mise à jour, ils apparaissent à la synchro suivante.
+- **Lu par…** (`Reading`) : chaque personne a son propre statut de lecture, affiché sous chaque message
+  (« Lu par Michael · pas encore par Mohammad »). Le drapeau « lu » de Gmail ou du serveur IMAP n'est
+  pas touché (D4). « Tout marquer comme lu » existe pour les vieux messages importés.
+- **Pièces jointes** : listées à la synchro, téléchargées chez le fournisseur au moment du clic
+  (toujours en téléchargement, jamais affichées sur le domaine de SG Mail). Pas encore de cache.
+
 ## Synchros
 
 - Les synchros tournent dans Solid Queue, hors du processus web : `bin/dev` lance Puma avec son

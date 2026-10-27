@@ -23,9 +23,23 @@ class MessageParser
       body_html: body_html,
       snippet: clean(body_text)&.squish&.truncate(SNIPPET_LENGTH),
       size: @raw.bytesize,
-      has_attachments: @mail.attachments.any?
+      has_attachments: @mail.attachments.any?,
+      attachments: attachments
     }
   end
+
+  # Les pièces jointes elles-mêmes restent chez le fournisseur : on ne garde que de quoi les lister.
+  def attachments
+    @mail.attachments.each_with_index.map do |part, index|
+      { "index" => index, "filename" => clean(part.filename).presence || "piece-jointe-#{index + 1}",
+        "content_type" => part.mime_type, "size" => part.body.decoded.bytesize }
+    end
+  rescue StandardError
+    []
+  end
+
+  # Contenu d'une pièce jointe, dans l'ordre de #attachments.
+  def attachment_data(index) = @mail.attachments[index]&.decoded
 
   private
 

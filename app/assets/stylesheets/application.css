@@ -20,3 +20,6 @@ form.inline { display: inline; }
 .field-errors { color: #b00020; }
 .card { border: 1px solid #eee; border-radius: 6px; padding: 1rem; margin: 1rem 0; }
 code.link { user-select: all; word-break: break-all; }
+.nowrap { white-space: nowrap; }
+ul.attachments { list-style: none; padding: 0; }
+p.read-by { font-size: .9em; margin-bottom: 0; }

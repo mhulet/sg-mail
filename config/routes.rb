@@ -20,11 +20,17 @@ Rails.application.routes.draw do
       post :sync, on: :member
       resources :accesses, controller: "mailbox_accesses", only: %i[index update]
     end
-    resources :messages, only: :show
+    resources :conversations, only: %i[index show] do
+      post :unread, on: :member
+      post :mark_all_read, on: :collection
+    end
+    resources :messages, only: :show do
+      resources :attachments, only: %i[show create]
+    end
     resources :memberships, only: %i[index update destroy]
     resources :invitations, only: %i[create destroy]
     get "auth/google_oauth2" => "google_oauth#new", as: :google_oauth
-    get "/" => "mailboxes#index", as: :account_root
+    get "/" => "conversations#index", as: :account_root
   end
 
   root "accounts#index"

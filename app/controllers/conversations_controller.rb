@@ -1,0 +1,54 @@
+class ConversationsController < ApplicationController
+  include AccountScoped
+  PER_PAGE = 50
+
+  before_action :set_conversation, only: %i[show unread]
+
+  # Boîte de réception unifiée : les fils de toutes les boîtes auxquelles on a accès.
+  def index
+    @mailboxes = Mailbox.accessible_by(Current.user).order(:address)
+    @mailbox = @mailboxes.find(params[:mailbox_id]) if params[:mailbox_id].present?
+    @conversations = page(filtered_conversations)
+  end
+
+  def show
+    @messages = @conversation.messages.includes(:readings)
+    @people = @conversation.mailbox.users_with_access.order(:name).to_a
+    @conversation.mark_read_by!(Current.user)
+  end
+
+  def unread
+    @conversation.mark_unread_by!(Current.user)
+    redirect_to conversations_path, notice: "Fil marqué comme non lu."
+  end
+
+  # « Tout marquer comme lu » : utile après l'import de milliers de vieux messages.
+  def mark_all_read
+    mailboxes = Mailbox.accessible_by(Current.user)
+    mailboxes = mailboxes.where(id: params[:mailbox_id]) if params[:mailbox_id].present?
+    Reading.mark!(Current.user, Message.where(mailbox: mailboxes))
+    redirect_to conversations_path(mailbox_id: params[:mailbox_id].presence), notice: "Tout est marqué comme lu."
+  end
+
+  private
+
+  def set_conversation
+    @conversation = Conversation.accessible_by(Current.user).find(params[:id])
+  end
+
+  def filtered_conversations
+    scope = Conversation.accessible_by(Current.user).with_unread_for(Current.user).includes(:mailbox)
+    scope = @mailbox ? scope.where(mailbox: @mailbox) : scope.inbox
+    scope = scope.where(<<~SQL.squish, Current.user.id) if params[:unread] == "1"
+      EXISTS (SELECT 1 FROM messages WHERE messages.conversation_id = conversations.id
+        AND NOT EXISTS (SELECT 1 FROM readings WHERE readings.message_id = messages.id AND readings.user_id = ?))
+    SQL
+    scope
+  end
+
+  # Pagination par date : ?before=<horodatage du dernier fil affiché>.
+  def page(scope)
+    scope = scope.where(last_message_at: ...Time.zone.parse(params[:before])) if params[:before].present?
+    scope.recent.limit(PER_PAGE).to_a
+  end
+end

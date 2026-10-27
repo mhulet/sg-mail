@@ -29,7 +29,8 @@
       <% if Current.account %>
         <span><%= Current.account.name %></span>
         <nav>
-          <%= link_to "Boîtes", account_root_path %>
+          <%= link_to "Réception", account_root_path %>
+          <%= link_to "Boîtes", mailboxes_path %>
           <%= link_to "Membres", memberships_path %>
         </nav>
       <% end %>

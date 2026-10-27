@@ -57,6 +57,47 @@ CREATE TABLE public.ar_internal_metadata (
 
 
 --
+-- Name: conversations; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.conversations (
+    id bigint NOT NULL,
+    account_id bigint NOT NULL,
+    mailbox_id bigint NOT NULL,
+    thread_key character varying NOT NULL,
+    subject character varying,
+    last_sender character varying,
+    snippet text,
+    last_message_at timestamp(6) without time zone,
+    messages_count integer DEFAULT 0 NOT NULL,
+    in_inbox boolean DEFAULT false NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+ALTER TABLE ONLY public.conversations FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: conversations_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.conversations_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: conversations_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.conversations_id_seq OWNED BY public.conversations.id;
+
+
+--
 -- Name: invitations; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -263,7 +304,9 @@ CREATE TABLE public.messages (
     has_attachments boolean DEFAULT false NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    account_id bigint NOT NULL
+    account_id bigint NOT NULL,
+    conversation_id bigint,
+    attachments jsonb DEFAULT '[]'::jsonb NOT NULL
 );
 
 ALTER TABLE ONLY public.messages FORCE ROW LEVEL SECURITY;
@@ -286,6 +329,40 @@ CREATE SEQUENCE public.messages_id_seq
 --
 
 ALTER SEQUENCE public.messages_id_seq OWNED BY public.messages.id;
+
+
+--
+-- Name: readings; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.readings (
+    id bigint NOT NULL,
+    account_id bigint NOT NULL,
+    message_id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    read_at timestamp(6) without time zone NOT NULL
+);
+
+ALTER TABLE ONLY public.readings FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: readings_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.readings_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: readings_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.readings_id_seq OWNED BY public.readings.id;
 
 
 --
@@ -372,6 +449,13 @@ ALTER TABLE ONLY public.accounts ALTER COLUMN id SET DEFAULT nextval('public.acc
 
 
 --
+-- Name: conversations id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.conversations ALTER COLUMN id SET DEFAULT nextval('public.conversations_id_seq'::regclass);
+
+
+--
 -- Name: invitations id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -414,6 +498,13 @@ ALTER TABLE ONLY public.messages ALTER COLUMN id SET DEFAULT nextval('public.mes
 
 
 --
+-- Name: readings id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.readings ALTER COLUMN id SET DEFAULT nextval('public.readings_id_seq'::regclass);
+
+
+--
 -- Name: sessions id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -441,6 +532,14 @@ ALTER TABLE ONLY public.accounts
 
 ALTER TABLE ONLY public.ar_internal_metadata
     ADD CONSTRAINT ar_internal_metadata_pkey PRIMARY KEY (key);
+
+
+--
+-- Name: conversations conversations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.conversations
+    ADD CONSTRAINT conversations_pkey PRIMARY KEY (id);
 
 
 --
@@ -492,6 +591,14 @@ ALTER TABLE ONLY public.messages
 
 
 --
+-- Name: readings readings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.readings
+    ADD CONSTRAINT readings_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: schema_migrations schema_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -513,6 +620,34 @@ ALTER TABLE ONLY public.sessions
 
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: index_conversations_on_account_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_conversations_on_account_id ON public.conversations USING btree (account_id);
+
+
+--
+-- Name: index_conversations_on_account_id_and_last_message_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_conversations_on_account_id_and_last_message_at ON public.conversations USING btree (account_id, last_message_at);
+
+
+--
+-- Name: index_conversations_on_mailbox_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_conversations_on_mailbox_id ON public.conversations USING btree (mailbox_id);
+
+
+--
+-- Name: index_conversations_on_mailbox_id_and_thread_key; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_conversations_on_mailbox_id_and_thread_key ON public.conversations USING btree (mailbox_id, thread_key);
 
 
 --
@@ -635,6 +770,13 @@ CREATE INDEX index_messages_on_account_id ON public.messages USING btree (accoun
 
 
 --
+-- Name: index_messages_on_conversation_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_messages_on_conversation_id ON public.messages USING btree (conversation_id);
+
+
+--
 -- Name: index_messages_on_mail_folder_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -670,6 +812,27 @@ CREATE INDEX index_messages_on_mailbox_id_and_thread_key ON public.messages USIN
 
 
 --
+-- Name: index_readings_on_account_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_readings_on_account_id ON public.readings USING btree (account_id);
+
+
+--
+-- Name: index_readings_on_message_id_and_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_readings_on_message_id_and_user_id ON public.readings USING btree (message_id, user_id);
+
+
+--
+-- Name: index_readings_on_user_id_and_message_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_readings_on_user_id_and_message_id ON public.readings USING btree (user_id, message_id);
+
+
+--
 -- Name: index_sessions_on_user_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -681,6 +844,30 @@ CREATE INDEX index_sessions_on_user_id ON public.sessions USING btree (user_id);
 --
 
 CREATE UNIQUE INDEX index_users_on_email_address ON public.users USING btree (email_address);
+
+
+--
+-- Name: conversations fk_rails_00afd02cba; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.conversations
+    ADD CONSTRAINT fk_rails_00afd02cba FOREIGN KEY (account_id) REFERENCES public.accounts(id);
+
+
+--
+-- Name: conversations fk_rails_15ac80a23a; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.conversations
+    ADD CONSTRAINT fk_rails_15ac80a23a FOREIGN KEY (mailbox_id) REFERENCES public.mailboxes(id);
+
+
+--
+-- Name: readings fk_rails_22f92bfeac; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.readings
+    ADD CONSTRAINT fk_rails_22f92bfeac FOREIGN KEY (user_id) REFERENCES public.users(id);
 
 
 --
@@ -697,6 +884,14 @@ ALTER TABLE ONLY public.messages
 
 ALTER TABLE ONLY public.messages
     ADD CONSTRAINT fk_rails_51faa60c81 FOREIGN KEY (mailbox_id) REFERENCES public.mailboxes(id);
+
+
+--
+-- Name: readings fk_rails_5ed0692eb7; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.readings
+    ADD CONSTRAINT fk_rails_5ed0692eb7 FOREIGN KEY (message_id) REFERENCES public.messages(id) ON DELETE CASCADE;
 
 
 --
@@ -721,6 +916,14 @@ ALTER TABLE ONLY public.mailbox_accesses
 
 ALTER TABLE ONLY public.sessions
     ADD CONSTRAINT fk_rails_758836b4f0 FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
+-- Name: messages fk_rails_7f927086d2; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.messages
+    ADD CONSTRAINT fk_rails_7f927086d2 FOREIGN KEY (conversation_id) REFERENCES public.conversations(id);
 
 
 --
@@ -753,6 +956,14 @@ ALTER TABLE ONLY public.messages
 
 ALTER TABLE ONLY public.mailboxes
     ADD CONSTRAINT fk_rails_b75b98abc9 FOREIGN KEY (connected_by_id) REFERENCES public.users(id);
+
+
+--
+-- Name: readings fk_rails_c5c96624d2; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.readings
+    ADD CONSTRAINT fk_rails_c5c96624d2 FOREIGN KEY (account_id) REFERENCES public.accounts(id);
 
 
 --
@@ -804,6 +1015,13 @@ ALTER TABLE ONLY public.invitations
 
 
 --
+-- Name: conversations account_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY account_isolation ON public.conversations USING (((current_setting('sg_mail.bypass_rls'::text, true) = 'on'::text) OR (account_id = (NULLIF(current_setting('sg_mail.account_id'::text, true), ''::text))::bigint))) WITH CHECK (((current_setting('sg_mail.bypass_rls'::text, true) = 'on'::text) OR (account_id = (NULLIF(current_setting('sg_mail.account_id'::text, true), ''::text))::bigint)));
+
+
+--
 -- Name: mail_folders account_isolation; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -832,6 +1050,19 @@ CREATE POLICY account_isolation ON public.messages USING (((current_setting('sg_
 
 
 --
+-- Name: readings account_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY account_isolation ON public.readings USING (((current_setting('sg_mail.bypass_rls'::text, true) = 'on'::text) OR (account_id = (NULLIF(current_setting('sg_mail.account_id'::text, true), ''::text))::bigint))) WITH CHECK (((current_setting('sg_mail.bypass_rls'::text, true) = 'on'::text) OR (account_id = (NULLIF(current_setting('sg_mail.account_id'::text, true), ''::text))::bigint)));
+
+
+--
+-- Name: conversations; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.conversations ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: mail_folders; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -856,12 +1087,19 @@ ALTER TABLE public.mailboxes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: readings; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.readings ENABLE ROW LEVEL SECURITY;
+
+--
 -- PostgreSQL database dump complete
 --
 
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261027203000'),
 ('20261027200000'),
 ('20261027194405'),
 ('20261027194404'),
