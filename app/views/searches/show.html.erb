@@ -1,0 +1,22 @@
+<% content_for :title, "Recherche · SG Mail" %>
+<h1>Recherche</h1>
+
+<%= form_with url: search_path, method: :get, class: "inline" do |f| %>
+  <%= f.search_field :q, value: @search.query, autofocus: true, size: 40, aria: { label: "Rechercher" } %>
+  <% if @mailboxes.many? %>
+    <%= f.select :mailbox_id, [ [ "Toutes les boîtes", "" ] ] + @mailboxes.map { |m| [ m.address, m.id ] },
+          { selected: @mailbox&.id }, aria: { label: "Boîte" } %>
+  <% end %>
+  <%= f.submit "Chercher" %>
+<% end %>
+<p class="muted">Astuces : <code>de:anne</code>, <code>a:formations</code>, <code>avec:pj</code>. Les accents et la fin des mots sont facultatifs.</p>
+
+<% if @search.blank? %>
+<% elsif @conversations.none? %>
+  <p class="muted">Aucun résultat.</p>
+<% else %>
+  <p class="muted"><%= pluralize(@conversations.size, "fil") %><%= " (les #{SearchesController::LIMIT} plus récents)" if @conversations.size == SearchesController::LIMIT %></p>
+  <table class="conversations">
+    <%= render partial: "conversations/conversation", collection: @conversations, locals: { show_mailbox: @mailboxes.many? && !@mailbox } %>
+  </table>
+<% end %>

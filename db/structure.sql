@@ -9,6 +9,29 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
+--
+-- Name: unaccent; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS unaccent WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION unaccent; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION unaccent IS 'text search dictionary that removes accents';
+
+
+--
+-- Name: sg_mail_unaccent(text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.sg_mail_unaccent(text) RETURNS text
+    LANGUAGE sql IMMUTABLE STRICT PARALLEL SAFE
+    AS $_$ SELECT public.unaccent('public.unaccent'::regdictionary, $1) $_$;
+
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
@@ -353,7 +376,8 @@ CREATE TABLE public.messages (
     updated_at timestamp(6) without time zone NOT NULL,
     account_id bigint NOT NULL,
     conversation_id bigint,
-    attachments jsonb DEFAULT '[]'::jsonb NOT NULL
+    attachments jsonb DEFAULT '[]'::jsonb NOT NULL,
+    search_vector tsvector GENERATED ALWAYS AS ((((setweight(to_tsvector('simple'::regconfig, public.sg_mail_unaccent((COALESCE(subject, ''::character varying))::text)), 'A'::"char") || setweight(to_tsvector('simple'::regconfig, public.sg_mail_unaccent((((COALESCE(from_name, ''::character varying))::text || ' '::text) || (COALESCE(from_address, ''::character varying))::text))), 'B'::"char")) || setweight(to_tsvector('simple'::regconfig, public.sg_mail_unaccent((((to_addresses)::text || ' '::text) || (cc_addresses)::text))), 'C'::"char")) || setweight(to_tsvector('simple'::regconfig, public.sg_mail_unaccent("left"(COALESCE(body_text, regexp_replace("left"(body_html, 400000), '<[^>]*>'::text, ' '::text, 'g'::text), ''::text), 200000))), 'D'::"char"))) STORED
 );
 
 ALTER TABLE ONLY public.messages FORCE ROW LEVEL SECURITY;
@@ -1024,6 +1048,13 @@ CREATE INDEX index_messages_on_mailbox_id_and_thread_key ON public.messages USIN
 
 
 --
+-- Name: index_messages_on_search_vector; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_messages_on_search_vector ON public.messages USING gin (search_vector);
+
+
+--
 -- Name: index_notes_on_account_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1525,6 +1556,7 @@ ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261027220000'),
 ('20261027213000'),
 ('20261027210000'),
 ('20261027203000'),
