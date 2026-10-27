@@ -39,7 +39,6 @@ Rails.application.configure do
 
   # Synchros hors du processus web (Solid Queue lancé par Puma, ou à part avec bin/jobs).
   config.active_job.queue_adapter = :solid_queue
-  config.solid_queue.connects_to = { database: { writing: :queue } }
 
   # Set localhost to be used by links generated in mailer templates.
   config.action_mailer.default_url_options = { host: "localhost", port: 3000 }
