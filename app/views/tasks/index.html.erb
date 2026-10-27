@@ -1,0 +1,16 @@
+<% content_for :title, "Mes tâches · SG Mail" %>
+<h1>Mes tâches</h1>
+
+<%= render "form", people: @members %>
+
+<% if @open_tasks.none? %><p class="muted">Rien à faire. 🌿</p><% end %>
+<ul class="tasks">
+  <%= render partial: "task", collection: @open_tasks, locals: { with_conversation: true } %>
+</ul>
+
+<% if @done_tasks.any? %>
+  <h2>Terminées récemment</h2>
+  <ul class="tasks">
+    <%= render partial: "task", collection: @done_tasks, locals: { with_conversation: true } %>
+  </ul>
+<% end %>

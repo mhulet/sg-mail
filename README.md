@@ -55,6 +55,16 @@ pendant la phase 0 se retrouvent dans un client « Compte initial », dont ce co
 - **Pièces jointes** : listées à la synchro, téléchargées chez le fournisseur au moment du clic
   (toujours en téléchargement, jamais affichées sur le domaine de SG Mail). Pas encore de cache.
 
+## Travail à plusieurs
+
+- **Assignation** : chaque fil peut être confié à une personne qui a accès à la boîte
+  (« Qui s'en occupe ? »). Filtre « Assignés à moi » dans la réception.
+- **Tâches** (`Task`) : créées depuis un message (« Créer une tâche »), depuis un fil ou librement,
+  avec une personne et une échéance. « Mes tâches » liste celles qu'on m'a confiées et celles que j'ai
+  créées sans les confier. Une tâche liée à un fil n'est visible que de ceux qui ont accès à la boîte.
+- **Notes internes** (`Note`) : sous le fil, visibles de l'équipe seulement, jamais envoyées.
+  Seule l'autrice ou l'auteur peut supprimer sa note.
+
 ## Synchros
 
 - Les synchros tournent dans Solid Queue, hors du processus web : `bin/dev` lance Puma avec son

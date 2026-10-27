@@ -2,7 +2,7 @@ class ConversationsController < ApplicationController
   include AccountScoped
   PER_PAGE = 50
 
-  before_action :set_conversation, only: %i[show unread]
+  before_action :set_conversation, only: %i[show unread assign]
 
   # Boîte de réception unifiée : les fils de toutes les boîtes auxquelles on a accès.
   def index
@@ -14,12 +14,22 @@ class ConversationsController < ApplicationController
   def show
     @messages = @conversation.messages.includes(:readings)
     @people = @conversation.mailbox.users_with_access.order(:name).to_a
+    @notes = @conversation.notes.includes(:user)
+    @tasks = @conversation.tasks.includes(:assignee).by_due_date
     @conversation.mark_read_by!(Current.user)
   end
 
   def unread
     @conversation.mark_unread_by!(Current.user)
     redirect_to conversations_path, notice: "Fil marqué comme non lu."
+  end
+
+  # Qui s'occupe de ce fil : une personne qui a accès à la boîte, ou personne.
+  def assign
+    assignee = @conversation.mailbox.users_with_access.find_by(id: params[:assignee_id])
+    @conversation.update!(assignee: assignee)
+    notice = assignee ? "#{assignee.display_name} s'occupe de ce fil." : "Plus personne n'est assigné à ce fil."
+    redirect_to conversation_path(@conversation), notice: notice
   end
 
   # « Tout marquer comme lu » : utile après l'import de milliers de vieux messages.
@@ -37,8 +47,9 @@ class ConversationsController < ApplicationController
   end
 
   def filtered_conversations
-    scope = Conversation.accessible_by(Current.user).with_unread_for(Current.user).includes(:mailbox)
+    scope = Conversation.accessible_by(Current.user).with_unread_for(Current.user).includes(:mailbox, :assignee)
     scope = @mailbox ? scope.where(mailbox: @mailbox) : scope.inbox
+    scope = scope.assigned_to(Current.user) if params[:mine] == "1"
     scope = scope.where(<<~SQL.squish, Current.user.id) if params[:unread] == "1"
       EXISTS (SELECT 1 FROM messages WHERE messages.conversation_id = conversations.id
         AND NOT EXISTS (SELECT 1 FROM readings WHERE readings.message_id = messages.id AND readings.user_id = ?))

@@ -72,7 +72,8 @@ CREATE TABLE public.conversations (
     messages_count integer DEFAULT 0 NOT NULL,
     in_inbox boolean DEFAULT false NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    assignee_id bigint
 );
 
 ALTER TABLE ONLY public.conversations FORCE ROW LEVEL SECURITY;
@@ -378,6 +379,42 @@ ALTER SEQUENCE public.messages_id_seq OWNED BY public.messages.id;
 
 
 --
+-- Name: notes; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.notes (
+    id bigint NOT NULL,
+    account_id bigint NOT NULL,
+    conversation_id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    body text NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+ALTER TABLE ONLY public.notes FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: notes_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.notes_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: notes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.notes_id_seq OWNED BY public.notes.id;
+
+
+--
 -- Name: readings; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -451,6 +488,48 @@ CREATE SEQUENCE public.sessions_id_seq
 --
 
 ALTER SEQUENCE public.sessions_id_seq OWNED BY public.sessions.id;
+
+
+--
+-- Name: tasks; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.tasks (
+    id bigint NOT NULL,
+    account_id bigint NOT NULL,
+    creator_id bigint NOT NULL,
+    assignee_id bigint,
+    conversation_id bigint,
+    message_id bigint,
+    title character varying NOT NULL,
+    status character varying DEFAULT 'open'::character varying NOT NULL,
+    due_on date,
+    completed_at timestamp(6) without time zone,
+    external_ref character varying,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+ALTER TABLE ONLY public.tasks FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: tasks_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.tasks_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: tasks_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.tasks_id_seq OWNED BY public.tasks.id;
 
 
 --
@@ -551,6 +630,13 @@ ALTER TABLE ONLY public.messages ALTER COLUMN id SET DEFAULT nextval('public.mes
 
 
 --
+-- Name: notes id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notes ALTER COLUMN id SET DEFAULT nextval('public.notes_id_seq'::regclass);
+
+
+--
 -- Name: readings id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -562,6 +648,13 @@ ALTER TABLE ONLY public.readings ALTER COLUMN id SET DEFAULT nextval('public.rea
 --
 
 ALTER TABLE ONLY public.sessions ALTER COLUMN id SET DEFAULT nextval('public.sessions_id_seq'::regclass);
+
+
+--
+-- Name: tasks id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tasks ALTER COLUMN id SET DEFAULT nextval('public.tasks_id_seq'::regclass);
 
 
 --
@@ -652,6 +745,14 @@ ALTER TABLE ONLY public.messages
 
 
 --
+-- Name: notes notes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notes
+    ADD CONSTRAINT notes_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: readings readings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -676,6 +777,14 @@ ALTER TABLE ONLY public.sessions
 
 
 --
+-- Name: tasks tasks_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tasks
+    ADD CONSTRAINT tasks_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -695,6 +804,13 @@ CREATE INDEX index_conversations_on_account_id ON public.conversations USING btr
 --
 
 CREATE INDEX index_conversations_on_account_id_and_last_message_at ON public.conversations USING btree (account_id, last_message_at);
+
+
+--
+-- Name: index_conversations_on_assignee_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_conversations_on_assignee_id ON public.conversations USING btree (assignee_id);
 
 
 --
@@ -908,6 +1024,27 @@ CREATE INDEX index_messages_on_mailbox_id_and_thread_key ON public.messages USIN
 
 
 --
+-- Name: index_notes_on_account_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_notes_on_account_id ON public.notes USING btree (account_id);
+
+
+--
+-- Name: index_notes_on_conversation_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_notes_on_conversation_id ON public.notes USING btree (conversation_id);
+
+
+--
+-- Name: index_notes_on_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_notes_on_user_id ON public.notes USING btree (user_id);
+
+
+--
 -- Name: index_readings_on_account_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -936,10 +1073,60 @@ CREATE INDEX index_sessions_on_user_id ON public.sessions USING btree (user_id);
 
 
 --
+-- Name: index_tasks_on_account_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_tasks_on_account_id ON public.tasks USING btree (account_id);
+
+
+--
+-- Name: index_tasks_on_assignee_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_tasks_on_assignee_id ON public.tasks USING btree (assignee_id);
+
+
+--
+-- Name: index_tasks_on_assignee_id_and_status; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_tasks_on_assignee_id_and_status ON public.tasks USING btree (assignee_id, status);
+
+
+--
+-- Name: index_tasks_on_conversation_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_tasks_on_conversation_id ON public.tasks USING btree (conversation_id);
+
+
+--
+-- Name: index_tasks_on_creator_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_tasks_on_creator_id ON public.tasks USING btree (creator_id);
+
+
+--
+-- Name: index_tasks_on_message_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_tasks_on_message_id ON public.tasks USING btree (message_id);
+
+
+--
 -- Name: index_users_on_email_address; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE UNIQUE INDEX index_users_on_email_address ON public.users USING btree (email_address);
+
+
+--
+-- Name: tasks fk_rails_0016c50613; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tasks
+    ADD CONSTRAINT fk_rails_0016c50613 FOREIGN KEY (assignee_id) REFERENCES public.users(id);
 
 
 --
@@ -948,6 +1135,22 @@ CREATE UNIQUE INDEX index_users_on_email_address ON public.users USING btree (em
 
 ALTER TABLE ONLY public.conversations
     ADD CONSTRAINT fk_rails_00afd02cba FOREIGN KEY (account_id) REFERENCES public.accounts(id);
+
+
+--
+-- Name: tasks fk_rails_00f6e5b7b4; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tasks
+    ADD CONSTRAINT fk_rails_00f6e5b7b4 FOREIGN KEY (creator_id) REFERENCES public.users(id);
+
+
+--
+-- Name: tasks fk_rails_1439344ea6; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tasks
+    ADD CONSTRAINT fk_rails_1439344ea6 FOREIGN KEY (conversation_id) REFERENCES public.conversations(id) ON DELETE SET NULL;
 
 
 --
@@ -980,6 +1183,14 @@ ALTER TABLE ONLY public.readings
 
 ALTER TABLE ONLY public.messages
     ADD CONSTRAINT fk_rails_32bdc0a6b3 FOREIGN KEY (mail_folder_id) REFERENCES public.mail_folders(id);
+
+
+--
+-- Name: tasks fk_rails_43dfabfaca; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tasks
+    ADD CONSTRAINT fk_rails_43dfabfaca FOREIGN KEY (account_id) REFERENCES public.accounts(id);
 
 
 --
@@ -1039,11 +1250,35 @@ ALTER TABLE ONLY public.sessions
 
 
 --
+-- Name: tasks fk_rails_7609921947; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tasks
+    ADD CONSTRAINT fk_rails_7609921947 FOREIGN KEY (message_id) REFERENCES public.messages(id) ON DELETE SET NULL;
+
+
+--
+-- Name: notes fk_rails_7f2323ad43; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notes
+    ADD CONSTRAINT fk_rails_7f2323ad43 FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
 -- Name: messages fk_rails_7f927086d2; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.messages
     ADD CONSTRAINT fk_rails_7f927086d2 FOREIGN KEY (conversation_id) REFERENCES public.conversations(id);
+
+
+--
+-- Name: notes fk_rails_9259470eb1; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notes
+    ADD CONSTRAINT fk_rails_9259470eb1 FOREIGN KEY (conversation_id) REFERENCES public.conversations(id) ON DELETE CASCADE;
 
 
 --
@@ -1076,6 +1311,14 @@ ALTER TABLE ONLY public.memberships
 
 ALTER TABLE ONLY public.messages
     ADD CONSTRAINT fk_rails_a231e55201 FOREIGN KEY (account_id) REFERENCES public.accounts(id);
+
+
+--
+-- Name: conversations fk_rails_b0388c9502; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.conversations
+    ADD CONSTRAINT fk_rails_b0388c9502 FOREIGN KEY (assignee_id) REFERENCES public.users(id);
 
 
 --
@@ -1132,6 +1375,14 @@ ALTER TABLE ONLY public.drafts
 
 ALTER TABLE ONLY public.mail_folders
     ADD CONSTRAINT fk_rails_e8cdd440af FOREIGN KEY (account_id) REFERENCES public.accounts(id);
+
+
+--
+-- Name: notes fk_rails_ed57cedfc1; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notes
+    ADD CONSTRAINT fk_rails_ed57cedfc1 FOREIGN KEY (account_id) REFERENCES public.accounts(id);
 
 
 --
@@ -1193,10 +1444,24 @@ CREATE POLICY account_isolation ON public.messages USING (((current_setting('sg_
 
 
 --
+-- Name: notes account_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY account_isolation ON public.notes USING (((current_setting('sg_mail.bypass_rls'::text, true) = 'on'::text) OR (account_id = (NULLIF(current_setting('sg_mail.account_id'::text, true), ''::text))::bigint))) WITH CHECK (((current_setting('sg_mail.bypass_rls'::text, true) = 'on'::text) OR (account_id = (NULLIF(current_setting('sg_mail.account_id'::text, true), ''::text))::bigint)));
+
+
+--
 -- Name: readings account_isolation; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY account_isolation ON public.readings USING (((current_setting('sg_mail.bypass_rls'::text, true) = 'on'::text) OR (account_id = (NULLIF(current_setting('sg_mail.account_id'::text, true), ''::text))::bigint))) WITH CHECK (((current_setting('sg_mail.bypass_rls'::text, true) = 'on'::text) OR (account_id = (NULLIF(current_setting('sg_mail.account_id'::text, true), ''::text))::bigint)));
+
+
+--
+-- Name: tasks account_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY account_isolation ON public.tasks USING (((current_setting('sg_mail.bypass_rls'::text, true) = 'on'::text) OR (account_id = (NULLIF(current_setting('sg_mail.account_id'::text, true), ''::text))::bigint))) WITH CHECK (((current_setting('sg_mail.bypass_rls'::text, true) = 'on'::text) OR (account_id = (NULLIF(current_setting('sg_mail.account_id'::text, true), ''::text))::bigint)));
 
 
 --
@@ -1236,10 +1501,22 @@ ALTER TABLE public.mailboxes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: notes; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.notes ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: readings; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.readings ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: tasks; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
 
 --
 -- PostgreSQL database dump complete
@@ -1248,6 +1525,7 @@ ALTER TABLE public.readings ENABLE ROW LEVEL SECURITY;
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261027213000'),
 ('20261027210000'),
 ('20261027203000'),
 ('20261027200000'),

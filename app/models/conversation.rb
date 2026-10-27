@@ -3,11 +3,15 @@
 class Conversation < ApplicationRecord
   acts_as_tenant :account
   belongs_to :mailbox
+  belongs_to :assignee, class_name: "User", optional: true
   has_many :messages, -> { order(:sent_at, :id) }, dependent: :nullify
+  has_many :notes, -> { order(:created_at) }, dependent: :delete_all
+  has_many :tasks, dependent: :nullify
 
   scope :recent, -> { order(last_message_at: :desc, id: :desc) }
   scope :accessible_by, ->(user) { where(mailbox: Mailbox.accessible_by(user)) }
   scope :inbox, -> { where(in_inbox: true) }
+  scope :assigned_to, ->(user) { where(assignee: user) }
 
   # Ajoute la colonne « unread » : reste-t-il un message que cette personne n'a pas lu ?
   scope :with_unread_for, ->(user) {
