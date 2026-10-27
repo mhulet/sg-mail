@@ -98,6 +98,52 @@ ALTER SEQUENCE public.conversations_id_seq OWNED BY public.conversations.id;
 
 
 --
+-- Name: drafts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.drafts (
+    id bigint NOT NULL,
+    account_id bigint NOT NULL,
+    mailbox_id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    conversation_id bigint,
+    source_message_id bigint,
+    kind character varying DEFAULT 'new'::character varying NOT NULL,
+    to_addresses jsonb DEFAULT '[]'::jsonb NOT NULL,
+    cc_addresses jsonb DEFAULT '[]'::jsonb NOT NULL,
+    bcc_addresses jsonb DEFAULT '[]'::jsonb NOT NULL,
+    subject character varying,
+    body text,
+    status character varying DEFAULT 'draft'::character varying NOT NULL,
+    error text,
+    sent_at timestamp(6) without time zone,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+ALTER TABLE ONLY public.drafts FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: drafts_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.drafts_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: drafts_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.drafts_id_seq OWNED BY public.drafts.id;
+
+
+--
 -- Name: invitations; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -456,6 +502,13 @@ ALTER TABLE ONLY public.conversations ALTER COLUMN id SET DEFAULT nextval('publi
 
 
 --
+-- Name: drafts id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.drafts ALTER COLUMN id SET DEFAULT nextval('public.drafts_id_seq'::regclass);
+
+
+--
 -- Name: invitations id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -540,6 +593,14 @@ ALTER TABLE ONLY public.ar_internal_metadata
 
 ALTER TABLE ONLY public.conversations
     ADD CONSTRAINT conversations_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: drafts drafts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.drafts
+    ADD CONSTRAINT drafts_pkey PRIMARY KEY (id);
 
 
 --
@@ -648,6 +709,41 @@ CREATE INDEX index_conversations_on_mailbox_id ON public.conversations USING btr
 --
 
 CREATE UNIQUE INDEX index_conversations_on_mailbox_id_and_thread_key ON public.conversations USING btree (mailbox_id, thread_key);
+
+
+--
+-- Name: index_drafts_on_account_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_drafts_on_account_id ON public.drafts USING btree (account_id);
+
+
+--
+-- Name: index_drafts_on_conversation_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_drafts_on_conversation_id ON public.drafts USING btree (conversation_id);
+
+
+--
+-- Name: index_drafts_on_mailbox_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_drafts_on_mailbox_id ON public.drafts USING btree (mailbox_id);
+
+
+--
+-- Name: index_drafts_on_source_message_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_drafts_on_source_message_id ON public.drafts USING btree (source_message_id);
+
+
+--
+-- Name: index_drafts_on_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_drafts_on_user_id ON public.drafts USING btree (user_id);
 
 
 --
@@ -863,6 +959,14 @@ ALTER TABLE ONLY public.conversations
 
 
 --
+-- Name: drafts fk_rails_1b49dc20e4; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.drafts
+    ADD CONSTRAINT fk_rails_1b49dc20e4 FOREIGN KEY (account_id) REFERENCES public.accounts(id);
+
+
+--
 -- Name: readings fk_rails_22f92bfeac; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -879,11 +983,27 @@ ALTER TABLE ONLY public.messages
 
 
 --
+-- Name: drafts fk_rails_4c9796b117; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.drafts
+    ADD CONSTRAINT fk_rails_4c9796b117 FOREIGN KEY (source_message_id) REFERENCES public.messages(id) ON DELETE SET NULL;
+
+
+--
 -- Name: messages fk_rails_51faa60c81; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.messages
     ADD CONSTRAINT fk_rails_51faa60c81 FOREIGN KEY (mailbox_id) REFERENCES public.mailboxes(id);
+
+
+--
+-- Name: drafts fk_rails_5a006091c0; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.drafts
+    ADD CONSTRAINT fk_rails_5a006091c0 FOREIGN KEY (mailbox_id) REFERENCES public.mailboxes(id);
 
 
 --
@@ -924,6 +1044,14 @@ ALTER TABLE ONLY public.sessions
 
 ALTER TABLE ONLY public.messages
     ADD CONSTRAINT fk_rails_7f927086d2 FOREIGN KEY (conversation_id) REFERENCES public.conversations(id);
+
+
+--
+-- Name: drafts fk_rails_976b64226f; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.drafts
+    ADD CONSTRAINT fk_rails_976b64226f FOREIGN KEY (user_id) REFERENCES public.users(id);
 
 
 --
@@ -991,6 +1119,14 @@ ALTER TABLE ONLY public.mailbox_accesses
 
 
 --
+-- Name: drafts fk_rails_e1fd7770df; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.drafts
+    ADD CONSTRAINT fk_rails_e1fd7770df FOREIGN KEY (conversation_id) REFERENCES public.conversations(id) ON DELETE SET NULL;
+
+
+--
 -- Name: mail_folders fk_rails_e8cdd440af; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1019,6 +1155,13 @@ ALTER TABLE ONLY public.invitations
 --
 
 CREATE POLICY account_isolation ON public.conversations USING (((current_setting('sg_mail.bypass_rls'::text, true) = 'on'::text) OR (account_id = (NULLIF(current_setting('sg_mail.account_id'::text, true), ''::text))::bigint))) WITH CHECK (((current_setting('sg_mail.bypass_rls'::text, true) = 'on'::text) OR (account_id = (NULLIF(current_setting('sg_mail.account_id'::text, true), ''::text))::bigint)));
+
+
+--
+-- Name: drafts account_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY account_isolation ON public.drafts USING (((current_setting('sg_mail.bypass_rls'::text, true) = 'on'::text) OR (account_id = (NULLIF(current_setting('sg_mail.account_id'::text, true), ''::text))::bigint))) WITH CHECK (((current_setting('sg_mail.bypass_rls'::text, true) = 'on'::text) OR (account_id = (NULLIF(current_setting('sg_mail.account_id'::text, true), ''::text))::bigint)));
 
 
 --
@@ -1063,6 +1206,12 @@ CREATE POLICY account_isolation ON public.readings USING (((current_setting('sg_
 ALTER TABLE public.conversations ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: drafts; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.drafts ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: mail_folders; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -1099,6 +1248,7 @@ ALTER TABLE public.readings ENABLE ROW LEVEL SECURITY;
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261027210000'),
 ('20261027203000'),
 ('20261027200000'),
 ('20261027194405'),

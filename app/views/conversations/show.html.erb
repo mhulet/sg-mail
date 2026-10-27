@@ -34,6 +34,12 @@
       <%= button_to "Afficher les pièces jointes", message_attachments_path(message), class: "link" %>
     <% end %>
 
+    <p class="actions">
+      <%= link_to "Répondre", new_draft_path(message_id: message.id, kind: "reply") %>
+      <%= link_to "Répondre à tous", new_draft_path(message_id: message.id, kind: "reply_all") %>
+      <%= link_to "Transférer", new_draft_path(message_id: message.id, kind: "forward") %>
+    </p>
+
     <% readers, others = @people.partition { |person| message.read_by?(person) } %>
     <p class="muted read-by">
       <%= readers.any? ? "Lu par #{readers.map(&:display_name).to_sentence}" : "Lu par personne" %>

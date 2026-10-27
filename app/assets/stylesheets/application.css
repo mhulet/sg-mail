@@ -23,3 +23,4 @@ code.link { user-select: all; word-break: break-all; }
 .nowrap { white-space: nowrap; }
 ul.attachments { list-style: none; padding: 0; }
 p.read-by { font-size: .9em; margin-bottom: 0; }
+form.compose input[type=text], form.compose textarea, form.compose select { width: 100%; box-sizing: border-box; font: inherit; }
