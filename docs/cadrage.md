@@ -181,4 +181,4 @@ Sans MCP, la même `Integration` peut viser une API REST classique (webhook ou a
 | D5 | Stocker les corps des emails chez SG Mail (indispensable pour la recherche et le MCP) ? | Oui |
 | D6 | Héberger chez Infomaniak (Suisse, cohérent avec tes outils actuels) ? | Oui |
 | D7 | Envoi d'emails dès le MVP (et pas seulement lecture + tâches) ? | Oui |
-| D8 | Assistant Claude intégré (API payée par Super Génial) reporté en phase 2, le chemin « Claude + deux MCP » suffisant au départ ? | Oui |
+| D8 | Assistant Claude intégré (API payée par Super Génial) reporté en phase 2, le chemin « Claude + deux MCP » suffisant au départ ? | **Validé** (27/10) : chemin 1 |
