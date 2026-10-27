@@ -11,7 +11,7 @@ Pas encore de comptes, de multi-tenant ni d'authentification : l'app tourne en l
 
 ### Lancer en local
 
-Prérequis : Ruby (voir `.ruby-version`), PostgreSQL.
+Prérequis : Ruby 3.4.10 (`.ruby-version` et `.tool-versions` pour asdf), PostgreSQL.
 
 ```sh
 bin/setup --skip-server
