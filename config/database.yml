@@ -22,16 +22,10 @@ default: &default
   schema_format: sql
 
 
+# Une seule base par environnement : Solid Queue, Solid Cache et Solid Cable y ont leurs tables.
 development:
-  primary:
-    <<: *default
-    database: sg_mail_development
-  # Solid Queue a sa propre base, comme en production.
-  queue:
-    <<: *default
-    database: sg_mail_development_queue
-    schema_format: ruby
-    migrations_paths: db/queue_migrate
+  <<: *default
+  database: sg_mail_development
 
   # The specified database role being used to connect to PostgreSQL.
   # To create additional roles in PostgreSQL see `$ createuser --help`.
@@ -93,24 +87,8 @@ test:
 # Read https://guides.rubyonrails.org/configuring.html#configuring-a-database
 # for a full overview on how database connection configuration can be specified.
 #
+# Hatchbox fournit DATABASE_URL quand une base est attachée à l'app. Le rôle Postgres
+# ne doit pas être superutilisateur : un superutilisateur échappe à la Row Level Security.
 production:
-  primary: &primary_production
-    <<: *default
-    database: sg_mail_production
-    username: sg_mail
-    password: <%= ENV["SG_MAIL_DATABASE_PASSWORD"] %>
-  cache:
-    <<: *primary_production
-    database: sg_mail_production_cache
-    schema_format: ruby
-    migrations_paths: db/cache_migrate
-  queue:
-    <<: *primary_production
-    database: sg_mail_production_queue
-    schema_format: ruby
-    migrations_paths: db/queue_migrate
-  cable:
-    <<: *primary_production
-    database: sg_mail_production_cable
-    schema_format: ruby
-    migrations_paths: db/cable_migrate
+  <<: *default
+  url: <%= ENV["DATABASE_URL"] %>

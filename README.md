@@ -18,6 +18,33 @@ bin/dev                # http://localhost:3000, avec Solid Queue
 `sg_mail:staff` crée un compte de l'équipe Super Génial (création des clients). Les boîtes importées
 pendant la phase 0 se retrouvent dans un client « Compte initial », dont ce compte devient admin.
 
+## Héberger sur Hatchbox
+
+Une seule base Postgres : Solid Queue, Solid Cache et Solid Cable ont leurs tables dans la base principale.
+
+1. **App** : créer l'app sur le serveur, branche `main`, puis attacher une base PostgreSQL
+   (Hatchbox renseigne `DATABASE_URL`). Le rôle Postgres ne doit **pas** être superutilisateur,
+   sinon la Row Level Security ne s'applique pas. Vérifier avec
+   `bin/rails runner 'puts ActiveRecord::Base.connection.select_value("select rolsuper from pg_roles where rolname = current_user")'`
+   (doit afficher `false`).
+2. **Processus** (fichier `Procfile`) : `web` (Puma), `jobs` (`bin/jobs` : synchros, envois, relance
+   toutes les 5 min) et `idle` (`bin/idle` : IMAP en temps réel).
+3. **Variables d'environnement** :
+   - `SECRET_KEY_BASE` (souvent déjà mis par Hatchbox, sinon `bin/rails secret`) ;
+   - `ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY`, `ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY`,
+     `ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT` : générées une fois avec `bin/rails db:encryption:init`,
+     à garder précieusement (sans elles, les jetons Google et mots de passe IMAP enregistrés sont illisibles) ;
+   - `APP_HOST` (ex. `mail.supergenial.be`) ;
+   - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` ;
+   - `MAILER_FROM`, `SMTP_ADDRESS`, `SMTP_PORT` (587), `SMTP_USERNAME`, `SMTP_PASSWORD` pour les invitations ;
+   - facultatif : `GMAIL_PUBSUB_TOPIC`, `GMAIL_PUBSUB_TOKEN` (Gmail en temps réel, voir Synchros).
+4. **Google Cloud** : ajouter `https://<APP_HOST>/auth/google_oauth2/callback` aux URI de redirection
+   autorisées du client OAuth.
+5. **Premier compte**, une fois déployé : `bin/rails sg_mail:staff EMAIL=… NAME=…` dans la console Hatchbox.
+
+Le déploiement lance `bin/rails db:prepare` ou `db:migrate` : les migrations s'appliquent seules. HTTPS est
+obligatoire (`force_ssl`), ce qui convient au certificat géré par Hatchbox.
+
 ## Clients, membres et isolation
 
 - **Client** (`Account`) : une organisation (Semisto, Silvéa…). Ses boîtes et ses emails lui appartiennent.
@@ -113,7 +140,7 @@ sans action explicite.
   superviseur Solid Queue (`SOLID_QUEUE_IN_PUMA`). On peut aussi lancer les jobs à part avec `bin/jobs`.
 - **IMAP, temps réel** : `bin/idle` (ou `bin/rails sg_mail:idle`) garde une connexion IDLE par boîte IMAP
   et lance une synchro dès qu'un message arrive ou disparaît. `bin/dev` le lance aussi
-  (`SKIP_IMAP_IDLE=1` pour s'en passer). En production, c'est le rôle `idle` de Kamal.
+  (`SKIP_IMAP_IDLE=1` pour s'en passer). En production, c'est le processus `idle` (voir Hatchbox).
 - **Gmail, temps réel** : avec `GMAIL_PUBSUB_TOPIC` et `GMAIL_PUBSUB_TOKEN`, chaque synchro (re)lance
   `users.watch` (valable 7 jours) et Google prévient `/webhooks/gmail?token=…` à chaque changement.
   Réglage côté Google Cloud, une fois, quand l'app a une adresse publique :
