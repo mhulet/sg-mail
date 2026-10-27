@@ -121,7 +121,7 @@ Points clés :
 
 - **API REST JSON** (`/api/v1`), source unique de vérité. Authentification par jeton personnel (CLI, scripts) ou OAuth 2.1 (Doorkeeper) pour le MCP.
 - **Serveur MCP** dans l'app Rails (SDK MCP officiel en Ruby, transport HTTP « streamable », endpoint `/mcp`), connectable dans Claude comme connecteur personnalisé. Outils envisagés : `search_conversations`, `get_conversation`, `mark_read`, `draft_reply`, `send_draft`, `create_task`, `list_tasks`, `assign`, `add_note`. Par défaut Claude **rédige des brouillons** ; l'envoi demande une action explicite.
-- **CLI** `sg` (gem Ruby avec Thor), sortie texte ou `--json` pour Claude Code : `sg inbox`, `sg show 123`, `sg task add 123 "Relancer le devis"`, `sg reply 123 --draft`.
+- **CLI** `sg-mail` (gem Ruby avec Thor), sortie texte ou `--json` pour Claude Code : `sg-mail inbox`, `sg-mail show 123`, `sg-mail task add 123 "Relancer le devis"`, `sg-mail reply 123 --draft`.
 
 ### 7.2 Agir sur MySemisto depuis un fil
 
