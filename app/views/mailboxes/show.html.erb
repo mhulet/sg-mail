@@ -1,0 +1,28 @@
+<% content_for :title, "#{@mailbox.address} · SG Mail" %>
+<h1><%= @mailbox.address %> <small><%= @mailbox.provider %></small></h1>
+
+<div class="actions">
+  <%= button_to "Synchroniser", sync_mailbox_path(@mailbox) %>
+  <span class="muted">
+    <%= @mailbox.messages.count %> messages ·
+    dernière synchro : <%= @mailbox.last_synced_at ? l(@mailbox.last_synced_at, format: :short) : "jamais" %>
+  </span>
+</div>
+<% if @mailbox.last_sync_error %><p class="flash alert"><%= @mailbox.last_sync_error %></p><% end %>
+<details><summary class="muted">État de synchro</summary><pre><%= JSON.pretty_generate(@mailbox.sync_state) %></pre>
+  <% @mailbox.mail_folders.each do |folder| %>
+    <div class="muted"><%= folder.name %> · UIDVALIDITY <%= folder.uidvalidity %> · dernier UID <%= folder.last_uid %></div>
+  <% end %>
+</details>
+
+<table>
+  <% @messages.each do |message| %>
+    <tr class="<%= "unread" if message.unread_in_provider? %>">
+      <td><%= message.from_name.presence || message.from_address %></td>
+      <td><%= link_to message.subject.presence || "(sans objet)", message %> <span class="muted"><%= message.snippet&.truncate(80) %></span></td>
+      <td class="muted"><%= message.sent_at && l(message.sent_at, format: :short) %></td>
+    </tr>
+  <% end %>
+</table>
+
+<%= button_to "Déconnecter cette boîte", mailbox_path(@mailbox), method: :delete, form: { data: { turbo_confirm: "Déconnecter et effacer les messages importés ?" } } %>

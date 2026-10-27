@@ -1,0 +1,17 @@
+<% content_for :title, "Connecter une boîte IMAP · SG Mail" %>
+<h1>Connecter une boîte IMAP</h1>
+
+<%= form_with scope: :imap, url: mailboxes_path, class: "stacked" do |f| %>
+  <%= f.label :address, "Adresse email" %>
+  <%= f.email_field :address, required: true, value: params.dig(:imap, :address) %>
+  <%= f.label :host, "Serveur IMAP" %>
+  <%= f.text_field :host, required: true, placeholder: "mail.infomaniak.com", value: params.dig(:imap, :host) %>
+  <%= f.label :port, "Port" %>
+  <%= f.number_field :port, value: params.dig(:imap, :port) || 993 %>
+  <%= f.label :username, "Identifiant" %>
+  <%= f.text_field :username, required: true, value: params.dig(:imap, :username) %>
+  <%= f.label :password, "Mot de passe (ou mot de passe d'application)" %>
+  <%= f.password_field :password, required: true %>
+  <label><%= f.check_box :ssl, checked: true %> SSL/TLS</label>
+  <p><%= f.submit "Tester et connecter" %></p>
+<% end %>

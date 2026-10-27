@@ -1,0 +1,21 @@
+<% content_for :title, "Boîtes · SG Mail" %>
+<h1>Boîtes connectées</h1>
+
+<div class="actions">
+  <%= link_to "Connecter une boîte Google", google_oauth_path, data: { turbo: false } %>
+  ·
+  <%= link_to "Connecter une boîte IMAP", new_mailbox_path %>
+</div>
+
+<table>
+  <tr><th>Adresse</th><th>Type</th><th>Messages</th><th>Dernière synchro</th><th>Erreur</th></tr>
+  <% @mailboxes.each do |mailbox| %>
+    <tr>
+      <td><%= link_to mailbox.address, mailbox %></td>
+      <td><%= mailbox.provider %></td>
+      <td><%= mailbox.messages.count %></td>
+      <td><%= mailbox.last_synced_at ? l(mailbox.last_synced_at, format: :short) : "jamais" %></td>
+      <td class="muted"><%= mailbox.last_sync_error&.truncate(80) %></td>
+    </tr>
+  <% end %>
+</table>

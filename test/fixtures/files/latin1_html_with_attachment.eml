@@ -1,0 +1,36 @@
+From: =?ISO-8859-1?Q?Sylv=E9a?= <silvea@example.org>
+To: formations@semisto.org
+Cc: michael@example.org
+Subject: =?ISO-8859-1?Q?Inscription_=E0_la_formation?=
+Date: Mon, 26 Oct 2026 09:15:00 +0100
+Message-ID: <reply-1@example.org>
+In-Reply-To: <root-1@example.org>
+References: <root-1@example.org>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="mixed"
+
+--mixed
+Content-Type: multipart/alternative; boundary="alt"
+
+--alt
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+Bonjour, je voudrais m'inscrire =E0 la formation d'=E9t=E9.
+
+--alt
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+<p>Bonjour, je voudrais m'inscrire =E0 la formation d'=E9t=E9.</p>
+
+--alt--
+
+--mixed
+Content-Type: application/pdf; name="bulletin.pdf"
+Content-Disposition: attachment; filename="bulletin.pdf"
+Content-Transfer-Encoding: base64
+
+JVBERi0xLjQK
+
+--mixed--

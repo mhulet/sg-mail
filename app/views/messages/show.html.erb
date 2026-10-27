@@ -1,0 +1,21 @@
+<% content_for :title, "#{@message.subject} · SG Mail" %>
+<p><%= link_to "← #{@message.mailbox.address}", @message.mailbox %></p>
+<h1><%= @message.subject.presence || "(sans objet)" %></h1>
+
+<% @thread.each do |message| %>
+  <article>
+    <p>
+      <strong><%= message.from_name.presence || message.from_address %></strong>
+      <span class="muted">&lt;<%= message.from_address %>&gt; · <%= message.sent_at && l(message.sent_at, format: :long) %></span><br>
+      <span class="muted">À : <%= message.to_addresses.join(", ") %><%= " · Cc : #{message.cc_addresses.join(", ")}" if message.cc_addresses.any? %></span><br>
+      <span class="muted">Étiquettes/drapeaux : <%= message.labels.join(", ") %><%= " · pièces jointes" if message.has_attachments %></span>
+    </p>
+    <% if message.body_html.present? %>
+      <%# Bac à sable : pas de scripts, pas d'accès à la page SG Mail. %>
+      <iframe class="body" sandbox srcdoc="<%= message.body_html %>"></iframe>
+    <% else %>
+      <pre class="body"><%= message.body_text %></pre>
+    <% end %>
+  </article>
+  <hr>
+<% end %>
