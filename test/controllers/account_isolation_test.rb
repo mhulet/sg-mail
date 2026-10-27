@@ -8,10 +8,13 @@ class AccountIsolationTest < ActionDispatch::IntegrationTest
     with_account(@semisto) do
       @semisto_mailbox = Mailbox.create!(provider: "imap", address: "formations@semisto.org")
       @semisto_message = @semisto_mailbox.messages.create!(provider_uid: "1", subject: "Inscription formation")
+      @semisto_mailbox.grant!(users(:michael), "manage")
+      @semisto_mailbox.grant!(users(:mohammad), "send")
     end
     with_account(@silvea) do
       @silvea_mailbox = Mailbox.create!(provider: "imap", address: "contact@silvea.be")
       @silvea_message = @silvea_mailbox.messages.create!(provider_uid: "1", subject: "Devis confidentiel")
+      @silvea_mailbox.grant!(users(:lea), "manage")
     end
   end
 
@@ -45,7 +48,7 @@ class AccountIsolationTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "only admins disconnect a mailbox" do
+  test "only those who manage a mailbox disconnect it" do
     sign_in_as users(:mohammad)
     delete mailbox_path(@semisto_mailbox, account_id: @semisto.id)
     with_account(@semisto) { assert Mailbox.exists?(@semisto_mailbox.id) }

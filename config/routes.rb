@@ -8,6 +8,9 @@ Rails.application.routes.draw do
 
   resources :accounts, only: %i[index new create]
 
+  # Notifications Pub/Sub des boîtes Gmail (voir GmailWatch).
+  post "webhooks/gmail" => "webhooks/gmail#create"
+
   # Adresse de retour fixe, déclarée dans la console Google.
   get "auth/google_oauth2/callback" => "google_oauth#callback"
 
@@ -15,6 +18,7 @@ Rails.application.routes.draw do
   scope "/:account_id", constraints: { account_id: /\d+/ } do
     resources :mailboxes, only: %i[index show new create destroy] do
       post :sync, on: :member
+      resources :accesses, controller: "mailbox_accesses", only: %i[index update]
     end
     resources :messages, only: :show
     resources :memberships, only: %i[index update destroy]

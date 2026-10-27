@@ -1,5 +1,6 @@
 # Isolation des clients (décision D3), en deux verrous :
-# - acts_as_tenant filtre côté Rails les modèles qui appartiennent à un client (Mailbox, MailFolder, Message) ;
+# - acts_as_tenant filtre côté Rails les modèles qui appartiennent à un client (Mailbox, MailFolder, Message,
+#   MailboxAccess…) ;
 # - la Row Level Security de Postgres ne rend que les lignes du client fixé sur la connexion
 #   (sg_mail.account_id), même si l'application oublie un filtre. Sans client fixé, rien n'est visible.
 #

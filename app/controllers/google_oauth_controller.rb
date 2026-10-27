@@ -32,7 +32,12 @@ class GoogleOauthController < ApplicationController
       "access_token" => client.access_token,
       "expires_at" => client.expires_at&.to_i
     }
-    mailbox.save!
+    mailbox.connected_by ||= Current.user
+    Mailbox.transaction do
+      mailbox.save!
+      # Avoir ouvert la session Google de cette boîte vaut droit de gestion.
+      mailbox.grant!(Current.user, "manage")
+    end
 
     SyncMailboxJob.perform_later(mailbox)
     redirect_to mailbox, notice: "#{address} connectée. Import lancé."
