@@ -174,7 +174,7 @@ Sans MCP, la même `Integration` peut viser une API REST classique (webhook ou a
 
 | # | Question | Recommandation |
 |---|---|---|
-| D1 | Accepter l'écran « app non vérifiée » et le plafond de 100 utilisateurs Google pour le MVP ? | Oui |
+| D1 | Accepter l'écran « app non vérifiée » et le plafond de 100 utilisateurs Google pour le MVP ? | **Validé** (27/10) |
 | D2 | formations@semisto.org est-il un vrai compte Google (avec mot de passe) et non un Google Group ? Un groupe n'a pas de boîte à connecter. | À vérifier |
 | D3 | Isolation par `account_id` + RLS Postgres plutôt que des schémas séparés ? | Oui (option A) |
 | D4 | Laisser le drapeau « lu » de Gmail tel quel (SG Mail gère son propre lu par personne) ? Alternative : le marquer lu dès qu'une personne a lu. | Oui, ne pas y toucher |
