@@ -1,0 +1,14 @@
+pending:
+  account: semisto
+  invited_by: michael
+  email_address: nouvelle@example.com
+  role: member
+  token: pendingtoken1234567890abcdefghij
+
+expired:
+  account: semisto
+  invited_by: michael
+  email_address: ancienne@example.com
+  role: member
+  token: expiredtoken1234567890abcdefghi
+  created_at: <%= 15.days.ago.to_fs(:db) %>

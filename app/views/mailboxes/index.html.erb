@@ -1,5 +1,5 @@
-<% content_for :title, "Boîtes · SG Mail" %>
-<h1>Boîtes connectées</h1>
+<% content_for :title, "Boîtes · #{current_account.name} · SG Mail" %>
+<h1>Boîtes de <%= current_account.name %></h1>
 
 <div class="actions">
   <%= link_to "Connecter une boîte Google", google_oauth_path, data: { turbo: false } %>

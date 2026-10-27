@@ -1,0 +1,14 @@
+<% content_for :title, "Nouveau client · SG Mail" %>
+<h1>Nouveau client</h1>
+<p class="muted">Le premier admin reçoit une invitation par email. Tu ne deviens pas membre du client : ses emails restent privés.</p>
+
+<%= render "shared/errors", record: @account %>
+<%= render "shared/errors", record: @invitation if @invitation %>
+
+<%= form_with scope: :account, url: accounts_path, class: "stacked" do |f| %>
+  <%= f.label :name, "Nom du client" %>
+  <%= f.text_field :name, required: true, value: @account.name, placeholder: "Semisto" %>
+  <%= f.label :admin_email, "Email du premier admin" %>
+  <%= f.email_field :admin_email, required: true, value: @invitation&.email_address %>
+  <p><%= f.submit "Créer et inviter" %></p>
+<% end %>

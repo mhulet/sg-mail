@@ -61,6 +61,7 @@ class GmailSyncTest < ActiveSupport::TestCase
   setup do
     ENV["GOOGLE_CLIENT_ID"] ||= "test"
     ENV["GOOGLE_CLIENT_SECRET"] ||= "test"
+    ActsAsTenant.current_tenant = accounts(:semisto)
     @mailbox = Mailbox.create!(provider: "gmail", address: "formations@semisto.org",
       credentials: { "refresh_token" => "r", "access_token" => "a", "expires_at" => 1.hour.from_now.to_i })
     @gmail = FakeGmail.new

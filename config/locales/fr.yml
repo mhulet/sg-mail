@@ -1,0 +1,20 @@
+fr:
+  activerecord:
+    models:
+      account: Client
+      invitation: Invitation
+      membership: Membre
+      user: Utilisateur
+    attributes:
+      account:
+        name: Nom
+      invitation:
+        email_address: Adresse email
+        role: Rôle
+      membership:
+        role: Rôle
+      user:
+        email_address: Adresse email
+        name: Nom
+        password: Mot de passe
+        password_confirmation: Confirmation du mot de passe

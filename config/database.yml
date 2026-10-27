@@ -18,11 +18,20 @@ default: &default
   # For details on connection pooling, see Rails configuration guide
   # https://guides.rubyonrails.org/configuring.html#database-pooling
   max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  # structure.sql garde les règles de Row Level Security, que schema.rb ne sait pas décrire.
+  schema_format: sql
 
 
 development:
-  <<: *default
-  database: sg_mail_development
+  primary:
+    <<: *default
+    database: sg_mail_development
+  # Solid Queue a sa propre base, comme en production.
+  queue:
+    <<: *default
+    database: sg_mail_development_queue
+    schema_format: ruby
+    migrations_paths: db/queue_migrate
 
   # The specified database role being used to connect to PostgreSQL.
   # To create additional roles in PostgreSQL see `$ createuser --help`.
@@ -93,12 +102,15 @@ production:
   cache:
     <<: *primary_production
     database: sg_mail_production_cache
+    schema_format: ruby
     migrations_paths: db/cache_migrate
   queue:
     <<: *primary_production
     database: sg_mail_production_queue
+    schema_format: ruby
     migrations_paths: db/queue_migrate
   cable:
     <<: *primary_production
     database: sg_mail_production_cable
+    schema_format: ruby
     migrations_paths: db/cable_migrate

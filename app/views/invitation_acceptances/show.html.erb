@@ -1,0 +1,22 @@
+<% content_for :title, "Invitation · SG Mail" %>
+<h1>Rejoindre <%= @invitation.account.name %></h1>
+<p><%= @invitation.invited_by.display_name %> t'invite comme <%= Membership.role_label(@invitation.role).downcase %> sur SG Mail.</p>
+
+<% if authenticated? %>
+  <p>Tu es connecté·e en tant que <strong><%= Current.user.email_address %></strong>.</p>
+  <%= button_to "Rejoindre #{@invitation.account.name}", invitation_acceptance_path(@invitation.token) %>
+<% else %>
+  <%= render "shared/errors", record: @user %>
+  <%= form_with model: @user, url: invitation_acceptance_path(@invitation.token), method: :post, class: "stacked" do |f| %>
+    <%= f.label :email_address, "Adresse email" %>
+    <%= f.email_field :email_address, disabled: true %>
+    <%= f.label :name, "Ton nom" %>
+    <%= f.text_field :name, required: true, autofocus: true %>
+    <%= f.label :password, "Mot de passe" %>
+    <%= f.password_field :password, required: true, autocomplete: "new-password", maxlength: 72 %>
+    <%= f.label :password_confirmation, "Mot de passe, encore une fois" %>
+    <%= f.password_field :password_confirmation, required: true, autocomplete: "new-password", maxlength: 72 %>
+    <p><%= f.submit "Créer mon compte et rejoindre" %></p>
+  <% end %>
+  <p class="muted">Déjà un compte SG Mail ? <%= link_to "Connecte-toi", new_session_path %>, puis rouvre ce lien.</p>
+<% end %>

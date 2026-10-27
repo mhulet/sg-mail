@@ -16,6 +16,10 @@ module SgMail
     # Common ones are `templates`, `generators`, or `middleware`, for example.
     config.autoload_lib(ignore: %w[assets tasks])
 
+    config.i18n.default_locale = :fr
+    config.i18n.available_locales = %i[fr en]
+    config.time_zone = "Brussels"
+
     # Configuration for the application, engines, and railties goes here.
     #
     # These settings can be overridden in specific environments using the files

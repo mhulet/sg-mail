@@ -1,0 +1,54 @@
+<% content_for :title, "Membres · #{current_account.name} · SG Mail" %>
+<h1>Membres de <%= current_account.name %></h1>
+
+<table>
+  <tr><th>Nom</th><th>Email</th><th>Rôle</th><th></th></tr>
+  <% @memberships.each do |membership| %>
+    <tr>
+      <td><%= membership.user.display_name %><%= " (toi)" if membership == current_membership %></td>
+      <td><%= membership.user.email_address %></td>
+      <td>
+        <% if current_membership.admin? %>
+          <%= form_with model: membership, url: membership_path(membership), method: :patch, class: "inline" do |f| %>
+            <%= f.select :role, Membership::ROLES.map { |role| [ Membership.role_label(role), role ] }, {}, onchange: "this.form.requestSubmit()" %>
+          <% end %>
+        <% else %>
+          <%= membership.role_label %>
+        <% end %>
+      </td>
+      <td>
+        <% if membership == current_membership %>
+          <%= button_to "Quitter", membership_path(membership), method: :delete, class: "link", form: { data: { turbo_confirm: "Quitter « #{current_account.name} » ?" } } %>
+        <% elsif current_membership.admin? %>
+          <%= button_to "Retirer", membership_path(membership), method: :delete, class: "link", form: { data: { turbo_confirm: "Retirer #{membership.user.display_name} ?" } } %>
+        <% end %>
+      </td>
+    </tr>
+  <% end %>
+</table>
+
+<% if current_membership.admin? %>
+  <h2>Invitations en attente</h2>
+  <% if @invitations.any? %>
+    <table>
+      <tr><th>Email</th><th>Rôle</th><th>Lien (valable jusqu'au)</th><th></th></tr>
+      <% @invitations.each do |invitation| %>
+        <tr>
+          <td><%= invitation.email_address %></td>
+          <td><%= Membership.role_label(invitation.role) %></td>
+          <td><code class="link"><%= invitation_acceptance_url(invitation.token, account_id: nil) %></code> <span class="muted">(<%= l(invitation.expires_at.to_date) %>)</span></td>
+          <td><%= button_to "Annuler", invitation_path(invitation), method: :delete, class: "link" %></td>
+        </tr>
+      <% end %>
+    </table>
+  <% else %>
+    <p class="muted">Aucune.</p>
+  <% end %>
+
+  <h2>Inviter quelqu'un</h2>
+  <%= form_with model: @invitation, url: invitations_path, class: "actions" do |f| %>
+    <%= f.email_field :email_address, required: true, placeholder: "prenom@exemple.be" %>
+    <%= f.select :role, Membership::ROLES.map { |role| [ Membership.role_label(role), role ] }, selected: "member" %>
+    <%= f.submit "Inviter" %>
+  <% end %>
+<% end %>

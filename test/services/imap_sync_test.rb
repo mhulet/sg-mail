@@ -18,6 +18,7 @@ class ImapSyncTest < ActiveSupport::TestCase
       @imap.uid_store(uids, "+FLAGS", [ :Deleted ]) if uids.any?
       @imap.expunge
     end
+    ActsAsTenant.current_tenant = accounts(:semisto)
     @mailbox = Mailbox.create!(provider: "imap", address: "test@example.org", credentials: @credentials)
   end
 

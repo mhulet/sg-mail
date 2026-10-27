@@ -1,6 +1,8 @@
 class Mailbox < ApplicationRecord
   PROVIDERS = %w[gmail imap].freeze
 
+  acts_as_tenant :account
+
   serialize :credentials, coder: JSON
   encrypts :credentials
 
@@ -8,7 +10,7 @@ class Mailbox < ApplicationRecord
   has_many :messages, dependent: :delete_all
 
   validates :provider, inclusion: { in: PROVIDERS }
-  validates :address, presence: true, uniqueness: { scope: :provider }
+  validates :address, presence: true, uniqueness: { scope: %i[account_id provider] }
 
   def gmail? = provider == "gmail"
   def imap? = provider == "imap"

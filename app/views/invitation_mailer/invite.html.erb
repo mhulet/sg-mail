@@ -1,0 +1,7 @@
+<p>Bonjour,</p>
+<p>
+  <%= @invitation.invited_by.display_name %> t'invite à rejoindre <strong><%= @invitation.account.name %></strong> sur SG Mail,
+  le client mail de Super Génial.
+</p>
+<p><%= link_to "Accepter l'invitation", invitation_acceptance_url(@invitation.token) %></p>
+<p>Ce lien est valable jusqu'au <%= l(@invitation.expires_at.to_date, format: :long) %>.</p>
