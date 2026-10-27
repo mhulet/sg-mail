@@ -33,6 +33,12 @@ namespace :sg_mail do
     end
   end
 
+  desc "Écoute les boîtes IMAP en IDLE et lance une synchro à chaque nouveau message"
+  task idle: :environment do
+    Rails.logger = ActiveSupport::Logger.new($stdout) if Rails.env.development?
+    ImapIdleSupervisor.new.run
+  end
+
   desc "Synchronise toutes les boîtes en boucle (INTERVAL secondes, 60 par défaut)"
   task watch: :environment do
     interval = ENV.fetch("INTERVAL", 60).to_i

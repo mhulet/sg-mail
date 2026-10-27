@@ -1,4 +1,14 @@
 #!/usr/bin/env ruby
-# Puma + Solid Queue (processus séparé, supervisé par Puma) pour les synchros.
+# Puma + Solid Queue (processus séparé, supervisé par Puma) pour les synchros,
+# et l'écoute IMAP IDLE dans son propre processus (SKIP_IMAP_IDLE=1 pour s'en passer).
 ENV["SOLID_QUEUE_IN_PUMA"] ||= "1"
-exec "./bin/rails", "server", *ARGV
+
+idle = spawn("bin/rails", "sg_mail:idle") unless ENV["SKIP_IMAP_IDLE"]
+begin
+  system("./bin/rails", "server", *ARGV)
+ensure
+  if idle
+    Process.kill("TERM", idle) rescue nil
+    Process.wait(idle) rescue nil
+  end
+end

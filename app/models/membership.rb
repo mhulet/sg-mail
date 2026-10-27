@@ -9,6 +9,7 @@ class Membership < ApplicationRecord
   validate :keeps_an_admin, on: :update
 
   before_destroy :ensure_not_last_admin
+  after_destroy :revoke_mailbox_accesses
 
   scope :admins, -> { where(role: "admin") }
 
@@ -19,6 +20,10 @@ class Membership < ApplicationRecord
   def self.role_label(role) = role == "admin" ? "Admin" : "Membre"
 
   private
+
+  def revoke_mailbox_accesses
+    Tenancy.with_account(account) { MailboxAccess.where(user_id: user_id).delete_all }
+  end
 
   def last_admin?
     role_was == "admin" && account.memberships.admins.where.not(id: id).none?

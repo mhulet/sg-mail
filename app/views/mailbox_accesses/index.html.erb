@@ -1,0 +1,24 @@
+<% content_for :title, "Partage de #{@mailbox.address} · SG Mail" %>
+<p><%= link_to "← #{@mailbox.address}", @mailbox %></p>
+<h1>Qui a accès à <%= @mailbox.address %> ?</h1>
+<p class="muted">
+  Lecture : voir les emails. Envoi : répondre et écrire depuis cette adresse.
+  Gestion : en plus, choisir qui a accès et déconnecter la boîte.
+</p>
+
+<table>
+  <tr><th>Membre</th><th>Accès</th></tr>
+  <% @memberships.each do |membership| %>
+    <% access = @accesses[membership.user_id] %>
+    <tr>
+      <td><%= membership.user.display_name %> <span class="muted"><%= membership.user.email_address %></span></td>
+      <td>
+        <%= form_with url: mailbox_access_path(@mailbox, membership.user_id), method: :patch, class: "inline" do |f| %>
+          <%= f.select :level, [ [ "Aucun", "" ] ] + MailboxAccess::LABELS.map { |level, label| [ label, level ] },
+                { selected: access&.level.to_s }, onchange: "this.form.requestSubmit()", aria: { label: "Accès de #{membership.user.display_name}" } %>
+          <noscript><%= f.submit "Enregistrer" %></noscript>
+        <% end %>
+      </td>
+    </tr>
+  <% end %>
+</table>

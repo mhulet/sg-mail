@@ -36,12 +36,28 @@ pendant la phase 0 se retrouvent dans un client « Compte initial », dont ce co
     avec un rôle ordinaire.
   - Les règles RLS vivent dans `db/structure.sql` (pas de `schema.rb` pour la base principale).
 
+## Boîtes et partage
+
+- Une boîte connectée est **perso** : seule la personne qui l'a connectée la voit, même les admins du
+  client ne la voient pas. Elle peut la **partager** (page « Partage » de la boîte) avec d'autres membres :
+  lecture, lecture et envoi, ou gestion (partage et déconnexion). Il reste toujours au moins un gestionnaire.
+- Quitter un client retire ses accès aux boîtes de ce client.
+
 ## Synchros
 
 - Les synchros tournent dans Solid Queue, hors du processus web : `bin/dev` lance Puma avec son
   superviseur Solid Queue (`SOLID_QUEUE_IN_PUMA`). On peut aussi lancer les jobs à part avec `bin/jobs`.
-- `SyncAllMailboxesJob` relance toutes les boîtes toutes les 5 minutes (`config/recurring.yml`), en
-  attendant les notifications temps réel (Gmail Pub/Sub, IMAP IDLE) de l'étape 2.
+- **IMAP, temps réel** : `bin/idle` (ou `bin/rails sg_mail:idle`) garde une connexion IDLE par boîte IMAP
+  et lance une synchro dès qu'un message arrive ou disparaît. `bin/dev` le lance aussi
+  (`SKIP_IMAP_IDLE=1` pour s'en passer). En production, c'est le rôle `idle` de Kamal.
+- **Gmail, temps réel** : avec `GMAIL_PUBSUB_TOPIC` et `GMAIL_PUBSUB_TOKEN`, chaque synchro (re)lance
+  `users.watch` (valable 7 jours) et Google prévient `/webhooks/gmail?token=…` à chaque changement.
+  Réglage côté Google Cloud, une fois, quand l'app a une adresse publique :
+  1. activer l'API Pub/Sub et créer le sujet (ex. `projects/<projet>/topics/sg-mail-gmail`) ;
+  2. donner le rôle « Éditeur Pub/Sub » sur ce sujet à `gmail-api-push@system.gserviceaccount.com` ;
+  3. créer un abonnement **push** vers `https://<hôte>/webhooks/gmail?token=<GMAIL_PUBSUB_TOKEN>`.
+- `SyncAllMailboxesJob` relance toutes les boîtes toutes les 5 minutes (`config/recurring.yml`) :
+  filet de sécurité si une notification se perd, et seule synchro Gmail en local (pas d'adresse publique).
 - À la main : bouton « Synchroniser » sur une boîte, ou `bin/rails sg_mail:sync` / `sg_mail:watch`.
 - `GMAIL_IMPORT_LIMIT` / `IMAP_IMPORT_LIMIT` limitent l'import initial pendant les essais.
 

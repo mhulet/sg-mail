@@ -8,6 +8,11 @@ image: sg_mail
 servers:
   web:
     - 192.168.0.1
+  # Écoute IMAP IDLE (un fil par boîte IMAP), voir ImapIdleSupervisor.
+  idle:
+    hosts:
+      - 192.168.0.1
+    cmd: bin/idle
   # job:
   #   hosts:
   #     - 192.168.0.1

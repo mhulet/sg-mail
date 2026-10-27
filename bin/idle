@@ -1,0 +1,3 @@
+#!/usr/bin/env ruby
+# Processus d'écoute IMAP IDLE (un fil par boîte IMAP), à lancer à côté du serveur web.
+exec File.expand_path("rails", __dir__), "sg_mail:idle"

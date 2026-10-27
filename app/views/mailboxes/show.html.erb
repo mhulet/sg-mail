@@ -3,6 +3,7 @@
 
 <div class="actions">
   <%= button_to "Synchroniser", sync_mailbox_path(@mailbox) %>
+  <% if @access.can_manage? %><%= link_to "Partage (#{@mailbox.accesses.size})", mailbox_accesses_path(@mailbox) %><% end %>
   <span class="muted">
     <%= @mailbox.messages.count %> messages ·
     dernière synchro : <%= @mailbox.last_synced_at ? l(@mailbox.last_synced_at, format: :short) : "jamais" %>
@@ -25,6 +26,6 @@
   <% end %>
 </table>
 
-<% if current_membership.admin? %>
+<% if @access.can_manage? %>
   <%= button_to "Déconnecter cette boîte", mailbox_path(@mailbox), method: :delete, form: { data: { turbo_confirm: "Déconnecter et effacer les messages importés ?" } } %>
 <% end %>

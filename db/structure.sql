@@ -130,6 +130,42 @@ ALTER SEQUENCE public.mail_folders_id_seq OWNED BY public.mail_folders.id;
 
 
 --
+-- Name: mailbox_accesses; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.mailbox_accesses (
+    id bigint NOT NULL,
+    account_id bigint NOT NULL,
+    mailbox_id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    level character varying DEFAULT 'send'::character varying NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+ALTER TABLE ONLY public.mailbox_accesses FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: mailbox_accesses_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.mailbox_accesses_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: mailbox_accesses_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.mailbox_accesses_id_seq OWNED BY public.mailbox_accesses.id;
+
+
+--
 -- Name: mailboxes; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -143,7 +179,8 @@ CREATE TABLE public.mailboxes (
     last_sync_error text,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    account_id bigint NOT NULL
+    account_id bigint NOT NULL,
+    connected_by_id bigint
 );
 
 ALTER TABLE ONLY public.mailboxes FORCE ROW LEVEL SECURITY;
@@ -349,6 +386,13 @@ ALTER TABLE ONLY public.mail_folders ALTER COLUMN id SET DEFAULT nextval('public
 
 
 --
+-- Name: mailbox_accesses id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.mailbox_accesses ALTER COLUMN id SET DEFAULT nextval('public.mailbox_accesses_id_seq'::regclass);
+
+
+--
 -- Name: mailboxes id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -413,6 +457,14 @@ ALTER TABLE ONLY public.invitations
 
 ALTER TABLE ONLY public.mail_folders
     ADD CONSTRAINT mail_folders_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: mailbox_accesses mailbox_accesses_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.mailbox_accesses
+    ADD CONSTRAINT mailbox_accesses_pkey PRIMARY KEY (id);
 
 
 --
@@ -506,6 +558,34 @@ CREATE UNIQUE INDEX index_mail_folders_on_mailbox_id_and_name ON public.mail_fol
 
 
 --
+-- Name: index_mailbox_accesses_on_account_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_mailbox_accesses_on_account_id ON public.mailbox_accesses USING btree (account_id);
+
+
+--
+-- Name: index_mailbox_accesses_on_mailbox_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_mailbox_accesses_on_mailbox_id ON public.mailbox_accesses USING btree (mailbox_id);
+
+
+--
+-- Name: index_mailbox_accesses_on_mailbox_id_and_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_mailbox_accesses_on_mailbox_id_and_user_id ON public.mailbox_accesses USING btree (mailbox_id, user_id);
+
+
+--
+-- Name: index_mailbox_accesses_on_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_mailbox_accesses_on_user_id ON public.mailbox_accesses USING btree (user_id);
+
+
+--
 -- Name: index_mailboxes_on_account_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -517,6 +597,13 @@ CREATE INDEX index_mailboxes_on_account_id ON public.mailboxes USING btree (acco
 --
 
 CREATE UNIQUE INDEX index_mailboxes_on_account_id_and_provider_and_address ON public.mailboxes USING btree (account_id, provider, address);
+
+
+--
+-- Name: index_mailboxes_on_connected_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_mailboxes_on_connected_by_id ON public.mailboxes USING btree (connected_by_id);
 
 
 --
@@ -621,6 +708,14 @@ ALTER TABLE ONLY public.mail_folders
 
 
 --
+-- Name: mailbox_accesses fk_rails_706fcf23f6; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.mailbox_accesses
+    ADD CONSTRAINT fk_rails_706fcf23f6 FOREIGN KEY (account_id) REFERENCES public.accounts(id);
+
+
+--
 -- Name: sessions fk_rails_758836b4f0; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -653,11 +748,35 @@ ALTER TABLE ONLY public.messages
 
 
 --
+-- Name: mailboxes fk_rails_b75b98abc9; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.mailboxes
+    ADD CONSTRAINT fk_rails_b75b98abc9 FOREIGN KEY (connected_by_id) REFERENCES public.users(id);
+
+
+--
+-- Name: mailbox_accesses fk_rails_d78c2686fc; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.mailbox_accesses
+    ADD CONSTRAINT fk_rails_d78c2686fc FOREIGN KEY (mailbox_id) REFERENCES public.mailboxes(id);
+
+
+--
 -- Name: invitations fk_rails_d799c974a1; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.invitations
     ADD CONSTRAINT fk_rails_d799c974a1 FOREIGN KEY (invited_by_id) REFERENCES public.users(id);
+
+
+--
+-- Name: mailbox_accesses fk_rails_dce3c5a45c; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.mailbox_accesses
+    ADD CONSTRAINT fk_rails_dce3c5a45c FOREIGN KEY (user_id) REFERENCES public.users(id);
 
 
 --
@@ -692,6 +811,13 @@ CREATE POLICY account_isolation ON public.mail_folders USING (((current_setting(
 
 
 --
+-- Name: mailbox_accesses account_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY account_isolation ON public.mailbox_accesses USING (((current_setting('sg_mail.bypass_rls'::text, true) = 'on'::text) OR (account_id = (NULLIF(current_setting('sg_mail.account_id'::text, true), ''::text))::bigint))) WITH CHECK (((current_setting('sg_mail.bypass_rls'::text, true) = 'on'::text) OR (account_id = (NULLIF(current_setting('sg_mail.account_id'::text, true), ''::text))::bigint)));
+
+
+--
 -- Name: mailboxes account_isolation; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -712,6 +838,12 @@ CREATE POLICY account_isolation ON public.messages USING (((current_setting('sg_
 ALTER TABLE public.mail_folders ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: mailbox_accesses; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.mailbox_accesses ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: mailboxes; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -730,6 +862,7 @@ ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261027200000'),
 ('20261027194405'),
 ('20261027194404'),
 ('20261027194403'),

@@ -7,12 +7,17 @@
   <%= link_to "Connecter une boîte IMAP", new_mailbox_path %>
 </div>
 
+<% if @mailboxes.none? %>
+  <p class="muted">Aucune boîte pour l'instant. Une boîte perso n'est visible que par toi ; tu peux ensuite la partager.</p>
+<% end %>
+
 <table>
-  <tr><th>Adresse</th><th>Type</th><th>Messages</th><th>Dernière synchro</th><th>Erreur</th></tr>
+  <tr><th>Adresse</th><th>Type</th><th>Accès</th><th>Messages</th><th>Dernière synchro</th><th>Erreur</th></tr>
   <% @mailboxes.each do |mailbox| %>
     <tr>
       <td><%= link_to mailbox.address, mailbox %></td>
       <td><%= mailbox.provider %></td>
+      <td><%= mailbox.shared? ? "partagée (#{mailbox.accesses.size})" : "perso" %></td>
       <td><%= mailbox.messages.count %></td>
       <td><%= mailbox.last_synced_at ? l(mailbox.last_synced_at, format: :short) : "jamais" %></td>
       <td class="muted"><%= mailbox.last_sync_error&.truncate(80) %></td>
