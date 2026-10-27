@@ -5,18 +5,24 @@ class GmailSyncTest < ActiveSupport::TestCase
 
   # Imite le strict nécessaire de Google::Apis::GmailV1::GmailService.
   class FakeGmail
-    attr_accessor :messages, :history_id, :histories, :history_error, :quota_errors
+    attr_accessor :messages, :history_id, :histories, :history_error, :quota_errors, :list_quota_errors
 
     def initialize
       @messages = {}
       @history_id = 100
       @histories = []
       @quota_errors = 0
+      @list_quota_errors = 0
     end
 
     def get_user_profile(_user) = G::Profile.new(email_address: "formations@semisto.org", history_id: history_id)
 
     def list_user_messages(_user, max_results:, page_token: nil, **)
+      if list_quota_errors.positive?
+        self.list_quota_errors -= 1
+        raise Google::Apis::ClientError.new("PERMISSION_DENIED: Quota exceeded for quota metric 'Total Query Cost'", status_code: 403)
+      end
+
       ids = messages.keys
       offset = page_token.to_i
       page = ids[offset, 2]
@@ -101,6 +107,12 @@ class GmailSyncTest < ActiveSupport::TestCase
 
   test "quota dépassé : attend puis reprend" do
     @gmail.quota_errors = 2
+    sync
+    assert_equal 3, @mailbox.messages.count
+  end
+
+  test "quota dépassé sur la liste des messages : attend puis reprend" do
+    @gmail.list_quota_errors = 2
     sync
     assert_equal 3, @mailbox.messages.count
   end

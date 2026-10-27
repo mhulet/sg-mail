@@ -4,9 +4,9 @@
 # puis history.list à partir du dernier historyId connu.
 class GmailSync
   BATCH_SIZE = 25
-  # messages.get coûte 5 unités et Google limite à 15 000 unités par minute et par utilisateur.
-  # On vise 2 000 messages par minute : un lot de 25 toutes les 0,75 s au plus vite.
-  MIN_BATCH_INTERVAL = 0.75
+  # messages.get coûte 5 unités. Le plafond observé est de 6 000 unités par minute et par
+  # utilisateur (totalQueryCostPerMinutePerUser) : on vise 4 000, soit un lot de 25 toutes les 1,9 s.
+  MIN_BATCH_INTERVAL = 1.9
   MAX_ATTEMPTS = 6
 
   def initialize(mailbox, import_limit: ENV["GMAIL_IMPORT_LIMIT"].presence&.to_i)
@@ -43,12 +43,12 @@ class GmailSync
 
   def full_import
     # On note l'historyId avant l'import pour ne rien perdre de ce qui arrive pendant.
-    save_state("pending_history_id" => service.get_user_profile("me").history_id) if state["pending_history_id"].blank?
+    save_state("pending_history_id" => with_quota_retry { service.get_user_profile("me") }.history_id) if state["pending_history_id"].blank?
 
     page_token = state["full_page_token"]
     imported = state["full_imported"].to_i
     loop do
-      page = service.list_user_messages("me", max_results: 500, page_token: page_token, include_spam_trash: false)
+      page = with_quota_retry { service.list_user_messages("me", max_results: 500, page_token: page_token, include_spam_trash: false) }
       ids = Array(page.messages).map(&:id)
       ids = ids.first(@import_limit - imported) if @import_limit
       fetch_and_store(ids)
@@ -66,12 +66,14 @@ class GmailSync
     page_token = nil
     latest_history_id = state["history_id"]
     loop do
-      response = service.list_user_histories(
-        "me",
-        start_history_id: state["history_id"],
-        history_types: %w[messageAdded messageDeleted labelAdded labelRemoved],
-        page_token: page_token
-      )
+      response = with_quota_retry do
+        service.list_user_histories(
+          "me",
+          start_history_id: state["history_id"],
+          history_types: %w[messageAdded messageDeleted labelAdded labelRemoved],
+          page_token: page_token
+        )
+      end
       Array(response.history).each { |history| apply(history) }
       latest_history_id = response.history_id
       page_token = response.next_page_token
@@ -133,9 +135,22 @@ class GmailSync
     ids.index_with(e) # tout le lot a été refusé : on le retente en entier
   end
 
-  # Le quota se compte à la minute : on attend jusqu'à une minute avant de réessayer.
+  def with_quota_retry
+    attempt = 0
+    begin
+      yield
+    rescue Google::Apis::Error => e
+      attempt += 1
+      raise unless rate_limited?(e) && attempt < MAX_ATTEMPTS
+
+      backoff(attempt)
+      retry
+    end
+  end
+
+  # Le quota se compte par fenêtre d'une minute : on attend 15 s, 30 s, puis une minute.
   def backoff(attempt)
-    sleep([ 2**(attempt + 1), 60 ].min)
+    sleep([ 15 * 2**(attempt - 1), 60 ].min)
   end
 
   def pace
