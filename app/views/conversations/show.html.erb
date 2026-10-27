@@ -1,0 +1,43 @@
+<% content_for :title, "#{@conversation.title} · SG Mail" %>
+<p>
+  <%= link_to "← Réception", conversations_path %> ·
+  <%= link_to @conversation.mailbox.address, conversations_path(mailbox_id: @conversation.mailbox_id) %>
+</p>
+<h1><%= @conversation.title %></h1>
+<div class="actions">
+  <%= button_to "Marquer comme non lu", unread_conversation_path(@conversation), class: "link" %>
+</div>
+
+<% @messages.each do |message| %>
+  <article id="<%= dom_id(message) %>" class="card">
+    <p>
+      <strong><%= message.from_display %></strong>
+      <span class="muted">&lt;<%= message.from_address %>&gt; · <%= message.sent_at && l(message.sent_at, format: :long) %></span><br>
+      <span class="muted">À : <%= message.to_addresses.join(", ") %><%= " · Cc : #{message.cc_addresses.join(", ")}" if message.cc_addresses.any? %></span>
+    </p>
+
+    <% if message.body_html.present? %>
+      <%# Bac à sable : pas de scripts, pas d'accès à la page SG Mail. %>
+      <iframe class="body" sandbox srcdoc="<%= message.body_html %>" title="Contenu du message"></iframe>
+    <% else %>
+      <pre class="body"><%= message.body_text %></pre>
+    <% end %>
+
+    <% if message.attachments.any? %>
+      <ul class="attachments">
+        <% message.attachments.each do |attachment| %>
+          <li>📎 <%= link_to attachment["filename"], message_attachment_path(message, attachment["index"]), data: { turbo: false } %>
+            <span class="muted"><%= number_to_human_size(attachment["size"]) %></span></li>
+        <% end %>
+      </ul>
+    <% elsif message.has_attachments %>
+      <%= button_to "Afficher les pièces jointes", message_attachments_path(message), class: "link" %>
+    <% end %>
+
+    <% readers, others = @people.partition { |person| message.read_by?(person) } %>
+    <p class="muted read-by">
+      <%= readers.any? ? "Lu par #{readers.map(&:display_name).to_sentence}" : "Lu par personne" %>
+      <%= "· pas encore par #{others.map(&:display_name).to_sentence}" if others.any? %>
+    </p>
+  </article>
+<% end %>

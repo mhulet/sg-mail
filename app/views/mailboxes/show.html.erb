@@ -2,6 +2,7 @@
 <h1><%= @mailbox.address %> <small><%= @mailbox.provider %></small></h1>
 
 <div class="actions">
+  <%= link_to "Fils", conversations_path(mailbox_id: @mailbox.id) %>
   <%= button_to "Synchroniser", sync_mailbox_path(@mailbox) %>
   <% if @access.can_manage? %><%= link_to "Partage (#{@mailbox.accesses.size})", mailbox_accesses_path(@mailbox) %><% end %>
   <span class="muted">
@@ -16,15 +17,7 @@
   <% end %>
 </details>
 
-<table>
-  <% @messages.each do |message| %>
-    <tr class="<%= "unread" if message.unread_in_provider? %>">
-      <td><%= message.from_name.presence || message.from_address %></td>
-      <td><%= link_to message.subject.presence || "(sans objet)", message %> <span class="muted"><%= message.snippet&.truncate(80) %></span></td>
-      <td class="muted"><%= message.sent_at && l(message.sent_at, format: :short) %></td>
-    </tr>
-  <% end %>
-</table>
+<p><%= link_to "Voir les fils de cette boîte", conversations_path(mailbox_id: @mailbox.id) %></p>
 
 <% if @access.can_manage? %>
   <%= button_to "Déconnecter cette boîte", mailbox_path(@mailbox), method: :delete, form: { data: { turbo_confirm: "Déconnecter et effacer les messages importés ?" } } %>

@@ -14,6 +14,9 @@ class MessageParserTest < ActiveSupport::TestCase
     assert_includes attrs[:body_text], "formation d'été"
     assert_includes attrs[:body_html], "<p>Bonjour"
     assert attrs[:has_attachments]
+    assert_equal 1, attrs[:attachments].size
+    assert_equal 0, attrs[:attachments].first["index"]
+    assert attrs[:attachments].first["filename"].present?
     assert_equal Time.utc(2026, 10, 26, 8, 15), attrs[:sent_at]
     assert attrs[:body_text].valid_encoding?
   end

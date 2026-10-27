@@ -9,7 +9,6 @@ class MailboxesController < ApplicationController
   end
 
   def show
-    @messages = @mailbox.messages.recent.limit(100)
   end
 
   def new
@@ -41,7 +40,7 @@ class MailboxesController < ApplicationController
 
   def destroy
     @mailbox.destroy!
-    redirect_to account_root_path, notice: "Boîte déconnectée."
+    redirect_to mailboxes_path, notice: "Boîte déconnectée."
   end
 
   private

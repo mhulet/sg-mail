@@ -17,7 +17,7 @@ class MailboxAccessesTest < ActionDispatch::IntegrationTest
 
   test "a personal mailbox stays private, even from the account's admins" do
     sign_in_as users(:michael)
-    get account_root_path(account_id: @semisto.id)
+    get mailboxes_path(account_id: @semisto.id)
     assert_select "a", "formations@semisto.org"
     assert_select "a", { text: "mohammad@semisto.org", count: 0 }
 

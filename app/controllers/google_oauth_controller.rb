@@ -2,7 +2,7 @@ class GoogleOauthController < ApplicationController
   include AccountScoped
 
   rescue_from KeyError do
-    redirect_to account_root_path, alert: "GOOGLE_CLIENT_ID et GOOGLE_CLIENT_SECRET manquent dans .env."
+    redirect_to mailboxes_path, alert: "GOOGLE_CLIENT_ID et GOOGLE_CLIENT_SECRET manquent dans .env."
   end
 
   def new
@@ -18,7 +18,7 @@ class GoogleOauthController < ApplicationController
 
   def callback
     if params[:error].present? || params[:state] != session.delete(:google_oauth_state)
-      return redirect_to account_root_path, alert: "Connexion Google annulée ou invalide (#{params[:error]})."
+      return redirect_to mailboxes_path, alert: "Connexion Google annulée ou invalide (#{params[:error]})."
     end
 
     client = oauth_client

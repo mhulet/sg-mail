@@ -9,6 +9,7 @@ class Mailbox < ApplicationRecord
   belongs_to :connected_by, class_name: "User", optional: true
   has_many :mail_folders, dependent: :destroy
   has_many :messages, dependent: :delete_all
+  has_many :conversations, dependent: :delete_all
   has_many :accesses, class_name: "MailboxAccess", dependent: :delete_all
   has_many :users_with_access, through: :accesses, source: :user
 
@@ -34,6 +35,7 @@ class Mailbox < ApplicationRecord
 
   def sync!
     synchronizer.call
+    Conversation.rebuild_for(self)
     GmailWatch.new(self).renew_if_needed if gmail?
     update!(last_synced_at: Time.current, last_sync_error: nil)
   rescue => e
