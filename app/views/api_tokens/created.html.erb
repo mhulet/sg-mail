@@ -1,0 +1,5 @@
+<% content_for :title, "Jeton créé · SG Mail" %>
+<h1>Jeton « <%= @api_token.name %> » créé</h1>
+<p>Copie-le maintenant : il ne sera plus jamais affiché.</p>
+<pre class="card"><%= @api_token.token %></pre>
+<p><%= link_to "← Mes jetons", api_tokens_path %></p>

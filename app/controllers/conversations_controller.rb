@@ -50,10 +50,7 @@ class ConversationsController < ApplicationController
     scope = Conversation.accessible_by(Current.user).with_unread_for(Current.user).includes(:mailbox, :assignee)
     scope = @mailbox ? scope.where(mailbox: @mailbox) : scope.inbox
     scope = scope.assigned_to(Current.user) if params[:mine] == "1"
-    scope = scope.where(<<~SQL.squish, Current.user.id) if params[:unread] == "1"
-      EXISTS (SELECT 1 FROM messages WHERE messages.conversation_id = conversations.id
-        AND NOT EXISTS (SELECT 1 FROM readings WHERE readings.message_id = messages.id AND readings.user_id = ?))
-    SQL
+    scope = scope.unread_for(Current.user) if params[:unread] == "1"
     scope
   end
 

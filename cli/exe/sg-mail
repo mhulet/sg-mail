@@ -1,0 +1,11 @@
+#!/usr/bin/env ruby
+require_relative "../lib/sg_mail"
+
+Encoding.default_external = Encoding::UTF_8
+
+begin
+  SgMail::Cli.start(ARGV)
+rescue SgMail::Client::Error => error
+  warn error.message
+  exit 1
+end
