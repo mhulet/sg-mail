@@ -25,4 +25,6 @@
   <% end %>
 </table>
 
-<%= button_to "Déconnecter cette boîte", mailbox_path(@mailbox), method: :delete, form: { data: { turbo_confirm: "Déconnecter et effacer les messages importés ?" } } %>
+<% if current_membership.admin? %>
+  <%= button_to "Déconnecter cette boîte", mailbox_path(@mailbox), method: :delete, form: { data: { turbo_confirm: "Déconnecter et effacer les messages importés ?" } } %>
+<% end %>

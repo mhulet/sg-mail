@@ -1,0 +1,14 @@
+michael_semisto:
+  account: semisto
+  user: michael
+  role: admin
+
+mohammad_semisto:
+  account: semisto
+  user: mohammad
+  role: member
+
+lea_silvea:
+  account: silvea
+  user: lea
+  role: admin

@@ -1,2 +1,4 @@
 #!/usr/bin/env ruby
+# Puma + Solid Queue (processus séparé, supervisé par Puma) pour les synchros.
+ENV["SOLID_QUEUE_IN_PUMA"] ||= "1"
 exec "./bin/rails", "server", *ARGV

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
   <head>
     <title><%= content_for(:title) || "SG Mail" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -24,7 +24,23 @@
   </head>
 
   <body>
-    <header><%= link_to "SG Mail", root_path %> <small>phase 0 · preuve technique</small></header>
+    <header>
+      <%= link_to "SG Mail", Current.account ? account_root_path : root_path %>
+      <% if Current.account %>
+        <span><%= Current.account.name %></span>
+        <nav>
+          <%= link_to "Boîtes", account_root_path %>
+          <%= link_to "Membres", memberships_path %>
+        </nav>
+      <% end %>
+      <% if authenticated? %>
+        <nav class="user">
+          <% if Current.user.accounts.many? || Current.user.staff? %><%= link_to "Clients", accounts_path(account_id: nil) %><% end %>
+          <span class="muted"><%= Current.user.display_name %></span>
+          <%= button_to "Déconnexion", session_path(account_id: nil), method: :delete, class: "link" %>
+        </nav>
+      <% end %>
+    </header>
     <% if notice %><p class="flash notice"><%= notice %></p><% end %>
     <% if alert %><p class="flash alert"><%= alert %></p><% end %>
     <main><%= yield %></main>

@@ -1,4 +1,6 @@
 class MailboxesController < ApplicationController
+  include AccountScoped
+  before_action :require_admin, only: :destroy
   def index
     @mailboxes = Mailbox.order(:address)
   end
@@ -35,6 +37,6 @@ class MailboxesController < ApplicationController
 
   def destroy
     Mailbox.find(params[:id]).destroy!
-    redirect_to mailboxes_path, notice: "Boîte déconnectée."
+    redirect_to account_root_path, notice: "Boîte déconnectée."
   end
 end

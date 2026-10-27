@@ -1,10 +1,13 @@
 class GoogleOauthController < ApplicationController
+  include AccountScoped
+
   rescue_from KeyError do
-    redirect_to mailboxes_path, alert: "GOOGLE_CLIENT_ID et GOOGLE_CLIENT_SECRET manquent dans .env."
+    redirect_to account_root_path, alert: "GOOGLE_CLIENT_ID et GOOGLE_CLIENT_SECRET manquent dans .env."
   end
 
   def new
     session[:google_oauth_state] = SecureRandom.hex(16)
+    session[:google_oauth_account_id] = current_account.id
     redirect_to oauth_client.authorization_uri(
       access_type: "offline",
       prompt: "consent", # pour recevoir un refresh_token à chaque connexion
@@ -15,7 +18,7 @@ class GoogleOauthController < ApplicationController
 
   def callback
     if params[:error].present? || params[:state] != session.delete(:google_oauth_state)
-      return redirect_to mailboxes_path, alert: "Connexion Google annulée ou invalide (#{params[:error]})."
+      return redirect_to account_root_path, alert: "Connexion Google annulée ou invalide (#{params[:error]})."
     end
 
     client = oauth_client
@@ -36,6 +39,9 @@ class GoogleOauthController < ApplicationController
   end
 
   private
+
+  # Google rappelle une adresse fixe (déclarée dans la console Google) : le client vient de la session.
+  def requested_account_id = params[:account_id] || session[:google_oauth_account_id]
 
   def oauth_client
     GoogleOauth.client(redirect_uri: "#{request.base_url}/auth/google_oauth2/callback")
