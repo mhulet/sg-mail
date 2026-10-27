@@ -78,3 +78,6 @@ gem "acts_as_tenant"
 
 # Interface en français (messages d'erreur, dates)
 gem "rails-i18n"
+
+# Serveur MCP (/mcp) pour Claude
+gem "mcp", "~> 1.8"

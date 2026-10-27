@@ -34,9 +34,30 @@ Rails.application.routes.draw do
     end
     resources :memberships, only: %i[index update destroy]
     resources :invitations, only: %i[create destroy]
+    resources :api_tokens, only: %i[index create destroy]
     get "auth/google_oauth2" => "google_oauth#new", as: :google_oauth
     get "/" => "conversations#index", as: :account_root
   end
+
+  # API JSON, utilisée par le CLI et le MCP (jeton personnel ; le client est celui du jeton).
+  namespace :api do
+    namespace :v1 do
+      resource :me, only: :show, controller: "me"
+      resources :conversations, only: %i[index show update] do
+        post :read, on: :member
+        post :unread, on: :member
+        resources :notes, only: :create
+      end
+      resources :tasks, only: %i[index show create update]
+      resources :drafts, only: %i[index show create update] do
+        post :deliver, on: :member
+      end
+    end
+  end
+
+  # Serveur MCP pour Claude (même jeton que l'API).
+  post "mcp" => "mcp#create", as: :mcp
+  match "mcp" => "mcp#unsupported", via: %i[get delete]
 
   root "accounts#index"
 end

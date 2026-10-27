@@ -23,6 +23,13 @@ class Conversation < ApplicationRecord
     SQL
   }
 
+  scope :unread_for, ->(user) {
+    where(<<~SQL.squish, user.id)
+      EXISTS (SELECT 1 FROM messages WHERE messages.conversation_id = conversations.id
+        AND NOT EXISTS (SELECT 1 FROM readings WHERE readings.message_id = messages.id AND readings.user_id = ?))
+    SQL
+  }
+
   # Recalcule les fils d'une boîte après une synchro : un INSERT … ON CONFLICT et deux requêtes,
   # quel que soit le nombre de messages.
   def self.rebuild_for(mailbox)

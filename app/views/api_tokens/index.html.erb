@@ -1,0 +1,29 @@
+<% content_for :title, "Jetons d'API · SG Mail" %>
+<h1>Jetons d'API</h1>
+<p class="muted">Un jeton agit en ton nom dans <%= current_account.name %>, avec tes droits : pour le CLI <code>sg-mail</code>,
+  un script ou Claude Code. Garde-le comme un mot de passe.</p>
+
+<%= form_with model: @api_token, url: api_tokens_path, class: "inline" do |f| %>
+  <%= f.text_field :name, placeholder: "Nom (ex. MacBook, Claude Code)", aria: { label: "Nom du jeton" } %>
+  <%= f.submit "Créer un jeton" %>
+<% end %>
+
+<% if @api_tokens.any? %>
+  <table>
+    <% @api_tokens.each do |api_token| %>
+      <tr>
+        <td><%= api_token.name %></td>
+        <td class="muted">créé le <%= l(api_token.created_at, format: :short) %></td>
+        <td class="muted"><%= api_token.last_used_at ? "utilisé le #{l(api_token.last_used_at, format: :short)}" : "jamais utilisé" %></td>
+        <td><%= button_to "Révoquer", api_token_path(api_token), method: :delete, class: "link",
+              form: { data: { turbo_confirm: "Révoquer « #{api_token.name} » ? Ce qui l'utilise cessera de fonctionner." } } %></td>
+      </tr>
+    <% end %>
+  </table>
+<% end %>
+
+<h2>Utilisation</h2>
+<pre>export SG_MAIL_URL=<%= request.base_url %>
+export SG_MAIL_TOKEN=sgm_…
+sg-mail inbox</pre>
+<p class="muted">Dans Claude Code : <code>claude mcp add --transport http sg-mail <%= request.base_url %>/mcp --header "Authorization: Bearer sgm_…"</code></p>

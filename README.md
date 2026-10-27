@@ -72,6 +72,36 @@ et le corps des messages des boîtes accessibles, et rend les fils. Sans accents
 (« inscri ete » trouve « Inscription formation d'été »). Filtres : `de:anne`, `a:formations`, `avec:pj`.
 Index plein texte Postgres (`messages.search_vector`, colonne calculée, extension `unaccent`).
 
+## API, MCP et CLI
+
+Tout passe par `MailActions` : mêmes droits que dans l'interface, et un brouillon n'est jamais envoyé
+sans action explicite.
+
+- **Jetons personnels** : menu « Jetons d'API » (un jeton = une personne dans un client). Affiché une
+  seule fois ; seule son empreinte SHA-256 est gardée. Il cesse de fonctionner si la personne quitte le client.
+- **API JSON** `/api/v1` (en-tête `Authorization: Bearer sgm_…`) : `me`, `conversations` (`q`, `mailbox_id`,
+  `unread`, `mine`, `before`), `conversations/:id` (+ `read`, `unread`, `notes`, PATCH `assignee_id`),
+  `tasks`, `drafts` (+ `deliver` pour envoyer).
+- **MCP** `/mcp` (HTTP « streamable », sans état) : `whoami`, `search_conversations`, `get_conversation`,
+  `mark_read`, `mark_unread`, `assign`, `add_note`, `list_tasks`, `create_task`, `update_task`,
+  `list_drafts`, `create_draft`, `update_draft`, `send_draft`. Dans Claude Code :
+
+  ```sh
+  claude mcp add --transport http sg-mail https://<hôte>/mcp --header "Authorization: Bearer sgm_…"
+  ```
+
+- **CLI** `sg-mail` (dossier `cli/`, gem Ruby avec Thor) :
+
+  ```sh
+  cd cli && gem build sg-mail.gemspec && gem install sg-mail-*.gem
+  sg-mail login https://<hôte> sgm_…
+  sg-mail inbox --unread          # ou : search, show 12 --read, tasks, task-add, note, assign
+  sg-mail reply 345 "Merci !"     # crée un brouillon, jamais envoyé
+  sg-mail send 7                  # demande confirmation
+  ```
+
+  `--json` donne la réponse brute de l'API, pratique pour Claude Code.
+
 ## Synchros
 
 - Les synchros tournent dans Solid Queue, hors du processus web : `bin/dev` lance Puma avec son
