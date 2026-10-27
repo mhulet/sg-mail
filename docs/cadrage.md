@@ -125,7 +125,7 @@ Points clés :
 
 ### 7.2 Agir sur MySemisto depuis un fil
 
-**Chemin 1, sans aucun développement (disponible dès que le MCP SG Mail existe) :** dans Claude, connecter à la fois le MCP SG Mail et le MCP MySemisto. « Lis le dernier mail de formation@ et crée la tâche correspondante dans le projet Academy » : Claude fait le pont entre les deux outils.
+**Chemin 1, sans aucun développement (disponible dès que le MCP SG Mail existe) :** dans Claude, connecter à la fois le MCP SG Mail et le MCP MySemisto. « Lis le dernier mail de formations@ et crée la tâche correspondante dans le projet Academy » : Claude fait le pont entre les deux outils.
 
 **Chemin 2, dans l'interface SG Mail (phase 2) :** un panneau « Assistant » dans chaque fil. SG Mail appelle l'API Claude en lui passant le fil et les serveurs MCP que l'utilisateur a branchés (l'API Anthropic accepte directement des serveurs MCP distants avec leur jeton : SG Mail n'a pas à réimplémenter un client MCP complet). L'utilisateur branche MySemisto une fois via OAuth, le jeton est stocké chiffré dans `Integration`. À noter : les appels à l'API Claude sont payants pour Super Génial.
 
@@ -144,7 +144,7 @@ Sans MCP, la même `Integration` peut viser une API REST classique (webhook ou a
 
 ## 9. MVP proposé
 
-**Phase 0, preuve technique (1 à 2 semaines).** Projet Google, connexion d'une boîte Gmail en OAuth et d'une boîte IMAP, import et synchro d'une boîte réelle (formation@semisto.org).
+**Phase 0, preuve technique (1 à 2 semaines).** Projet Google, connexion d'une boîte Gmail en OAuth et d'une boîte IMAP, import et synchro d'une boîte réelle (formations@semisto.org).
 
 **Phase 1, MVP utilisable par Semisto.**
 1. Clients, utilisateurs, invitations, rôles.
@@ -175,7 +175,7 @@ Sans MCP, la même `Integration` peut viser une API REST classique (webhook ou a
 | # | Question | Recommandation |
 |---|---|---|
 | D1 | Accepter l'écran « app non vérifiée » et le plafond de 100 utilisateurs Google pour le MVP ? | Oui |
-| D2 | formation@semisto.org est-il un vrai compte Google (avec mot de passe) et non un Google Group ? Un groupe n'a pas de boîte à connecter. | À vérifier |
+| D2 | formations@semisto.org est-il un vrai compte Google (avec mot de passe) et non un Google Group ? Un groupe n'a pas de boîte à connecter. | À vérifier |
 | D3 | Isolation par `account_id` + RLS Postgres plutôt que des schémas séparés ? | Oui (option A) |
 | D4 | Laisser le drapeau « lu » de Gmail tel quel (SG Mail gère son propre lu par personne) ? Alternative : le marquer lu dès qu'une personne a lu. | Oui, ne pas y toucher |
 | D5 | Stocker les corps des emails chez SG Mail (indispensable pour la recherche et le MCP) ? | Oui |
