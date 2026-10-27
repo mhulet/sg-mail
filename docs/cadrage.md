@@ -1,6 +1,6 @@
 # SG Mail : note de cadrage
 
-*Version 0.1, 27 octobre 2026. Document de travail, rien n'est encore codé.*
+*Version 0.2, 27 octobre 2026. Décisions D1 à D8 validées par Michael. Rien n'est encore codé.*
 
 ## 1. En une phrase
 
@@ -17,7 +17,7 @@ Inspiration : Hey.com pour l'ergonomie, Front/Missive pour le travail à plusieu
 | Statut de lu par utilisateur | Oui | C'est une donnée SG Mail, indépendante du drapeau « lu » de Google/IMAP. |
 | Emails transformés en tâches | Oui | Simple, côté SG Mail. |
 | MCP + CLI + API | Oui | Une API unique, le MCP et le CLI s'appuient dessus. |
-| Brancher le MCP de MySemisto dans SG Mail | Oui | Deux chemins, dont un qui marche **dès le premier jour sans dev** (voir §7). |
+| Agir sur MySemisto depuis un email | Oui | Via Claude, avec les MCP SG Mail et MySemisto branchés côte à côte, sans dev spécifique (voir §7). |
 | Confidentialité multi-client | Oui | Isolation par client + chiffrement des secrets. Choix du mode d'isolation à trancher (§4). |
 
 ## 3. Connexion des boîtes Google
@@ -74,7 +74,7 @@ Un **client** (tenant) = une organisation : Semisto, Silvéa, Super Génial… U
 ### 4.2 Mesures de confidentialité, quel que soit le choix
 
 - Jetons OAuth et mots de passe IMAP chiffrés (Active Record Encryption), jamais exposés par l'API.
-- Hébergement en Europe (Infomaniak ou Hetzner), disque chiffré, sauvegardes chiffrées.
+- Hébergement en Europe (nouveau serveur cloud Infomaniak), disque chiffré, sauvegardes chiffrées.
 - Journal d'accès : qui a ouvert quel email, quand (c'est aussi ce qui alimente « lu par »).
 - Super Génial est sous-traitant au sens du RGPD : un court accord de traitement par client.
 - Suppression complète d'un client ou d'une boîte à la demande.
@@ -94,8 +94,7 @@ Account (client)                       ex. Semisto
  │   ├─ Note (user, body)                          ← note interne, invisible du correspondant
  │   └─ Assignment (user)                          ← qui s'en occupe
  ├─ Task (title, status, due_on, assignee, conversation, message, external_ref)
- ├─ Contact (email, name, screening: pending|accepted|blocked)
- └─ Integration (user, kind: mcp|api, url, jetons chiffrés)   ← MySemisto, etc.
+ └─ Contact (email, name, screening: pending|accepted|blocked)
 
 User (global, hors client) : email, nom, passkey/mot de passe, jetons API
 ```
@@ -105,7 +104,7 @@ Points clés :
 - **Le lu est une ligne `Reading` par utilisateur et par message.** L'interface affiche « Lu par Michael, pas encore par Mohammad ». Le drapeau « lu » de Gmail est une autre information, gérée selon la décision D4.
 - La boîte partagée appartient au client, pas à une personne : le jeton est attaché à la `Mailbox`. Une personne la connecte une fois, les autres y accèdent via `MailboxAccess`.
 - `ConversationState` porte les fonctions façon Hey, **par utilisateur** : chacun classe sa vue sans gêner l'autre.
-- `Task.external_ref` garde le lien vers la tâche créée dans MySemisto, pour l'afficher dans le fil.
+- `Task.external_ref` garde le lien vers la tâche créée dans MySemisto (renseigné par Claude via le MCP), pour l'afficher dans le fil.
 
 ## 6. Synchronisation et envoi
 
@@ -125,11 +124,10 @@ Points clés :
 
 ### 7.2 Agir sur MySemisto depuis un fil
 
-**Chemin 1, sans aucun développement (disponible dès que le MCP SG Mail existe) :** dans Claude, connecter à la fois le MCP SG Mail et le MCP MySemisto. « Lis le dernier mail de formations@ et crée la tâche correspondante dans le projet Academy » : Claude fait le pont entre les deux outils.
+**Chemin retenu (D8), sans aucun développement dès que le MCP SG Mail existe :** dans Claude, connecter à la fois le MCP SG Mail et le MCP MySemisto. « Lis le dernier mail de formations@ et crée la tâche correspondante dans le projet Academy » : Claude fait le pont entre les deux outils.
 
-**Chemin 2, dans l'interface SG Mail (phase 2) :** un panneau « Assistant » dans chaque fil. SG Mail appelle l'API Claude en lui passant le fil et les serveurs MCP que l'utilisateur a branchés (l'API Anthropic accepte directement des serveurs MCP distants avec leur jeton : SG Mail n'a pas à réimplémenter un client MCP complet). L'utilisateur branche MySemisto une fois via OAuth, le jeton est stocké chiffré dans `Integration`. À noter : les appels à l'API Claude sont payants pour Super Génial.
+Pas d'assistant Claude intégré à SG Mail : ce n'est pas prévu, ni au MVP ni en phase 2.
 
-Sans MCP, la même `Integration` peut viser une API REST classique (webhook ou appel configuré).
 
 ## 8. Stack recommandée
 
@@ -138,9 +136,9 @@ Sans MCP, la même `Integration` peut viser une API REST classique (webhook ou a
 - **Solid Queue / Solid Cache / Solid Cable** ; un processus séparé pour les connexions IMAP IDLE.
 - Authentification : générateur d'auth Rails 8 + passkeys ; invitations par client.
 - Recherche : full-text Postgres (`pg_search`) au départ.
-- Déploiement : **Kamal** sur un VPS européen (Infomaniak ou Hetzner).
+- Déploiement : **Kamal** sur le nouveau serveur cloud Infomaniak.
 - Mobile : PWA au départ, Hotwire Native plus tard si besoin.
-- Gems clés : `google-apis-gmail_v1`, `net-imap`, `mail`, `acts_as_tenant`, `doorkeeper`, `mcp`, `anthropic` (phase 2).
+- Gems clés : `google-apis-gmail_v1`, `net-imap`, `mail`, `acts_as_tenant`, `doorkeeper`, `mcp`.
 
 ## 9. MVP proposé
 
@@ -157,7 +155,7 @@ Sans MCP, la même `Integration` peut viser une API REST classique (webhook ou a
 8. Recherche.
 9. API + MCP + CLI (lecture, tâches, brouillons).
 
-**Phase 2, l'esprit Hey et l'assistant.** Screener (approbation des nouveaux expéditeurs), Imbox / Feed / Paper Trail, Reply Later, Set Aside, assistant Claude dans le fil avec MCP tiers.
+**Phase 2, l'esprit Hey.** Screener (approbation des nouveaux expéditeurs), Imbox / Feed / Paper Trail, Reply Later, Set Aside.
 
 **Phase 3, ouverture.** Vérification Google + CASA si plus de 100 utilisateurs, application mobile.
 
@@ -167,18 +165,18 @@ Sans MCP, la même `Integration` peut viser une API REST classique (webhook ou a
 |---|---|
 | Google durcit sa politique ou refuse la vérification | IMAP + mot de passe d'application en secours ; rester sous 100 utilisateurs (volume attendu : bien en deçà, selon Michael). |
 | Synchro IMAP fragile selon les hébergeurs | Tester tôt avec les vrais fournisseurs des clientes. |
-| Dispersion : le périmètre ressemble à Hey + Front + un assistant IA | Tenir le MVP de la phase 1, le reste attend un usage réel. |
+| Dispersion : le périmètre ressemble à Hey + Front | Tenir le MVP de la phase 1, le reste attend un usage réel. |
 | Données sensibles chez Super Génial | Chiffrement, hébergement UE, accord de traitement, journal d'accès. |
 
-## 11. Décisions ouvertes à valider par Michael
+## 11. Décisions validées par Michael (27 octobre 2026)
 
-| # | Question | Recommandation |
+| # | Question | Décision |
 |---|---|---|
-| D1 | Accepter l'écran « app non vérifiée » et le plafond de 100 utilisateurs Google pour le MVP ? | **Validé** (27/10) |
-| D2 | formations@semisto.org est-il un vrai compte Google (avec mot de passe) et non un Google Group ? Un groupe n'a pas de boîte à connecter. | À vérifier |
-| D3 | Isolation par `account_id` + RLS Postgres plutôt que des schémas séparés ? | Oui (option A) |
-| D4 | Laisser le drapeau « lu » de Gmail tel quel (SG Mail gère son propre lu par personne) ? Alternative : le marquer lu dès qu'une personne a lu. | Oui, ne pas y toucher |
+| D1 | Accepter l'écran « app non vérifiée » et le plafond de 100 utilisateurs Google pour le MVP ? | Oui |
+| D2 | formations@semisto.org est-il un vrai compte Google (avec mot de passe) et non un Google Group ? Un groupe n'a pas de boîte à connecter. | Oui, vrai compte Google |
+| D3 | Isolation par `account_id` + RLS Postgres plutôt que des schémas séparés ? | Oui, option A |
+| D4 | Laisser le drapeau « lu » de Gmail tel quel (SG Mail gère son propre lu par personne) ? Alternative : le marquer lu dès qu'une personne a lu. | Oui, on n'y touche pas |
 | D5 | Stocker les corps des emails chez SG Mail (indispensable pour la recherche et le MCP) ? | Oui |
-| D6 | Héberger chez Infomaniak (Suisse, cohérent avec tes outils actuels) ? | Oui |
+| D6 | Héberger chez Infomaniak (Suisse, cohérent avec tes outils actuels) ? | Oui, sur un nouveau serveur cloud à ouvrir |
 | D7 | Envoi d'emails dès le MVP (et pas seulement lecture + tâches) ? | Oui |
-| D8 | Assistant Claude intégré (API payée par Super Génial) reporté en phase 2, le chemin « Claude + deux MCP » suffisant au départ ? | **Validé** (27/10) : chemin 1 |
+| D8 | Passer par Claude avec les MCP SG Mail et MySemisto, sans assistant intégré ? | Oui, pas d'assistant intégré du tout |
