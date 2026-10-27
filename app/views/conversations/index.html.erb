@@ -9,6 +9,11 @@
       <%= f.hidden_field :unread, value: params[:unread] if params[:unread].present? %>
     <% end %>
   <% end %>
+  <% if params[:mine] == "1" %>
+    <%= link_to "Tous les fils", conversations_path(mailbox_id: @mailbox&.id) %>
+  <% else %>
+    <%= link_to "Assignés à moi", conversations_path(mailbox_id: @mailbox&.id, mine: 1) %>
+  <% end %>
   <% if params[:unread] == "1" %>
     <%= link_to "Tous les fils", conversations_path(mailbox_id: @mailbox&.id) %>
   <% else %>
@@ -30,6 +35,7 @@
       <td><%= conversation.last_sender %><%= tag.span(" (#{conversation.messages_count})", class: "muted") if conversation.messages_count > 1 %></td>
       <td>
         <%= link_to conversation.title, conversation_path(conversation) %>
+        <%= tag.span("→ #{conversation.assignee.display_name}", class: "assignee") if conversation.assignee %>
         <span class="muted"><%= conversation.snippet&.truncate(90) %></span>
       </td>
       <% unless @mailbox || @mailboxes.one? %><td class="muted"><%= conversation.mailbox.address %></td><% end %>

@@ -6,7 +6,20 @@
 <h1><%= @conversation.title %></h1>
 <div class="actions">
   <%= button_to "Marquer comme non lu", unread_conversation_path(@conversation), class: "link" %>
+  <%= form_with url: assign_conversation_path(@conversation), method: :patch, class: "inline" do |f| %>
+    <%= f.label :assignee_id, "Qui s'en occupe ?" %>
+    <%= f.select :assignee_id, [ [ "Personne", "" ] ] + @people.map { |p| [ p.display_name, p.id ] },
+          { selected: @conversation.assignee_id }, onchange: "this.form.requestSubmit()" %>
+  <% end %>
 </div>
+
+<section class="card internal">
+  <h2>Tâches</h2>
+  <ul class="tasks">
+    <%= render partial: "tasks/task", collection: @tasks %>
+  </ul>
+  <%= render "tasks/form", people: @people, conversation: @conversation %>
+</section>
 
 <% @messages.each do |message| %>
   <article id="<%= dom_id(message) %>" class="card">
@@ -38,6 +51,7 @@
       <%= link_to "Répondre", new_draft_path(message_id: message.id, kind: "reply") %>
       <%= link_to "Répondre à tous", new_draft_path(message_id: message.id, kind: "reply_all") %>
       <%= link_to "Transférer", new_draft_path(message_id: message.id, kind: "forward") %>
+      <%= button_to "Créer une tâche", tasks_path(task: { message_id: message.id, title: "Traiter : #{@conversation.title}", assignee_id: Current.user.id }), class: "link" %>
     </p>
 
     <% readers, others = @people.partition { |person| message.read_by?(person) } %>
@@ -47,3 +61,22 @@
     </p>
   </article>
 <% end %>
+
+<section class="card internal">
+  <h2>Notes internes</h2>
+  <p class="muted">Visibles de l'équipe seulement, jamais envoyées.</p>
+  <% @notes.each do |note| %>
+    <div id="<%= dom_id(note) %>" class="note">
+      <p><strong><%= note.user.display_name %></strong> <span class="muted"><%= l(note.created_at, format: :short) %></span>
+        <% if note.user == Current.user %>
+          <%= button_to "Supprimer", conversation_note_path(@conversation, note), method: :delete, class: "link muted", form: { class: "inline" } %>
+        <% end %>
+      </p>
+      <%= simple_format(note.body) %>
+    </div>
+  <% end %>
+  <%= form_with model: Note.new, url: conversation_notes_path(@conversation) do |f| %>
+    <%= f.text_area :body, rows: 3, placeholder: "Une note pour l'équipe…", required: true, aria: { label: "Note" } %>
+    <%= f.submit "Ajouter la note" %>
+  <% end %>
+</section>

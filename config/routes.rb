@@ -22,9 +22,12 @@ Rails.application.routes.draw do
     end
     resources :conversations, only: %i[index show] do
       post :unread, on: :member
+      patch :assign, on: :member
+      resources :notes, only: %i[create destroy]
       post :mark_all_read, on: :collection
     end
     resources :drafts, except: :show
+    resources :tasks, only: %i[index create update destroy]
     resources :messages, only: :show do
       resources :attachments, only: %i[show create]
     end
