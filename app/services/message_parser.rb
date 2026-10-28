@@ -4,6 +4,12 @@ class MessageParser
 
   def self.parse(raw) = new(raw).attributes
 
+  # Aperçu en texte brut, sans entités HTML : Gmail fournit le sien échappé (J&#39;ai, &quot;…&quot;),
+  # et la vue l'échapperait une seconde fois.
+  def self.snippet(text)
+    CGI.unescapeHTML(text.to_s).squish.truncate(SNIPPET_LENGTH).presence
+  end
+
   def initialize(raw)
     @raw = raw.to_s.b
     @mail = Mail.new(@raw)
@@ -21,7 +27,7 @@ class MessageParser
       sent_at: sent_at,
       body_text: body_text,
       body_html: body_html,
-      snippet: clean(body_text)&.squish&.truncate(SNIPPET_LENGTH),
+      snippet: self.class.snippet(body_text.presence || html_as_text),
       size: @raw.bytesize,
       has_attachments: @mail.attachments.any?,
       attachments: attachments
@@ -67,6 +73,16 @@ class MessageParser
 
   def body_html
     @body_html ||= decoded_part("text/html")
+  end
+
+  # Pour les messages sans partie texte : le texte visible, entités décodées.
+  def html_as_text
+    document = Nokogiri::HTML5(body_html.to_s)
+    document.css("head, style, script").remove
+    document.css("br, p, div, li, tr").each { |node| node.add_previous_sibling(" ") }
+    document.text
+  rescue StandardError
+    nil
   end
 
   def decoded_part(mime_type)

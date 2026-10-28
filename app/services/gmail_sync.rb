@@ -172,7 +172,7 @@ class GmailSync
     message.assign_attributes(MessageParser.parse(gmail_message.raw))
     message.thread_key = gmail_message.thread_id
     message.labels = Array(gmail_message.label_ids)
-    message.snippet = gmail_message.snippet.presence || message.snippet
+    message.snippet = MessageParser.snippet(gmail_message.snippet) || message.snippet
     message.save!
   end
 
