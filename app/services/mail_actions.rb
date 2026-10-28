@@ -9,15 +9,17 @@ class MailActions
   def mailboxes = Mailbox.accessible_by(@user).order(:address)
   def members = ActsAsTenant.current_tenant.users.order(:name)
 
-  # Réception (par défaut), une boîte, ou une recherche ; filtres non lus, assignés à moi, avant une date.
-  # Hors recherche, seuls les fils d'expéditeurs acceptés (Screener) apparaissent.
-  def conversations(query: nil, mailbox_id: nil, unread: false, mine: false, before: nil, limit: 50)
+  # Une pile (box : imbox par défaut, feed, paper_trail), une boîte, ou une recherche ; filtres non lus,
+  # assignés à moi, avant une date. Hors recherche, seuls les fils d'expéditeurs acceptés (Screener)
+  # et rangés dans cette pile apparaissent.
+  def conversations(query: nil, box: nil, mailbox_id: nil, unread: false, mine: false, before: nil, limit: 50)
+    raise ArgumentError, "box : imbox, feed ou paper_trail" unless box.blank? || box.in?(Screening::BUCKETS)
     mailbox = mailboxes.find(mailbox_id) if mailbox_id.present?
     scope = if query.present?
       MessageSearch.new(@user, query, mailbox: mailbox).conversations
     else
       scope = mailbox ? accessible_conversations.where(mailbox: mailbox) : accessible_conversations.inbox
-      scope.screened_in_for(@user)
+      scope.in_bucket_for(@user, box.presence || "imbox")
     end
     scope = scope.with_unread_for(@user).with_screening_for(@user).includes(:mailbox, :assignee)
     scope = scope.unread_for(@user) if unread
@@ -52,8 +54,9 @@ class MailActions
 
   def blocked_senders = Screening.where(user: @user, decision: "blocked").order(updated_at: :desc)
 
-  # decision : accepted (le fil entre dans ma réception) ou blocked (il reste dehors), pour moi seulement.
-  def screen(address, decision) = Screening.decide!(@user, address, decision)
+  # decision : accepted (ses fils entrent dans la pile « bucket », imbox par défaut) ou blocked
+  # (ils restent dehors), pour moi seulement. Accepter à nouveau avec une autre pile y déplace l'expéditeur.
+  def screen(address, decision, bucket: nil) = Screening.decide!(@user, address, decision, bucket: bucket)
 
   def add_note(conversation_id, body)
     conversation(conversation_id).notes.create!(user: @user, body: body)

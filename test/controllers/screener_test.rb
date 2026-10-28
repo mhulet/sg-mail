@@ -46,7 +46,7 @@ class ScreenerTest < ActionDispatch::IntegrationTest
 
       post screenings_path(account_id: @semisto.id), params: { address: "Zoe@example.org", decision: "accepted" }
       follow_redirect!
-      assert_select "p.notice", /zoe@example.org arrive désormais dans ta réception/
+      assert_select "p.notice", /Les emails de zoe@example.org arrivent désormais dans « Réception »/
 
       get account_root_path(account_id: @semisto.id)
       assert_select "a", "Relance"
@@ -80,11 +80,47 @@ class ScreenerTest < ActionDispatch::IntegrationTest
     assert_select "a", "Relance"
   end
 
+  test "accepted into the Feed or the Paper Trail, then moved, for me only" do
+    sign_in_as users(:mohammad)
+    get screenings_path(account_id: @semisto.id)
+    assert_equal [ "Réception", "Feed", "Paper Trail", "Bloquer" ], css_select("tr button").map(&:text)
+
+    post screenings_path(account_id: @semisto.id), params: { address: "zoe@example.org", decision: "accepted", bucket: "feed" }
+    follow_redirect!
+    assert_select "p.notice", /arrivent désormais dans « Feed »/
+    get account_root_path(account_id: @semisto.id)
+    assert_select "a", { text: "Relance", count: 0 }
+    get conversations_path(account_id: @semisto.id, box: "feed")
+    assert_select "h1", "Feed"
+    assert_select "a", "Relance"
+    assert_select "a", { text: "Inscription", count: 0 }
+
+    # Déplacer Anne (acceptée d'office dans la réception) vers le Paper Trail depuis un de ses fils.
+    post screenings_path(account_id: @semisto.id), params: { address: "anne@example.org", decision: "accepted", bucket: "paper_trail" }
+    get conversations_path(account_id: @semisto.id, box: "paper_trail")
+    assert_select "a", "Inscription"
+    get account_root_path(account_id: @semisto.id)
+    assert_select "a", { text: "Inscription", count: 0 }
+    assert_select "a", "Devis"
+
+    # « Tout marquer comme lu » dans le Feed ne touche pas la réception.
+    post mark_all_read_conversations_path(account_id: @semisto.id, box: "feed")
+    get conversations_path(account_id: @semisto.id, box: "feed")
+    assert_select "tr.unread", count: 0
+    get account_root_path(account_id: @semisto.id)
+    assert_select "tr.unread a", "Devis"
+
+    sign_in_as users(:michael)
+    get account_root_path(account_id: @semisto.id)
+    assert_select "a", "Inscription"
+  end
+
   test "an accepted sender can be blocked from the thread" do
     sign_in_as users(:michael)
     inscription = with_account(@semisto) { Conversation.find_by!(thread_key: "t1") }
     get conversation_path(inscription, account_id: @semisto.id)
-    assert_select "button", "Bloquer anne@example.org"
+    assert_select ".actions", /rangés dans « Réception »/
+    assert_equal [ "Marquer comme non lu", "Feed", "Paper Trail", "Bloquer" ], css_select(".actions button").map(&:text)
   end
 
   test "someone who gets access later finds the history already accepted" do

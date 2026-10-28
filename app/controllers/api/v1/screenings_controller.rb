@@ -7,8 +7,9 @@ class Api::V1::ScreeningsController < Api::V1::BaseController
     }
   end
 
-  # Paramètres : address, decision (accepted ou blocked).
+  # Paramètres : address, decision (accepted ou blocked), box (imbox, feed, paper_trail) pour accepted.
   def create
-    render json: { screening: serializer.screening(actions.screen(params.require(:address), params.require(:decision))) }
+    screening = actions.screen(params.require(:address), params.require(:decision), bucket: params[:box])
+    render json: { screening: serializer.screening(screening) }
   end
 end

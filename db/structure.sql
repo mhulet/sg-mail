@@ -640,7 +640,8 @@ CREATE TABLE public.screenings (
     address character varying NOT NULL,
     decision character varying NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    bucket character varying DEFAULT 'imbox'::character varying NOT NULL
 );
 
 ALTER TABLE ONLY public.screenings FORCE ROW LEVEL SECURITY;
@@ -3076,6 +3077,7 @@ ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261028090000'),
 ('20261028080000'),
 ('20261027230000'),
 ('20261027224500'),

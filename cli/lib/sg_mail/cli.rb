@@ -28,7 +28,8 @@ module SgMail
       end
     end
 
-    desc "inbox", "Réception (ou une boîte avec --mailbox)"
+    desc "inbox", "Réception (--box feed ou paper_trail pour les autres piles, --mailbox pour une boîte)"
+    option :box, enum: %w[imbox feed paper_trail]
     option :unread, type: :boolean, desc: "Non lus seulement"
     option :mine, type: :boolean, desc: "Assignés à moi"
     option :mailbox, type: :numeric
@@ -36,6 +37,16 @@ module SgMail
     def inbox
       list_conversations(nil)
     end
+
+    desc "feed", "Le Feed : lettres d'info et lectures"
+    option :unread, type: :boolean
+    option :limit, type: :numeric, default: 30
+    def feed = list_conversations(nil, box: "feed")
+
+    desc "paper-trail", "Le Paper Trail : reçus, confirmations, notifications"
+    option :unread, type: :boolean
+    option :limit, type: :numeric, default: 30
+    def paper_trail = list_conversations(nil, box: "paper_trail")
 
     desc "search REQUÊTE", "Recherche (filtres : de:anne a:formations avec:pj)"
     option :mailbox, type: :numeric
@@ -87,8 +98,12 @@ module SgMail
       end
     end
 
-    desc "accept ADRESSE", "Accepte un expéditeur : ses emails arrivent dans ma réception"
-    def accept(address) = screen(address, "accepted", "#{address} accepté.")
+    desc "accept ADRESSE", "Accepte un expéditeur (--to feed ou paper_trail ; sert aussi à le déplacer)"
+    option :to, enum: %w[imbox feed paper_trail]
+    def accept(address)
+      data = client.post("screener", address: address, decision: "accepted", box: options[:to])
+      done(data, "#{address} accepté, dans #{data.dig("screening", "box")}.")
+    end
 
     desc "block ADRESSE", "Bloque un expéditeur : ses emails restent hors de ma réception"
     def block(address) = screen(address, "blocked", "#{address} bloqué.")
@@ -156,8 +171,8 @@ module SgMail
 
     def int(value) = Integer(value, exception: false) || raise(Client::Error, "Identifiant attendu (un nombre), reçu : #{value.inspect}")
 
-    def list_conversations(query)
-      data = client.get("conversations", q: query, unread: options[:unread] ? 1 : nil, mine: options[:mine] ? 1 : nil,
+    def list_conversations(query, box: options[:box])
+      data = client.get("conversations", q: query, box: box, unread: options[:unread] ? 1 : nil, mine: options[:mine] ? 1 : nil,
         mailbox_id: options[:mailbox], limit: options[:limit])
       output(data) do |d|
         say "Rien ici." if d["conversations"].empty?

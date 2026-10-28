@@ -1,25 +1,33 @@
-<% content_for :title, "#{@mailbox&.address || "Réception"} · #{current_account.name} · SG Mail" %>
-<h1><%= @mailbox ? @mailbox.address : "Réception" %></h1>
+<% box_label = Screening::BUCKET_LABELS.fetch(@box) %>
+<% box = (@box unless @box == "imbox") %>
+<% content_for :title, "#{[ box_label, @mailbox&.address ].compact.join(" · ")} · #{current_account.name} · SG Mail" %>
+<h1><%= box_label %><%= tag.span(" · #{@mailbox.address}", class: "muted") if @mailbox %></h1>
+<% if @box == "feed" %>
+  <p class="muted">Lettres d'info et lectures : à parcourir quand tu as le temps.</p>
+<% elsif @box == "paper_trail" %>
+  <p class="muted">Reçus, confirmations et notifications : gardés ici, sans encombrer ta réception.</p>
+<% end %>
 
 <div class="actions">
   <% if @mailboxes.many? || @mailbox %>
     <%= form_with url: conversations_path, method: :get, class: "inline" do |f| %>
-      <%= f.select :mailbox_id, [ [ "Toutes les boîtes (réception)", "" ] ] + @mailboxes.map { |m| [ m.address, m.id ] },
+      <%= f.hidden_field :box, value: box if box %>
+      <%= f.select :mailbox_id, [ [ "Toutes les boîtes", "" ] ] + @mailboxes.map { |m| [ m.address, m.id ] },
             { selected: @mailbox&.id }, onchange: "this.form.requestSubmit()", aria: { label: "Boîte" } %>
       <%= f.hidden_field :unread, value: params[:unread] if params[:unread].present? %>
     <% end %>
   <% end %>
   <% if params[:mine] == "1" %>
-    <%= link_to "Tous les fils", conversations_path(mailbox_id: @mailbox&.id) %>
+    <%= link_to "Tous les fils", conversations_path(box: box, mailbox_id: @mailbox&.id) %>
   <% else %>
-    <%= link_to "Assignés à moi", conversations_path(mailbox_id: @mailbox&.id, mine: 1) %>
+    <%= link_to "Assignés à moi", conversations_path(box: box, mailbox_id: @mailbox&.id, mine: 1) %>
   <% end %>
   <% if params[:unread] == "1" %>
-    <%= link_to "Tous les fils", conversations_path(mailbox_id: @mailbox&.id) %>
+    <%= link_to "Tous les fils", conversations_path(box: box, mailbox_id: @mailbox&.id) %>
   <% else %>
-    <%= link_to "Non lus seulement", conversations_path(mailbox_id: @mailbox&.id, unread: 1) %>
+    <%= link_to "Non lus seulement", conversations_path(box: box, mailbox_id: @mailbox&.id, unread: 1) %>
   <% end %>
-  <%= button_to "Tout marquer comme lu", mark_all_read_conversations_path(mailbox_id: @mailbox&.id), class: "link",
+  <%= button_to "Tout marquer comme lu", mark_all_read_conversations_path(box: box, mailbox_id: @mailbox&.id), class: "link",
         form: { data: { turbo_confirm: "Marquer comme lus tous les messages#{" de #{@mailbox.address}" if @mailbox} ?" } } %>
 </div>
 
@@ -36,5 +44,5 @@
 </table>
 
 <% if @conversations.size == ConversationsController::PER_PAGE && @conversations.last.last_message_at %>
-  <p><%= link_to "Plus anciens →", conversations_path(mailbox_id: @mailbox&.id, unread: params[:unread].presence, before: @conversations.last.last_message_at.iso8601(6)) %></p>
+  <p><%= link_to "Plus anciens →", conversations_path(box: box, mailbox_id: @mailbox&.id, unread: params[:unread].presence, before: @conversations.last.last_message_at.iso8601(6)) %></p>
 <% end %>

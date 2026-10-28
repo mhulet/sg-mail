@@ -1,7 +1,7 @@
 class Api::V1::ConversationsController < Api::V1::BaseController
-  # Paramètres : q, mailbox_id, unread=1, mine=1, before (date ISO 8601), limit.
+  # Paramètres : q, box (imbox, feed, paper_trail), mailbox_id, unread=1, mine=1, before (date ISO 8601), limit.
   def index
-    conversations = actions.conversations(query: params[:q], mailbox_id: params[:mailbox_id], unread: params[:unread] == "1",
+    conversations = actions.conversations(query: params[:q], box: params[:box], mailbox_id: params[:mailbox_id], unread: params[:unread] == "1",
       mine: params[:mine] == "1", before: params[:before], limit: params[:limit] || 50)
     render json: { conversations: conversations.map { |conversation| serializer.conversation(conversation) } }
   end
