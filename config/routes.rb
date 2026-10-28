@@ -27,6 +27,7 @@ Rails.application.routes.draw do
   scope "/:account_id", constraints: { account_id: /\d+/ } do
     resources :mailboxes, only: %i[index show new create destroy] do
       post :sync, on: :member
+      patch :preferences, on: :member
       resources :accesses, controller: "mailbox_accesses", only: %i[index update]
     end
     resources :conversations, only: %i[index show] do

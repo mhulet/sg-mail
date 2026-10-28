@@ -19,6 +19,21 @@
 
 <p><%= link_to "Voir les fils de cette boîte", conversations_path(mailbox_id: @mailbox.id) %></p>
 
+<% if @access.can_send? %>
+  <section class="card">
+    <h2>Quand j'écris depuis cette boîte</h2>
+    <%= form_with model: @access, url: preferences_mailbox_path(@mailbox), method: :patch, class: "stacked compose" do |f| %>
+      <%= f.label :sender_name, "Nom affiché" %>
+      <%= f.text_field :sender_name, placeholder: Current.user.display_name %>
+      <p class="muted">Par exemple « Semisto Academy » pour une boîte partagée. Vide : ton nom.</p>
+      <%= f.label :signature, "Signature" %>
+      <%= f.text_area :signature, rows: 4, placeholder: "Prénom Nom\nOrganisation · téléphone" %>
+      <p class="muted">Ajoutée sous tes nouveaux messages, réponses et transferts depuis cette boîte.</p>
+      <p><%= f.submit "Enregistrer" %></p>
+    <% end %>
+  </section>
+<% end %>
+
 <% if @access.can_manage? %>
   <%= button_to "Déconnecter cette boîte", mailbox_path(@mailbox), method: :delete, form: { data: { turbo_confirm: "Déconnecter et effacer les messages importés ?" } } %>
 <% end %>

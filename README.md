@@ -78,6 +78,9 @@ obligatoire (`force_ssl`), ce qui convient au certificat géré par Hatchbox.
   client ne la voient pas. Elle peut la **partager** (page « Partage » de la boîte) avec d'autres membres :
   lecture, lecture et envoi, ou gestion (partage et déconnexion). Il reste toujours au moins un gestionnaire.
 - Quitter un client retire ses accès aux boîtes de ce client.
+- **Signature et nom affiché**, par personne et par boîte (page de la boîte, « Quand j'écris depuis cette boîte ») :
+  la signature se place sous les nouveaux messages, et entre la réponse et la citation ; le nom affiché remplace
+  le nom de la personne dans « De » (ex. « Semisto Academy » pour formations@).
 
 ## Lecture
 

@@ -1,6 +1,6 @@
 class MailboxesController < ApplicationController
   include AccountScoped
-  before_action :set_mailbox, only: %i[show sync destroy]
+  before_action :set_mailbox, only: %i[show sync preferences destroy]
   before_action :require_manage_access, only: :destroy
 
   # Seules les boîtes auxquelles on a accès : une boîte perso reste privée, même pour les admins.
@@ -31,6 +31,12 @@ class MailboxesController < ApplicationController
   rescue Net::IMAP::Error, SocketError, SystemCallError, OpenSSL::SSL::SSLError, ActiveRecord::RecordInvalid => e
     flash.now[:alert] = "Connexion IMAP impossible : #{e.message}"
     render :new, status: :unprocessable_entity
+  end
+
+  # Ma signature et mon nom d'expéditeur dans cette boîte.
+  def preferences
+    @access.update!(params.expect(mailbox_access: %i[sender_name signature]))
+    redirect_to @mailbox, notice: "Signature enregistrée."
   end
 
   def sync

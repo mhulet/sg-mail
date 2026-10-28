@@ -31,6 +31,28 @@ class DraftsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "sending", with_account(@semisto) { draft.reload.status }
   end
 
+  test "my signature and sender name for a mailbox" do
+    sign_in_as users(:mohammad)
+    patch preferences_mailbox_path(@mailbox, account_id: @semisto.id),
+      params: { mailbox_access: { sender_name: "Semisto Academy", signature: "Mohammad\nSemisto Academy" } }
+    assert_redirected_to mailbox_path(@mailbox, account_id: @semisto.id)
+
+    get new_draft_path(account_id: @semisto.id)
+    assert_match(/\A\n*-- \nMohammad\nSemisto Academy\z/, css_select("textarea[name='draft[body]']").text)
+
+    get new_draft_path(account_id: @semisto.id, message_id: @message.id, kind: "reply")
+    body = css_select("textarea[name='draft[body]']").text
+    assert_match(/\A\n*-- \nMohammad\nSemisto Academy\n\nLe .*a écrit :\n> Bonjour\z/, body)
+
+    draft = with_account(@semisto) { Draft.start(user: users(:mohammad), mailbox: @mailbox, body: "Bonjour") }
+    assert_equal "Bonjour\n\n-- \nMohammad\nSemisto Academy", draft.body
+    draft.assign_attributes(to_list: "anne@example.org", subject: "x")
+    assert_equal "Semisto Academy <formations@semisto.org>", with_account(@semisto) { MailSender.new(draft).mail[:from].value }
+
+    # Les préférences d'une personne ne changent pas celles des autres.
+    assert_nil with_account(@semisto) { @mailbox.access_for(users(:michael)).signature }
+  end
+
   test "a reader cannot send from the mailbox" do
     sign_in_as users(:michael)
     get new_draft_path(account_id: @semisto.id)

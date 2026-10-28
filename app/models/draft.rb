@@ -19,7 +19,19 @@ class Draft < ApplicationRecord
 
   scope :editable, -> { where(status: %w[draft failed]) }
 
+  # Un nouveau message, avec la signature de la personne pour cette boîte.
+  def self.start(user:, mailbox:, body: nil)
+    new(kind: "new", user: user, mailbox: mailbox, body: "#{body}#{signature_block(user, mailbox)}".presence)
+  end
+
+  # « -- » puis la signature, séparée du texte par une ligne vide ; rien sans signature.
+  def self.signature_block(user, mailbox)
+    signature = mailbox&.access_for(user)&.signature
+    signature.present? ? "\n\n-- \n#{signature.strip}" : ""
+  end
+
   # Prépare un brouillon à partir d'un message reçu, avec la citation et les bons destinataires.
+  # La signature se place entre la réponse et la citation.
   def self.build_from(message, kind:, user:, mailbox: nil)
     mailbox ||= message.mailbox
     own_addresses = [ mailbox.address, message.mailbox.address ].map(&:downcase)
@@ -35,10 +47,10 @@ class Draft < ApplicationRecord
         draft.cc_addresses = others.uniq(&:downcase)
       end
       draft.subject = prefixed(message.subject, "Re")
-      draft.body = "\n\n#{quote(message)}"
+      draft.body = "#{signature_block(user, mailbox)}\n\n#{quote(message)}"
     when "forward"
       draft.subject = prefixed(message.subject, "Fwd")
-      draft.body = "\n\n---------- Message transféré ----------\n" \
+      draft.body = "#{signature_block(user, mailbox)}\n\n---------- Message transféré ----------\n" \
         "De : #{message.from_display} <#{message.from_address}>\n" \
         "Date : #{message.sent_at && I18n.l(message.sent_at, format: :long)}\n" \
         "Objet : #{message.subject}\n" \

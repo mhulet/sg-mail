@@ -16,7 +16,7 @@ class DraftsController < ApplicationController
       mailbox = @mailboxes.find { |m| m.id == message.mailbox_id } || @mailboxes.first
       @draft = Draft.build_from(message, kind: params[:kind].presence_in(Draft::KINDS) || "reply", user: Current.user, mailbox: mailbox)
     else
-      @draft = Draft.new(kind: "new", user: Current.user, mailbox: @mailboxes.first)
+      @draft = Draft.start(user: Current.user, mailbox: @mailboxes.first)
     end
   end
 

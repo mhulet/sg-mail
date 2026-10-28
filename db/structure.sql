@@ -364,7 +364,9 @@ CREATE TABLE public.mailbox_accesses (
     user_id bigint NOT NULL,
     level character varying DEFAULT 'send'::character varying NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    signature text,
+    sender_name character varying
 );
 
 ALTER TABLE ONLY public.mailbox_accesses FORCE ROW LEVEL SECURITY;
@@ -3388,6 +3390,7 @@ ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261028140000'),
 ('20261028130000'),
 ('20261028120000'),
 ('20261028110000'),
