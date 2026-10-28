@@ -81,3 +81,5 @@ gem "rails-i18n"
 
 # Serveur MCP (/mcp) pour Claude
 gem "mcp", "~> 1.8"
+
+gem "webauthn", "~> 3.5"

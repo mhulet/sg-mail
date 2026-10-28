@@ -48,6 +48,7 @@
         <nav class="user">
           <% if Current.user.accounts.many? || Current.user.staff? %><%= link_to "Clients", accounts_path(account_id: nil) %><% end %>
           <% if Current.account %><%= link_to "Jetons d'API", api_tokens_path %><% end %>
+          <%= link_to "Passkeys", passkeys_path(account_id: nil) %>
           <span class="muted"><%= Current.user.display_name %></span>
           <%= button_to "Déconnexion", session_path(account_id: nil), method: :delete, class: "link" %>
         </nav>

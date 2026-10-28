@@ -10,3 +10,8 @@
 <% end %>
 
 <p><%= link_to "Mot de passe oublié ?", new_password_path %></p>
+
+<div data-controller="passkey" data-passkey-options-url-value="<%= passkey_session_options_path %>" data-passkey-url-value="<%= passkey_session_path %>">
+  <p><button data-action="passkey#signIn">Se connecter avec une passkey</button></p>
+  <p class="flash alert" data-passkey-target="error" hidden></p>
+</div>

@@ -663,6 +663,42 @@ ALTER SEQUENCE public.oauth_tokens_id_seq OWNED BY public.oauth_tokens.id;
 
 
 --
+-- Name: passkeys; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.passkeys (
+    id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    external_id character varying NOT NULL,
+    public_key character varying NOT NULL,
+    sign_count bigint DEFAULT 0 NOT NULL,
+    name character varying NOT NULL,
+    last_used_at timestamp(6) without time zone,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: passkeys_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.passkeys_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: passkeys_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.passkeys_id_seq OWNED BY public.passkeys.id;
+
+
+--
 -- Name: readings; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1336,7 +1372,8 @@ CREATE TABLE public.users (
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
     name character varying DEFAULT ''::character varying NOT NULL,
-    staff boolean DEFAULT false NOT NULL
+    staff boolean DEFAULT false NOT NULL,
+    webauthn_id character varying
 );
 
 
@@ -1469,6 +1506,13 @@ ALTER TABLE ONLY public.oauth_clients ALTER COLUMN id SET DEFAULT nextval('publi
 --
 
 ALTER TABLE ONLY public.oauth_tokens ALTER COLUMN id SET DEFAULT nextval('public.oauth_tokens_id_seq'::regclass);
+
+
+--
+-- Name: passkeys id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.passkeys ALTER COLUMN id SET DEFAULT nextval('public.passkeys_id_seq'::regclass);
 
 
 --
@@ -1745,6 +1789,14 @@ ALTER TABLE ONLY public.oauth_clients
 
 ALTER TABLE ONLY public.oauth_tokens
     ADD CONSTRAINT oauth_tokens_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: passkeys passkeys_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.passkeys
+    ADD CONSTRAINT passkeys_pkey PRIMARY KEY (id);
 
 
 --
@@ -2315,6 +2367,20 @@ CREATE INDEX index_oauth_tokens_on_user_id ON public.oauth_tokens USING btree (u
 
 
 --
+-- Name: index_passkeys_on_external_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_passkeys_on_external_id ON public.passkeys USING btree (external_id);
+
+
+--
+-- Name: index_passkeys_on_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_passkeys_on_user_id ON public.passkeys USING btree (user_id);
+
+
+--
 -- Name: index_readings_on_account_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2665,6 +2731,13 @@ CREATE UNIQUE INDEX index_users_on_email_address ON public.users USING btree (em
 
 
 --
+-- Name: index_users_on_webauthn_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_users_on_webauthn_id ON public.users USING btree (webauthn_id);
+
+
+--
 -- Name: tasks fk_rails_0016c50613; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2958,6 +3031,14 @@ ALTER TABLE ONLY public.api_tokens
 
 ALTER TABLE ONLY public.oauth_tokens
     ADD CONSTRAINT fk_rails_8bbd4293ae FOREIGN KEY (account_id) REFERENCES public.accounts(id) ON DELETE CASCADE;
+
+
+--
+-- Name: passkeys fk_rails_902db11bce; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.passkeys
+    ADD CONSTRAINT fk_rails_902db11bce FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
 
 
 --
@@ -3307,6 +3388,7 @@ ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261028130000'),
 ('20261028120000'),
 ('20261028110000'),
 ('20261028100000'),

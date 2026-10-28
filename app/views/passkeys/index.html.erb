@@ -1,0 +1,26 @@
+<% content_for :title, "Passkeys · SG Mail" %>
+<h1>Mes passkeys</h1>
+<p class="muted">Une passkey te connecte d'un geste (Touch ID, Face ID, Windows Hello, clé de sécurité), sans mot de passe
+  et sans risque d'hameçonnage. Ajoute-en une par appareil.</p>
+
+<% if @passkeys.any? %>
+  <table>
+    <tr><th>Nom</th><th>Ajoutée</th><th>Dernière connexion</th><th></th></tr>
+    <% @passkeys.each do |passkey| %>
+      <tr>
+        <td><%= passkey.name %></td>
+        <td class="muted"><%= l(passkey.created_at.to_date) %></td>
+        <td class="muted"><%= passkey.last_used_at ? l(passkey.last_used_at, format: :short) : "jamais" %></td>
+        <td><%= button_to "Retirer", passkey_path(passkey), method: :delete, class: "link",
+              form: { data: { turbo_confirm: "Retirer la passkey « #{passkey.name} » ?" } } %></td>
+      </tr>
+    <% end %>
+  </table>
+<% else %>
+  <p class="muted">Aucune passkey pour l'instant.</p>
+<% end %>
+
+<div data-controller="passkey" data-passkey-options-url-value="<%= options_passkeys_path %>" data-passkey-url-value="<%= passkeys_path %>">
+  <p><button class="primary" data-action="passkey#register">Ajouter une passkey sur cet appareil</button></p>
+  <p class="flash alert" data-passkey-target="error" hidden></p>
+</div>
