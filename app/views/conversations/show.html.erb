@@ -16,6 +16,11 @@
 <% end %>
 <div class="actions">
   <%= button_to "Marquer comme non lu", unread_conversation_path(@conversation), class: "link" %>
+  <% ConversationState::STACKS.each do |stack| %>
+    <% on = @stacks.include?(stack) %>
+    <%= button_to on ? "Retirer de « #{ConversationState::STACK_LABELS.fetch(stack)} »" : ConversationState::ACTION_LABELS.fetch(stack),
+          stack_conversation_path(@conversation), method: :patch, params: { stack: stack, on: on ? "0" : "1" }, class: "link" %>
+  <% end %>
   <% if @screening == "accepted" %>
     <span class="muted">Emails de <%= @conversation.sender_address %> rangés dans « <%= Screening::BUCKET_LABELS.fetch(@bucket) %> ». Déplacer vers :</span>
     <%= render "screenings/buttons", address: @conversation.sender_address, current: @screening, bucket: @bucket %>

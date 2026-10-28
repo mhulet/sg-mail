@@ -1,8 +1,13 @@
-<% box_label = Screening::BUCKET_LABELS.fetch(@box) %>
-<% box = (@box unless @box == "imbox") %>
+<% box_label = @stack ? ConversationState::STACK_LABELS.fetch(@stack) : Screening::BUCKET_LABELS.fetch(@box) %>
+<% box = (@box unless @box == "imbox" || @stack) %>
+<% stack = @stack %>
 <% content_for :title, "#{[ box_label, @mailbox&.address ].compact.join(" · ")} · #{current_account.name} · SG Mail" %>
 <h1><%= box_label %><%= tag.span(" · #{@mailbox.address}", class: "muted") if @mailbox %></h1>
-<% if @box == "feed" %>
+<% if @stack == "reply_later" %>
+  <p class="muted">Les fils que tu as gardés pour y répondre plus tard. Ils quittent cette pile quand tu y réponds.</p>
+<% elsif @stack == "set_aside" %>
+  <p class="muted">Les fils que tu as mis de côté pour t'y référer.</p>
+<% elsif @box == "feed" %>
   <p class="muted">Lettres d'info et lectures : à parcourir quand tu as le temps.</p>
 <% elsif @box == "paper_trail" %>
   <p class="muted">Reçus, confirmations et notifications : gardés ici, sans encombrer ta réception.</p>
@@ -12,24 +17,34 @@
   <% if @mailboxes.many? || @mailbox %>
     <%= form_with url: conversations_path, method: :get, class: "inline" do |f| %>
       <%= f.hidden_field :box, value: box if box %>
+      <%= f.hidden_field :stack, value: stack if stack %>
       <%= f.select :mailbox_id, [ [ "Toutes les boîtes", "" ] ] + @mailboxes.map { |m| [ m.address, m.id ] },
             { selected: @mailbox&.id }, onchange: "this.form.requestSubmit()", aria: { label: "Boîte" } %>
       <%= f.hidden_field :unread, value: params[:unread] if params[:unread].present? %>
     <% end %>
   <% end %>
   <% if params[:mine] == "1" %>
-    <%= link_to "Tous les fils", conversations_path(box: box, mailbox_id: @mailbox&.id) %>
+    <%= link_to "Tous les fils", conversations_path(box: box, stack: stack, mailbox_id: @mailbox&.id) %>
   <% else %>
-    <%= link_to "Assignés à moi", conversations_path(box: box, mailbox_id: @mailbox&.id, mine: 1) %>
+    <%= link_to "Assignés à moi", conversations_path(box: box, stack: stack, mailbox_id: @mailbox&.id, mine: 1) %>
   <% end %>
   <% if params[:unread] == "1" %>
-    <%= link_to "Tous les fils", conversations_path(box: box, mailbox_id: @mailbox&.id) %>
+    <%= link_to "Tous les fils", conversations_path(box: box, stack: stack, mailbox_id: @mailbox&.id) %>
   <% else %>
-    <%= link_to "Non lus seulement", conversations_path(box: box, mailbox_id: @mailbox&.id, unread: 1) %>
+    <%= link_to "Non lus seulement", conversations_path(box: box, stack: stack, mailbox_id: @mailbox&.id, unread: 1) %>
   <% end %>
-  <%= button_to "Tout marquer comme lu", mark_all_read_conversations_path(box: box, mailbox_id: @mailbox&.id), class: "link",
+  <%= button_to "Tout marquer comme lu", mark_all_read_conversations_path(box: box, stack: stack, mailbox_id: @mailbox&.id), class: "link",
         form: { data: { turbo_confirm: "Marquer comme lus tous les messages#{" de #{@mailbox.address}" if @mailbox} ?" } } %>
 </div>
+
+<% if @stack_counts&.values&.any?(&:positive?) %>
+  <p class="stacks">
+    <% @stack_counts.each do |name, count| %>
+      <% next if count.zero? %>
+      <%= link_to "#{ConversationState::STACK_LABELS.fetch(name)} (#{count})", conversations_path(stack: name) %>
+    <% end %>
+  </p>
+<% end %>
 
 <% if @mailboxes.none? %>
   <p class="muted">Aucune boîte encore. <%= link_to "Connecte une boîte", mailboxes_path %> pour commencer.</p>
@@ -44,5 +59,5 @@
 </table>
 
 <% if @conversations.size == ConversationsController::PER_PAGE && @conversations.last.last_message_at %>
-  <p><%= link_to "Plus anciens →", conversations_path(box: box, mailbox_id: @mailbox&.id, unread: params[:unread].presence, before: @conversations.last.last_message_at.iso8601(6)) %></p>
+  <p><%= link_to "Plus anciens →", conversations_path(box: box, stack: stack, mailbox_id: @mailbox&.id, unread: params[:unread].presence, before: @conversations.last.last_message_at.iso8601(6)) %></p>
 <% end %>

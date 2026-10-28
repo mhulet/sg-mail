@@ -7,6 +7,7 @@ class Conversation < ApplicationRecord
   has_many :messages, -> { order(:sent_at, :id) }, dependent: :nullify
   has_many :notes, -> { order(:created_at) }, dependent: :delete_all
   has_many :tasks, dependent: :nullify
+  has_many :states, class_name: "ConversationState", dependent: :delete_all
 
   scope :recent, -> { order(last_message_at: :desc, id: :desc) }
   scope :accessible_by, ->(user) { where(mailbox: Mailbox.accessible_by(user)) }
@@ -22,6 +23,15 @@ class Conversation < ApplicationRecord
     SQL
     bucket == "imbox" ? where(sender_address: nil).or(accepted) : accepted
   }
+  # Reply Later / Set Aside : les fils qu'une personne a mis dans cette pile, ou ceux qu'elle n'a mis dans aucune.
+  scope :in_stack_for, ->(user, stack) {
+    column = ConversationState::COLUMNS.fetch(stack) { raise ArgumentError, "pile : reply_later ou set_aside" }
+    where(id: ConversationState.where(user: user).where.not(column => nil).select(:conversation_id))
+  }
+  scope :outside_stacks_for, ->(user) {
+    where.not(id: ConversationState.where(user: user).where("reply_later_at IS NOT NULL OR set_aside_at IS NOT NULL").select(:conversation_id))
+  }
+
   # Screener : un fil qui attend la décision de la personne.
   scope :screening_pending_for, ->(user) {
     where(<<~SQL.squish, user.id)
@@ -66,7 +76,7 @@ class Conversation < ApplicationRecord
       .select("DISTINCT ON (conversations.sender_address) conversations.*",
         "count(*) OVER (PARTITION BY conversations.sender_address) AS sender_conversations_count")
       .order("conversations.sender_address", last_message_at: :desc, id: :desc)
-    from(latest, :conversations).includes(:mailbox).order(last_message_at: :desc, id: :desc).limit(limit)
+    from(latest, :conversations).includes(:mailbox, :states).order(last_message_at: :desc, id: :desc).limit(limit)
   end
 
   # Recalcule les fils d'une boîte après une synchro : un INSERT … ON CONFLICT et deux requêtes,
@@ -119,6 +129,12 @@ class Conversation < ApplicationRecord
     return unless sender_address
 
     screening_record_for(user)&.decision || "pending"
+  end
+
+  # Les piles où cette personne a mis le fil : [] , ["reply_later"], ["set_aside"] ou les deux.
+  def stacks_for(user)
+    state = states.find { |s| s.user_id == user.id }
+    ConversationState::COLUMNS.filter_map { |stack, column| stack if state&.public_send(column) }
   end
 
   # imbox, feed ou paper_trail ; nil tant que l'expéditeur n'est pas accepté.

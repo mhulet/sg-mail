@@ -56,9 +56,14 @@ class DraftsControllerTest < ActionDispatch::IntegrationTest
 
     MailSender.class_eval { def deliver = true }
     with_account(@semisto) do
-      draft.update!(status: "sending")
+      conversation = @message.reload.conversation
+      ConversationState.put!(conversation, users(:mohammad), "reply_later")
+      ConversationState.put!(conversation, users(:michael), "reply_later")
+      draft.update!(status: "sending", conversation: conversation)
       assert_enqueued_with(job: SyncMailboxJob) { SendDraftJob.perform_now(draft) }
       assert_equal "sent", draft.reload.status
+      # Répondre sort le fil de « Répondre plus tard » pour qui a répondu, pas pour les autres.
+      assert_equal [ [], [ "reply_later" ] ], [ conversation.reload.stacks_for(users(:mohammad)), conversation.stacks_for(users(:michael)) ]
     end
   ensure
     MailSender.class_eval { alias_method :deliver, :original_deliver }

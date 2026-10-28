@@ -2,15 +2,18 @@ class ConversationsController < ApplicationController
   include AccountScoped
   PER_PAGE = 50
 
-  before_action :set_conversation, only: %i[show unread assign]
+  before_action :set_conversation, only: %i[show unread assign stack]
 
   # Boîte de réception unifiée : les fils de toutes les boîtes auxquelles on a accès.
-  # Une pile façon Hey : la réception (par défaut), ?box=feed ou ?box=paper_trail.
+  # Une pile façon Hey : la réception (par défaut), ?box=feed ou ?box=paper_trail ;
+  # ou une pile personnelle, ?stack=reply_later ou ?stack=set_aside.
   def index
+    @stack = params[:stack].presence_in(ConversationState::STACKS)
     @box = params[:box].presence_in(Screening::BUCKETS) || "imbox"
     @mailboxes = Mailbox.accessible_by(Current.user).order(:address)
     @mailbox = @mailboxes.find(params[:mailbox_id]) if params[:mailbox_id].present?
     @conversations = page(filtered_conversations)
+    @stack_counts = ConversationState::STACKS.index_with { |stack| Conversation.accessible_by(Current.user).in_stack_for(Current.user, stack).count } unless @stack
   end
 
   def show
@@ -20,6 +23,7 @@ class ConversationsController < ApplicationController
     @tasks = @conversation.tasks.includes(:assignee).by_due_date
     @screening = @conversation.screening_for(Current.user)
     @bucket = @conversation.bucket_for(Current.user)
+    @stacks = @conversation.stacks_for(Current.user)
     @conversation.mark_read_by!(Current.user)
   end
 
@@ -34,6 +38,17 @@ class ConversationsController < ApplicationController
     @conversation.update!(assignee: assignee)
     notice = assignee ? "#{assignee.display_name} s'occupe de ce fil." : "Plus personne n'est assigné à ce fil."
     redirect_to conversation_path(@conversation), notice: notice
+  end
+
+  # Met le fil dans « Répondre plus tard » ou « Mis de côté » (on=1), ou l'en retire, pour moi seulement.
+  def stack
+    stack = params.require(:stack)
+    on = params[:on] == "1"
+    ConversationState.put!(@conversation, Current.user, stack, on: on)
+    label = ConversationState::STACK_LABELS.fetch(stack)
+    redirect_back_or_to conversation_path(@conversation), notice: on ? "Fil ajouté à « #{label} »." : "Fil retiré de « #{label} »."
+  rescue ArgumentError
+    redirect_back_or_to conversation_path(@conversation), alert: "Pile inconnue."
   end
 
   # « Tout marquer comme lu » : utile après l'import de milliers de vieux messages.
@@ -55,9 +70,14 @@ class ConversationsController < ApplicationController
   end
 
   def filtered_conversations
-    scope = Conversation.accessible_by(Current.user).in_bucket_for(Current.user, @box)
-      .with_unread_for(Current.user).includes(:mailbox, :assignee)
-    scope = @mailbox ? scope.where(mailbox: @mailbox) : scope.inbox
+    scope = Conversation.accessible_by(Current.user).with_unread_for(Current.user).includes(:mailbox, :assignee)
+    if @stack
+      scope = scope.in_stack_for(Current.user, @stack)
+      scope = scope.where(mailbox: @mailbox) if @mailbox
+    else
+      scope = scope.in_bucket_for(Current.user, @box).outside_stacks_for(Current.user)
+      scope = @mailbox ? scope.where(mailbox: @mailbox) : scope.inbox
+    end
     scope = scope.assigned_to(Current.user) if params[:mine] == "1"
     scope = scope.unread_for(Current.user) if params[:unread] == "1"
     scope

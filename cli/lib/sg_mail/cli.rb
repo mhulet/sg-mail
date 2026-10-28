@@ -85,6 +85,14 @@ module SgMail
       done(data, data.dig("conversation", "assignee") ? "Confié à #{data.dig("conversation", "assignee", "name")}." : "Plus assigné.")
     end
 
+    desc "later [ID]", "Sans ID : ma pile « Répondre plus tard ». Avec ID : y met le fil (--off : l'en retire)"
+    option :off, type: :boolean
+    def later(id = nil) = stack("reply_later", id, "Répondre plus tard")
+
+    desc "aside [ID]", "Sans ID : ma pile « Mis de côté ». Avec ID : y met le fil (--off : l'en retire)"
+    option :off, type: :boolean
+    def aside(id = nil) = stack("set_aside", id, "Mis de côté")
+
     desc "screener", "À trier : les nouveaux expéditeurs qui attendent ma décision"
     def screener
       output(client.get("screener")) do |data|
@@ -171,8 +179,8 @@ module SgMail
 
     def int(value) = Integer(value, exception: false) || raise(Client::Error, "Identifiant attendu (un nombre), reçu : #{value.inspect}")
 
-    def list_conversations(query, box: options[:box])
-      data = client.get("conversations", q: query, box: box, unread: options[:unread] ? 1 : nil, mine: options[:mine] ? 1 : nil,
+    def list_conversations(query, box: options[:box], stack: nil)
+      data = client.get("conversations", q: query, box: box, stack: stack, unread: options[:unread] ? 1 : nil, mine: options[:mine] ? 1 : nil,
         mailbox_id: options[:mailbox], limit: options[:limit])
       output(data) do |d|
         say "Rien ici." if d["conversations"].empty?
@@ -181,6 +189,13 @@ module SgMail
             c["assignee"] ? "  → #{c.dig("assignee", "name")}" : "")
         end
       end
+    end
+
+    def stack(name, id, label)
+      return list_conversations(nil, stack: name) unless id
+
+      data = client.patch("conversations/#{int(id)}", name => !options[:off])
+      done(data, options[:off] ? "Fil #{id} retiré de « #{label} »." : "Fil #{id} ajouté à « #{label} ».")
     end
 
     def screen(address, decision, message) = done(client.post("screener", address: address, decision: decision), message)

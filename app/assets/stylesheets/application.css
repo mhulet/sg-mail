@@ -32,3 +32,4 @@ form.compose input[type=text], form.compose textarea, form.compose select { widt
 .assignee { font-size: .85em; background: #eef; border-radius: 4px; padding: 0 .3rem; }
 .screening { background: #eef6ff; display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; }
 .screener td { vertical-align: middle; }
+.stacks { display: flex; gap: 1rem; background: #f6f6f6; padding: .4rem .75rem; border-radius: 4px; }

@@ -120,7 +120,7 @@ class ScreenerTest < ActionDispatch::IntegrationTest
     inscription = with_account(@semisto) { Conversation.find_by!(thread_key: "t1") }
     get conversation_path(inscription, account_id: @semisto.id)
     assert_select ".actions", /rangés dans « Réception »/
-    assert_equal [ "Marquer comme non lu", "Feed", "Paper Trail", "Bloquer" ], css_select(".actions button").map(&:text)
+    assert_equal [ "Marquer comme non lu", "Répondre plus tard", "Mettre de côté", "Feed", "Paper Trail", "Bloquer" ], css_select(".actions button").map(&:text)
   end
 
   test "someone who gets access later finds the history already accepted" do
