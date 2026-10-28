@@ -19,7 +19,7 @@
     <span class="muted">Archivé.</span>
     <%= button_to "Remettre dans la réception", archive_conversation_path(@conversation), method: :patch, params: { on: "0" }, class: "link" %>
   <% else %>
-    <%= button_to "Archiver", archive_conversation_path(@conversation), method: :patch, params: { on: "1" } %>
+    <%= button_to "Archiver", archive_conversation_path(@conversation), method: :patch, params: { on: "1" }, class: "primary" %>
   <% end %>
   <%= button_to "Marquer comme non lu", unread_conversation_path(@conversation), class: "link" %>
   <% ConversationState::STACKS.each do |stack| %>
