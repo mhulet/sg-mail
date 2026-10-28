@@ -11,6 +11,9 @@ Rails.application.routes.draw do
   resources :passkeys, only: %i[index create destroy] do
     post :options, on: :collection
   end
+  resources :push_subscriptions, only: %i[index create destroy], path: "notifications" do
+    post :test, on: :collection
+  end
   resources :passwords, param: :token
   get "invitations/:token" => "invitation_acceptances#show", as: :invitation_acceptance
   post "invitations/:token" => "invitation_acceptances#create"

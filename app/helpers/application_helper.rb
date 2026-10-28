@@ -11,6 +11,11 @@ module ApplicationHelper
     count.zero? ? "À trier" : "À trier (#{count})"
   end
 
+  # Les fils non lus de ma réception : la pastille sur l'icône de l'app installée.
+  def imbox_unread_count
+    Conversation.accessible_by(Current.user).in_bucket_for(Current.user, "imbox").not_archived_for(Current.user).unread_for(Current.user).count
+  end
+
   # Lien de navigation, marqué comme page courante quand on y est. Avec space:, une pastille de sa couleur.
   def nav_link(label, path, shortcut: nil, space: nil)
     content = space ? safe_join([ tag.span(class: "dot", aria: { hidden: true }), label ]) : label

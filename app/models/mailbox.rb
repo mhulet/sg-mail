@@ -41,10 +41,13 @@ class Mailbox < ApplicationRecord
   end
 
   def sync!
+    started_at = Time.current
     synchronizer.call
     # Marge d'un jour : un message importé pendant la synchro précédente n'échappe pas au Screener.
     Conversation.rebuild_for(self, since: last_synced_at&.-(1.day))
     GmailWatch.new(self).renew_if_needed if gmail?
+    # La toute première synchro importe l'historique : on ne sonne pas pour des milliers de vieux messages.
+    NotifyNewMailJob.perform_later(self, started_at) if last_synced_at
     update!(last_synced_at: Time.current, last_sync_error: nil)
   rescue => e
     update!(last_sync_error: "#{e.class}: #{e.message}")
