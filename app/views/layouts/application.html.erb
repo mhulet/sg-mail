@@ -27,7 +27,8 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body data-controller="shortcuts" data-space="<%= current_space %>" class="<%= authenticated? ? "with-sidebar" : "bare" %>">
+  <body data-controller="shortcuts" data-space="<%= current_space %>" class="<%= authenticated? ? "with-sidebar" : "bare" %>"
+    <%= tag.attributes(data: { badge: imbox_unread_count }) if Current.account %>>
     <% if authenticated? %>
       <aside class="sidebar">
         <div class="brand">
@@ -62,6 +63,7 @@
               <%= nav_link "Jetons d'API", api_tokens_path %>
             <% end %>
             <% if Current.user.accounts.many? || Current.user.staff? %><%= link_to "Clients", accounts_path(account_id: nil) %><% end %>
+            <%= link_to "Notifications", push_subscriptions_path(account_id: nil) %>
             <%= link_to "Passkeys", passkeys_path(account_id: nil) %>
             <%= button_to "Déconnexion", session_path(account_id: nil), method: :delete, class: "link" %>
           </nav>

@@ -1,0 +1,41 @@
+<% content_for :title, "Notifications · SG Mail" %>
+<header class="space-head">
+  <h1>Notifications</h1>
+  <p class="tagline">Un message arrive dans ta réception : ton téléphone te le dit.</p>
+</header>
+<p class="muted">Seuls les messages de ta Réception sonnent : pas le Feed, ni le Paper Trail, ni les nouveaux expéditeurs
+  encore à trier. Le nombre de fils non lus s'affiche sur l'icône de l'app.</p>
+
+<div class="card push" data-controller="push" data-push-key-value="<%= @vapid_public_key %>" data-push-url-value="<%= push_subscriptions_path %>">
+  <p data-push-target="enable" hidden><button class="primary" data-action="push#subscribe">Activer les notifications sur cet appareil</button></p>
+  <p data-push-target="enabled" hidden>Les notifications sont actives sur cet appareil.</p>
+  <p data-push-target="denied" hidden>Les notifications sont bloquées pour SG Mail sur cet appareil. Autorise-les dans les réglages, puis reviens ici.</p>
+  <div data-push-target="install" hidden>
+    <p><strong>Sur iPhone et iPad</strong>, les notifications passent par l'app installée :</p>
+    <ol>
+      <li>Ouvre SG Mail dans Safari.</li>
+      <li>Touche <strong>Partager</strong>, puis <strong>Sur l'écran d'accueil</strong>.</li>
+      <li>Ouvre SG Mail depuis l'écran d'accueil et reviens sur cette page (Réglages, puis Notifications).</li>
+    </ol>
+  </div>
+  <p class="flash alert" data-push-target="error" hidden></p>
+</div>
+
+<h2>Mes appareils</h2>
+<% if @subscriptions.any? %>
+  <table>
+    <tr><th>Appareil</th><th>Activé le</th><th>Dernière notification</th><th></th></tr>
+    <% @subscriptions.each do |subscription| %>
+      <tr>
+        <td><%= subscription.name %></td>
+        <td class="muted"><%= l(subscription.created_at.to_date) %></td>
+        <td class="muted"><%= subscription.last_used_at ? l(subscription.last_used_at, format: :short) : "jamais" %></td>
+        <td><%= button_to "Retirer", push_subscription_path(subscription), method: :delete, class: "link",
+              form: { data: { turbo_confirm: "Ne plus envoyer de notifications à « #{subscription.name} » ?" } } %></td>
+      </tr>
+    <% end %>
+  </table>
+  <p><%= button_to "Envoyer une notification de test", test_push_subscriptions_path %></p>
+<% else %>
+  <p class="muted">Aucun appareil pour l'instant.</p>
+<% end %>
