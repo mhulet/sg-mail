@@ -8,6 +8,8 @@ class AttachmentsController < ApplicationController
     data = MessageParser.new(RawMessageFetcher.fetch(@message)).attachment_data(attachment["index"])
     raise ActiveRecord::RecordNotFound unless data
 
+    AccessLog.record!(Current.user, @message.conversation, via: "web", action: "attachment", message: @message, detail: attachment["filename"])
+
     # Toujours en téléchargement : un fichier HTML ou SVG ne doit jamais s'ouvrir sur le domaine de SG Mail.
     send_data data, filename: attachment["filename"], type: attachment["content_type"], disposition: "attachment"
   end

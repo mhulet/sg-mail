@@ -121,3 +121,5 @@ code.link { user-select: all; word-break: break-all; }
   .snippet { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   iframe.body { min-height: 300px; }
 }
+
+input[type=submit].danger { background: var(--danger); border-color: var(--danger); color: #fff; }

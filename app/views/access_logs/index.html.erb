@@ -1,0 +1,38 @@
+<% content_for :title, "Journal d'accès · #{current_account.name} · SG Mail" %>
+<h1>Journal d'accès</h1>
+<p class="muted">Qui a ouvert quel fil ou téléchargé quelle pièce jointe, et par où. Gardé un an.</p>
+
+<div class="actions">
+  <%= form_with url: access_logs_path, method: :get, class: "inline" do |f| %>
+    <%= f.select :user_id, [ [ "Tout le monde", "" ] ] + @people.map { |p| [ p.display_name, p.id ] },
+          { selected: params[:user_id] }, onchange: "this.form.requestSubmit()", aria: { label: "Personne" } %>
+  <% end %>
+</div>
+
+<% if @logs.none? %>
+  <p class="muted">Rien encore.</p>
+<% else %>
+  <table class="access-logs">
+    <tr><th>Quand</th><th>Qui</th><th>Quoi</th><th>Par</th></tr>
+    <% @logs.each do |log| %>
+      <tr>
+        <td class="nowrap muted"><%= l(log.created_at, format: :short) %></td>
+        <td><%= log.user.display_name %></td>
+        <td>
+          <%= AccessLog::ACTIONS.fetch(log.action) %>
+          <% if log.conversation %>
+            « <%= link_to log.conversation.title, conversation_path(log.conversation) %> »
+            <span class="muted">(<%= log.conversation.mailbox.address %>)</span>
+          <% else %>
+            <span class="muted">un fil supprimé depuis</span>
+          <% end %>
+          <%= tag.span("· #{log.detail}", class: "muted") if log.detail %>
+        </td>
+        <td class="muted"><%= AccessLog::VIAS.fetch(log.via) %></td>
+      </tr>
+    <% end %>
+  </table>
+  <% if @logs.size == AccessLogsController::PER_PAGE %>
+    <p><%= link_to "Plus anciens →", access_logs_path(user_id: params[:user_id].presence, before: @logs.last.created_at.iso8601(6)) %></p>
+  <% end %>
+<% end %>

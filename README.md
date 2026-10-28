@@ -62,6 +62,12 @@ obligatoire (`force_ssl`), ce qui convient au certificat géré par Hatchbox.
     ordinaire (propriétaire des tables, sans `SUPERUSER` ni `BYPASSRLS`). Les tests vérifient la RLS
     avec un rôle ordinaire.
   - Les règles RLS vivent dans `db/structure.sql` (pas de `schema.rb` pour la base principale).
+- **Journal d'accès** (cadrage §4.2, `AccessLog`) : chaque ouverture d'un fil (interface, API/CLI, MCP) et chaque
+  téléchargement de pièce jointe est noté, avec la personne et l'heure. Les admins le lisent depuis « Membres » →
+  « Journal d'accès ». Effacé après un an (`PurgeAccessLogsJob`, chaque nuit).
+- **Suppression complète d'un client** (cadrage §4.2) : réservée à l'équipe Super Génial, page « Clients », en
+  retapant le nom du client. `Account#purge!` efface toutes les tables du client (`Account::OWNED_TABLES`) et
+  révoque l'accès Google de ses boîtes Gmail. Déconnecter une boîte Gmail révoque aussi son accès Google.
 
 ## Boîtes et partage
 

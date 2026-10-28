@@ -27,6 +27,7 @@ class ConversationsController < ApplicationController
     @stacks = @conversation.stacks_for(Current.user)
     @archived = @conversation.archived_for?(Current.user)
     @conversation.mark_read_by!(Current.user)
+    AccessLog.record!(Current.user, @conversation, via: "web")
   end
 
   def unread

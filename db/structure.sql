@@ -37,6 +37,44 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
+-- Name: access_logs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.access_logs (
+    id bigint NOT NULL,
+    account_id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    conversation_id bigint,
+    message_id bigint,
+    action character varying NOT NULL,
+    via character varying NOT NULL,
+    detail character varying,
+    created_at timestamp(6) without time zone NOT NULL
+);
+
+ALTER TABLE ONLY public.access_logs FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: access_logs_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.access_logs_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: access_logs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.access_logs_id_seq OWNED BY public.access_logs.id;
+
+
+--
 -- Name: accounts; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1322,6 +1360,13 @@ ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
 
 
 --
+-- Name: access_logs id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.access_logs ALTER COLUMN id SET DEFAULT nextval('public.access_logs_id_seq'::regclass);
+
+
+--
 -- Name: accounts id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -1564,6 +1609,14 @@ ALTER TABLE ONLY public.tasks ALTER COLUMN id SET DEFAULT nextval('public.tasks_
 --
 
 ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
+
+
+--
+-- Name: access_logs access_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.access_logs
+    ADD CONSTRAINT access_logs_pkey PRIMARY KEY (id);
 
 
 --
@@ -1860,6 +1913,27 @@ ALTER TABLE ONLY public.tasks
 
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: index_access_logs_on_account_id_and_created_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_access_logs_on_account_id_and_created_at ON public.access_logs USING btree (account_id, created_at);
+
+
+--
+-- Name: index_access_logs_on_conversation_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_access_logs_on_conversation_id ON public.access_logs USING btree (conversation_id);
+
+
+--
+-- Name: index_access_logs_on_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_access_logs_on_user_id ON public.access_logs USING btree (user_id);
 
 
 --
@@ -2647,6 +2721,14 @@ ALTER TABLE ONLY public.readings
 
 
 --
+-- Name: access_logs fk_rails_26726b0a1b; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.access_logs
+    ADD CONSTRAINT fk_rails_26726b0a1b FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
 -- Name: conversation_states fk_rails_2674c34b79; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2700,6 +2782,14 @@ ALTER TABLE ONLY public.oauth_tokens
 
 ALTER TABLE ONLY public.tasks
     ADD CONSTRAINT fk_rails_43dfabfaca FOREIGN KEY (account_id) REFERENCES public.accounts(id);
+
+
+--
+-- Name: access_logs fk_rails_4559f39673; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.access_logs
+    ADD CONSTRAINT fk_rails_4559f39673 FOREIGN KEY (message_id) REFERENCES public.messages(id) ON DELETE SET NULL;
 
 
 --
@@ -2772,6 +2862,14 @@ ALTER TABLE ONLY public.screenings
 
 ALTER TABLE ONLY public.mail_folders
     ADD CONSTRAINT fk_rails_6c7fd64bb4 FOREIGN KEY (mailbox_id) REFERENCES public.mailboxes(id);
+
+
+--
+-- Name: access_logs fk_rails_703d52b5c3; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.access_logs
+    ADD CONSTRAINT fk_rails_703d52b5c3 FOREIGN KEY (conversation_id) REFERENCES public.conversations(id) ON DELETE SET NULL;
 
 
 --
@@ -2900,6 +2998,14 @@ ALTER TABLE ONLY public.memberships
 
 ALTER TABLE ONLY public.solid_queue_claimed_executions
     ADD CONSTRAINT fk_rails_9cfe4d4944 FOREIGN KEY (job_id) REFERENCES public.solid_queue_jobs(id) ON DELETE CASCADE;
+
+
+--
+-- Name: access_logs fk_rails_9fac0b39ba; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.access_logs
+    ADD CONSTRAINT fk_rails_9fac0b39ba FOREIGN KEY (account_id) REFERENCES public.accounts(id) ON DELETE CASCADE;
 
 
 --
@@ -3036,6 +3142,19 @@ ALTER TABLE ONLY public.invitations
 
 ALTER TABLE ONLY public.api_tokens
     ADD CONSTRAINT fk_rails_f16b5e0447 FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: access_logs; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.access_logs ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: access_logs account_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY account_isolation ON public.access_logs USING (((current_setting('sg_mail.bypass_rls'::text, true) = 'on'::text) OR (account_id = (NULLIF(current_setting('sg_mail.account_id'::text, true), ''::text))::bigint))) WITH CHECK (((current_setting('sg_mail.bypass_rls'::text, true) = 'on'::text) OR (account_id = (NULLIF(current_setting('sg_mail.account_id'::text, true), ''::text))::bigint)));
 
 
 --
@@ -3188,6 +3307,7 @@ ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261028120000'),
 ('20261028110000'),
 ('20261028100000'),
 ('20261028090000'),

@@ -10,7 +10,7 @@ Rails.application.routes.draw do
   get "invitations/:token" => "invitation_acceptances#show", as: :invitation_acceptance
   post "invitations/:token" => "invitation_acceptances#create"
 
-  resources :accounts, only: %i[index new create]
+  resources :accounts, only: %i[index new create destroy]
 
   # Notifications Pub/Sub des boîtes Gmail (voir GmailWatch).
   post "webhooks/gmail" => "webhooks/gmail#create"
@@ -42,6 +42,7 @@ Rails.application.routes.draw do
     resources :memberships, only: %i[index update destroy]
     resources :invitations, only: %i[create destroy]
     resources :api_tokens, only: %i[index create destroy]
+    resources :access_logs, only: :index, path: "journal"
     resources :oauth_connections, only: :destroy
     get "auth/google_oauth2" => "google_oauth#new", as: :google_oauth
     get "/" => "conversations#index", as: :account_root
