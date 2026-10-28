@@ -1,9 +1,11 @@
-<% box_label = @stack ? ConversationState::STACK_LABELS.fetch(@stack) : Screening::BUCKET_LABELS.fetch(@box) %>
-<% box = (@box unless @box == "imbox" || @stack) %>
+<% box_label = @archived ? "Archivés" : @stack ? ConversationState::STACK_LABELS.fetch(@stack) : Screening::BUCKET_LABELS.fetch(@box) %>
+<% box = (@box unless @box == "imbox" || @stack || @archived) %>
 <% stack = @stack %>
 <% content_for :title, "#{[ box_label, @mailbox&.address ].compact.join(" · ")} · #{current_account.name} · SG Mail" %>
 <h1><%= box_label %><%= tag.span(" · #{@mailbox.address}", class: "muted") if @mailbox %></h1>
-<% if @stack == "reply_later" %>
+<% if @archived %>
+  <p class="muted">Les fils que tu as archivés. Chacun revient dans ta réception dès qu'un nouveau message y arrive.</p>
+<% elsif @stack == "reply_later" %>
   <p class="muted">Les fils que tu as gardés pour y répondre plus tard. Ils quittent cette pile quand tu y réponds.</p>
 <% elsif @stack == "set_aside" %>
   <p class="muted">Les fils que tu as mis de côté pour t'y référer.</p>
@@ -18,6 +20,7 @@
     <%= form_with url: conversations_path, method: :get, class: "inline" do |f| %>
       <%= f.hidden_field :box, value: box if box %>
       <%= f.hidden_field :stack, value: stack if stack %>
+      <%= f.hidden_field :archived, value: "1" if @archived %>
       <%= f.select :mailbox_id, [ [ "Toutes les boîtes", "" ] ] + @mailboxes.map { |m| [ m.address, m.id ] },
             { selected: @mailbox&.id }, onchange: "this.form.requestSubmit()", aria: { label: "Boîte" } %>
       <%= f.hidden_field :unread, value: params[:unread] if params[:unread].present? %>
@@ -59,5 +62,8 @@
 </table>
 
 <% if @conversations.size == ConversationsController::PER_PAGE && @conversations.last.last_message_at %>
-  <p><%= link_to "Plus anciens →", conversations_path(box: box, stack: stack, mailbox_id: @mailbox&.id, unread: params[:unread].presence, before: @conversations.last.last_message_at.iso8601(6)) %></p>
+  <p><%= link_to "Plus anciens →", conversations_path(box: box, stack: stack, archived: ("1" if @archived), mailbox_id: @mailbox&.id, unread: params[:unread].presence, before: @conversations.last.last_message_at.iso8601(6)) %></p>
+<% end %>
+<% unless @archived %>
+  <p class="muted"><%= link_to "Voir mes fils archivés", conversations_path(archived: 1, mailbox_id: @mailbox&.id) %></p>
 <% end %>

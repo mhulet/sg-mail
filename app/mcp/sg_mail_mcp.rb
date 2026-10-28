@@ -10,7 +10,7 @@ module SgMailMcp
     Like Hey, a Screener keeps first-time senders out of each person's inbox until that person accepts them
     (list_screener, screen_sender), and each accepted sender lands in one of that person's boxes: imbox,
     feed (newsletters) or paper_trail (receipts, notifications). Each person can also keep a thread to
-    "reply later" or "set aside" (update_stacks). Search still finds every thread.
+    "reply later" or "set aside", or archive it when done (update_stacks). Search still finds every thread.
     Start with whoami (mailboxes and colleagues), then search_conversations and get_conversation.
     To answer an email, create a draft with create_draft and show it to the user. Only call send_draft after
     the user explicitly asked to send that draft: it sends a real email. Dates are ISO 8601. Write emails

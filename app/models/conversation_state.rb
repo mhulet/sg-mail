@@ -1,5 +1,6 @@
-# Les piles personnelles d'un fil, façon Hey : « Répondre plus tard » et « Mis de côté ».
-# Une ligne par personne et par fil ; l'horodatage dit depuis quand le fil est dans la pile.
+# Les piles personnelles d'un fil, façon Hey : « Répondre plus tard » et « Mis de côté », et l'archivage.
+# Une ligne par personne et par fil ; l'horodatage dit depuis quand le fil est dans la pile, ou archivé.
+# Un fil archivé revient dès qu'un message plus récent que l'archivage arrive.
 class ConversationState < ApplicationRecord
   STACKS = %w[reply_later set_aside].freeze
   COLUMNS = { "reply_later" => :reply_later_at, "set_aside" => :set_aside_at }.freeze
@@ -20,5 +21,17 @@ class ConversationState < ApplicationRecord
     column = COLUMNS.fetch(stack)
     state.update!(column => (on ? state[column] || Time.current : nil))
     state
+  end
+
+  # Archive le fil (on: true) pour cette personne : il quitte sa réception et « Répondre plus tard »,
+  # jusqu'au prochain message. Ou le remet dans la réception (on: false).
+  def self.archive!(conversation, user, on: true)
+    state = find_or_initialize_by(conversation: conversation, user: user)
+    state.update!(on ? { archived_at: Time.current, reply_later_at: nil } : { archived_at: nil })
+    state
+  end
+
+  def archived?(conversation)
+    archived_at.present? && (conversation.last_message_at.nil? || archived_at >= conversation.last_message_at)
   end
 end

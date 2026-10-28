@@ -126,7 +126,8 @@ CREATE TABLE public.conversation_states (
     reply_later_at timestamp(6) without time zone,
     set_aside_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    archived_at timestamp(6) without time zone
 );
 
 ALTER TABLE ONLY public.conversation_states FORCE ROW LEVEL SECURITY;
@@ -3187,6 +3188,7 @@ ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261028110000'),
 ('20261028100000'),
 ('20261028090000'),
 ('20261028080000'),

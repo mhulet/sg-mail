@@ -30,7 +30,17 @@ class Conversation < ApplicationRecord
   }
   scope :outside_stacks_for, ->(user) {
     where.not(id: ConversationState.where(user: user).where("reply_later_at IS NOT NULL OR set_aside_at IS NOT NULL").select(:conversation_id))
+      .not_archived_for(user)
   }
+
+  # Archivés par cette personne, et sans message arrivé depuis.
+  ARCHIVED_SQL = <<~SQL.squish
+    EXISTS (SELECT 1 FROM conversation_states WHERE conversation_states.conversation_id = conversations.id
+      AND conversation_states.user_id = ? AND conversation_states.archived_at IS NOT NULL
+      AND (conversations.last_message_at IS NULL OR conversation_states.archived_at >= conversations.last_message_at))
+  SQL
+  scope :archived_for, ->(user) { where(ARCHIVED_SQL, user.id) }
+  scope :not_archived_for, ->(user) { where("NOT #{ARCHIVED_SQL}", user.id) }
 
   # Screener : un fil qui attend la décision de la personne.
   scope :screening_pending_for, ->(user) {
@@ -135,6 +145,21 @@ class Conversation < ApplicationRecord
   def stacks_for(user)
     state = states.find { |s| s.user_id == user.id }
     ConversationState::COLUMNS.filter_map { |stack, column| stack if state&.public_send(column) }
+  end
+
+  # Archive le fil pour cette personne (ou le remet dans sa réception), et le reporte chez le fournisseur.
+  def archive_for!(user, on: true)
+    ConversationState.archive!(self, user, on: on)
+    states.reset
+    ProviderArchiveJob.perform_later(self, archive: on) if mailbox.gmail?
+  end
+
+  def archived_for?(user) = states.find { |s| s.user_id == user.id }&.archived?(self) || false
+
+  # Tout le monde a archivé le fil : on peut aussi le sortir de la réception chez le fournisseur.
+  def archived_by_everyone?
+    people = mailbox.users_with_access.pluck(:id)
+    people.any? && ConversationState.where(conversation: self, user_id: people).to_a.count { |state| state.archived?(self) } == people.size
   end
 
   # imbox, feed ou paper_trail ; nil tant que l'expéditeur n'est pas accepté.
