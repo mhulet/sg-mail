@@ -39,6 +39,32 @@ class McpControllerTest < ActionDispatch::IntegrationTest
     assert result["isError"]
   end
 
+  test "screener: a new sender waits, then is accepted" do
+    with_account(@semisto) do
+      travel 1.hour
+      @mailbox.messages.create!(provider_uid: "z", thread_key: "t2", subject: "Partenariat", from_address: "zoe@example.org",
+        from_name: "Zoé", sent_at: Time.current, labels: %w[INBOX])
+      Conversation.rebuild_for(@mailbox)
+    end
+
+    call_tool("search_conversations")
+    assert_equal [ "Inscription formation" ], result["structuredContent"]["conversations"].map { |c| c["subject"] }
+    assert_equal "accepted", result["structuredContent"]["conversations"].sole["screening"]
+
+    call_tool("list_screener")
+    entry = result["structuredContent"]["pending"].sole
+    assert_equal [ "zoe@example.org", "Zoé", "Partenariat", "pending" ],
+      [ entry["address"], entry["name"], entry.dig("latest_conversation", "subject"), entry.dig("latest_conversation", "screening") ]
+
+    call_tool("screen_sender", address: "zoe@example.org", decision: "accepted")
+    assert_equal "accepted", result["structuredContent"]["screening"]["decision"]
+    call_tool("search_conversations")
+    assert_equal 2, result["structuredContent"]["conversations"].size
+
+    call_tool("screen_sender", address: "zoe@example.org", decision: "maybe")
+    assert result["isError"]
+  end
+
   private
 
   def rpc(method, **params) = { jsonrpc: "2.0", id: 1, method: method, params: params }.to_json

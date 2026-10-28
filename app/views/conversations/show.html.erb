@@ -4,8 +4,22 @@
   <%= link_to @conversation.mailbox.address, conversations_path(mailbox_id: @conversation.mailbox_id) %>
 </p>
 <h1><%= @conversation.title %></h1>
+<% if @screening.in?(%w[pending blocked]) %>
+  <p class="card screening">
+    <% if @screening == "pending" %>
+      <strong><%= @conversation.sender_display %></strong> &lt;<%= @conversation.sender_address %>&gt; t'écrit pour la première fois.
+    <% else %>
+      Tu as bloqué <strong><%= @conversation.sender_address %></strong> : ses emails restent hors de ta réception.
+    <% end %>
+    <%= render "screenings/buttons", address: @conversation.sender_address, current: @screening %>
+  </p>
+<% end %>
 <div class="actions">
   <%= button_to "Marquer comme non lu", unread_conversation_path(@conversation), class: "link" %>
+  <% if @screening == "accepted" %>
+    <%= button_to "Bloquer #{@conversation.sender_address}", screenings_path, params: { address: @conversation.sender_address, decision: "blocked" },
+          class: "link", form: { data: { turbo_confirm: "Ne plus voir #{@conversation.sender_address} dans ta réception ?" } } %>
+  <% end %>
   <%= form_with url: assign_conversation_path(@conversation), method: :patch, class: "inline" do |f| %>
     <%= f.label :assignee_id, "Qui s'en occupe ?" %>
     <%= f.select :assignee_id, [ [ "Personne", "" ] ] + @people.map { |p| [ p.display_name, p.id ] },

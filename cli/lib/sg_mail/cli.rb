@@ -74,6 +74,25 @@ module SgMail
       done(data, data.dig("conversation", "assignee") ? "Confié à #{data.dig("conversation", "assignee", "name")}." : "Plus assigné.")
     end
 
+    desc "screener", "À trier : les nouveaux expéditeurs qui attendent ma décision"
+    def screener
+      output(client.get("screener")) do |data|
+        say "Personne n'attend." if data["pending"].empty?
+        data["pending"].each do |s|
+          c = s["latest_conversation"]
+          say format("%-32s %-22.22s %s%s", s["address"], s["name"].to_s, c["subject"],
+            s["conversations_count"] > 1 ? "  (#{s["conversations_count"]} fils)" : "")
+        end
+        data["blocked"].each { |b| say "bloqué : #{b["address"]}" }
+      end
+    end
+
+    desc "accept ADRESSE", "Accepte un expéditeur : ses emails arrivent dans ma réception"
+    def accept(address) = screen(address, "accepted", "#{address} accepté.")
+
+    desc "block ADRESSE", "Bloque un expéditeur : ses emails restent hors de ma réception"
+    def block(address) = screen(address, "blocked", "#{address} bloqué.")
+
     desc "note ID TEXTE", "Ajoute une note interne à un fil"
     def note(id, *text) = done(client.post("conversations/#{int(id)}/notes", body: text.join(" ")), "Note ajoutée.")
 
@@ -148,6 +167,8 @@ module SgMail
         end
       end
     end
+
+    def screen(address, decision, message) = done(client.post("screener", address: address, decision: decision), message)
 
     def draft_from(message_id, kind, text, to: nil)
       body = text.any? ? text.join(" ") : ($stdin.tty? ? nil : $stdin.read)

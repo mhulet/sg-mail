@@ -46,6 +46,22 @@ class SgMailCliTest < ActionDispatch::IntegrationTest
     assert_equal "Inscription", JSON.parse(run_cli("search", "inscri", "--json"))["conversations"].sole["subject"]
   end
 
+  test "screener, accept, block" do
+    with_account(@semisto) do
+      travel 1.hour
+      Mailbox.sole.messages.create!(provider_uid: "z", thread_key: "t2", subject: "Partenariat", from_address: "zoe@example.org",
+        from_name: "Zoé", sent_at: Time.current, labels: %w[INBOX])
+      Conversation.rebuild_for(Mailbox.sole)
+    end
+
+    assert_match(/zoe@example.org +Zoé +Partenariat/, run_cli("screener"))
+    assert_equal "zoe@example.org accepté.\n", run_cli("accept", "zoe@example.org")
+    assert_match(/Partenariat/, run_cli("inbox"))
+    run_cli("block", "zoe@example.org")
+    assert_equal "bloqué : zoe@example.org", run_cli("screener").lines.last.strip
+    assert_no_match(/Partenariat/, run_cli("inbox"))
+  end
+
   test "errors are readable" do
     error = assert_raises(SgMail::Client::Error) { run_cli("show", "999999") }
     assert_equal "Introuvable, ou pas d'accès.", error.message

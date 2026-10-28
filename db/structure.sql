@@ -131,7 +131,9 @@ CREATE TABLE public.conversations (
     in_inbox boolean DEFAULT false NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    assignee_id bigint
+    assignee_id bigint,
+    sender_address character varying,
+    sender_name character varying
 );
 
 ALTER TABLE ONLY public.conversations FORCE ROW LEVEL SECURITY;
@@ -625,6 +627,42 @@ ALTER SEQUENCE public.readings_id_seq OWNED BY public.readings.id;
 CREATE TABLE public.schema_migrations (
     version character varying NOT NULL
 );
+
+
+--
+-- Name: screenings; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.screenings (
+    id bigint NOT NULL,
+    account_id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    address character varying NOT NULL,
+    decision character varying NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+ALTER TABLE ONLY public.screenings FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: screenings_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.screenings_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: screenings_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.screenings_id_seq OWNED BY public.screenings.id;
 
 
 --
@@ -1350,6 +1388,13 @@ ALTER TABLE ONLY public.readings ALTER COLUMN id SET DEFAULT nextval('public.rea
 
 
 --
+-- Name: screenings id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.screenings ALTER COLUMN id SET DEFAULT nextval('public.screenings_id_seq'::regclass);
+
+
+--
 -- Name: sessions id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -1612,6 +1657,14 @@ ALTER TABLE ONLY public.schema_migrations
 
 
 --
+-- Name: screenings screenings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.screenings
+    ADD CONSTRAINT screenings_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: sessions sessions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1802,6 +1855,13 @@ CREATE INDEX index_conversations_on_assignee_id ON public.conversations USING bt
 --
 
 CREATE INDEX index_conversations_on_mailbox_id ON public.conversations USING btree (mailbox_id);
+
+
+--
+-- Name: index_conversations_on_mailbox_id_and_sender_address; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_conversations_on_mailbox_id_and_sender_address ON public.conversations USING btree (mailbox_id, sender_address);
 
 
 --
@@ -2124,6 +2184,20 @@ CREATE UNIQUE INDEX index_readings_on_message_id_and_user_id ON public.readings 
 --
 
 CREATE INDEX index_readings_on_user_id_and_message_id ON public.readings USING btree (user_id, message_id);
+
+
+--
+-- Name: index_screenings_on_account_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_screenings_on_account_id ON public.screenings USING btree (account_id);
+
+
+--
+-- Name: index_screenings_on_user_id_and_account_id_and_address; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_screenings_on_user_id_and_account_id_and_address ON public.screenings USING btree (user_id, account_id, address);
 
 
 --
@@ -2594,6 +2668,22 @@ ALTER TABLE ONLY public.readings
 
 
 --
+-- Name: screenings fk_rails_69bdf370d7; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.screenings
+    ADD CONSTRAINT fk_rails_69bdf370d7 FOREIGN KEY (account_id) REFERENCES public.accounts(id);
+
+
+--
+-- Name: screenings fk_rails_6c70b198a7; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.screenings
+    ADD CONSTRAINT fk_rails_6c70b198a7 FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
 -- Name: mail_folders fk_rails_6c7fd64bb4; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2906,6 +2996,13 @@ CREATE POLICY account_isolation ON public.readings USING (((current_setting('sg_
 
 
 --
+-- Name: screenings account_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY account_isolation ON public.screenings USING (((current_setting('sg_mail.bypass_rls'::text, true) = 'on'::text) OR (account_id = (NULLIF(current_setting('sg_mail.account_id'::text, true), ''::text))::bigint))) WITH CHECK (((current_setting('sg_mail.bypass_rls'::text, true) = 'on'::text) OR (account_id = (NULLIF(current_setting('sg_mail.account_id'::text, true), ''::text))::bigint)));
+
+
+--
 -- Name: tasks account_isolation; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -2961,6 +3058,12 @@ ALTER TABLE public.notes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.readings ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: screenings; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.screenings ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: tasks; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -2973,6 +3076,7 @@ ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261028080000'),
 ('20261027230000'),
 ('20261027224500'),
 ('20261027223000'),

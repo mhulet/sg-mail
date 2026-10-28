@@ -30,6 +30,7 @@
         <span><%= Current.account.name %></span>
         <nav>
           <%= link_to "Réception", account_root_path %>
+          <%= link_to screener_label, screenings_path %>
           <%= link_to "Mes tâches", tasks_path %>
           <%= link_to "Écrire", new_draft_path %>
           <%= link_to "Brouillons", drafts_path %>
