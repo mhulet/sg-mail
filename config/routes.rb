@@ -6,6 +6,11 @@ Rails.application.routes.draw do
   get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
 
   resource :session
+  post "session/passkey/options" => "passkey_sessions#options", as: :passkey_session_options
+  post "session/passkey" => "passkey_sessions#create", as: :passkey_session
+  resources :passkeys, only: %i[index create destroy] do
+    post :options, on: :collection
+  end
   resources :passwords, param: :token
   get "invitations/:token" => "invitation_acceptances#show", as: :invitation_acceptance
   post "invitations/:token" => "invitation_acceptances#create"

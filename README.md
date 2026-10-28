@@ -62,6 +62,9 @@ obligatoire (`force_ssl`), ce qui convient au certificat géré par Hatchbox.
     ordinaire (propriétaire des tables, sans `SUPERUSER` ni `BYPASSRLS`). Les tests vérifient la RLS
     avec un rôle ordinaire.
   - Les règles RLS vivent dans `db/structure.sql` (pas de `schema.rb` pour la base principale).
+- **Passkeys** (cadrage §8) : menu « Passkeys » pour en ajouter une par appareil (Touch ID, Face ID, Windows Hello,
+  clé de sécurité), puis « Se connecter avec une passkey » sur la page de connexion, sans adresse ni mot de passe.
+  Gem `webauthn` ; l'identifiant de la partie de confiance est l'hôte de la requête. Le mot de passe reste possible.
 - **Journal d'accès** (cadrage §4.2, `AccessLog`) : chaque ouverture d'un fil (interface, API/CLI, MCP) et chaque
   téléchargement de pièce jointe est noté, avec la personne et l'heure. Les admins le lisent depuis « Membres » →
   « Journal d'accès ». Effacé après un an (`PurgeAccessLogsJob`, chaque nuit).
