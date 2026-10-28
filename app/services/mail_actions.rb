@@ -11,15 +11,16 @@ class MailActions
 
   # Une pile (box : imbox par défaut, feed, paper_trail), une pile personnelle (stack : reply_later, set_aside),
   # une boîte, ou une recherche ; filtres non lus, assignés à moi, avant une date. Pour une pile, seuls les fils
-  # d'expéditeurs acceptés (Screener), rangés dans cette pile et dans aucune pile personnelle apparaissent.
-  def conversations(query: nil, box: nil, stack: nil, mailbox_id: nil, unread: false, mine: false, before: nil, limit: 50)
+  # d'expéditeurs acceptés (Screener), rangés dans cette pile et dans aucune pile personnelle, et pas archivés,
+  # apparaissent. archived: true liste mes fils archivés.
+  def conversations(query: nil, box: nil, stack: nil, mailbox_id: nil, unread: false, mine: false, before: nil, limit: 50, archived: false)
     raise ArgumentError, "box : imbox, feed ou paper_trail" unless box.blank? || box.in?(Screening::BUCKETS)
     raise ArgumentError, "stack : reply_later ou set_aside" unless stack.blank? || stack.in?(ConversationState::STACKS)
     mailbox = mailboxes.find(mailbox_id) if mailbox_id.present?
     scope = if query.present?
       MessageSearch.new(@user, query, mailbox: mailbox).conversations
-    elsif stack.present?
-      scope = accessible_conversations.in_stack_for(@user, stack)
+    elsif stack.present? || archived
+      scope = stack.present? ? accessible_conversations.in_stack_for(@user, stack) : accessible_conversations.archived_for(@user)
       mailbox ? scope.where(mailbox: mailbox) : scope
     else
       scope = mailbox ? accessible_conversations.where(mailbox: mailbox) : accessible_conversations.inbox
@@ -63,9 +64,11 @@ class MailActions
   def screen(address, decision, bucket: nil) = Screening.decide!(@user, address, decision, bucket: bucket)
 
   # Met le fil dans mes piles « Répondre plus tard » ou « Mis de côté » (true), ou l'en retire (false).
+  # archived: true l'archive pour moi (il revient au prochain message), false le remet dans ma réception.
   # Une valeur nil ne change rien.
-  def update_stacks(id, reply_later: nil, set_aside: nil)
+  def update_stacks(id, reply_later: nil, set_aside: nil, archived: nil)
     conversation = conversation(id)
+    conversation.archive_for!(@user, on: archived) unless archived.nil?
     { "reply_later" => reply_later, "set_aside" => set_aside }.each do |stack, on|
       ConversationState.put!(conversation, @user, stack, on: on) unless on.nil?
     end

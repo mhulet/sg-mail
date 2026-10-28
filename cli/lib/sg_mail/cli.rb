@@ -93,6 +93,15 @@ module SgMail
     option :off, type: :boolean
     def aside(id = nil) = stack("set_aside", id, "Mis de côté")
 
+    desc "archive [ID]", "Sans ID : mes fils archivés. Avec ID : archive le fil, jusqu'au prochain message (--off : le remet dans la réception)"
+    option :off, type: :boolean
+    def archive(id = nil)
+      return list_conversations(nil, archived: true) unless id
+
+      data = client.patch("conversations/#{int(id)}", archived: !options[:off])
+      done(data, options[:off] ? "Fil #{id} remis dans la réception." : "Fil #{id} archivé.")
+    end
+
     desc "screener", "À trier : les nouveaux expéditeurs qui attendent ma décision"
     def screener
       output(client.get("screener")) do |data|
@@ -179,8 +188,8 @@ module SgMail
 
     def int(value) = Integer(value, exception: false) || raise(Client::Error, "Identifiant attendu (un nombre), reçu : #{value.inspect}")
 
-    def list_conversations(query, box: options[:box], stack: nil)
-      data = client.get("conversations", q: query, box: box, stack: stack, unread: options[:unread] ? 1 : nil, mine: options[:mine] ? 1 : nil,
+    def list_conversations(query, box: options[:box], stack: nil, archived: false)
+      data = client.get("conversations", q: query, box: box, stack: stack, archived: archived ? 1 : nil, unread: options[:unread] ? 1 : nil, mine: options[:mine] ? 1 : nil,
         mailbox_id: options[:mailbox], limit: options[:limit])
       output(data) do |d|
         say "Rien ici." if d["conversations"].empty?

@@ -24,6 +24,7 @@ Rails.application.routes.draw do
       post :unread, on: :member
       patch :assign, on: :member
       patch :stack, on: :member
+      patch :archive, on: :member
       resources :notes, only: %i[create destroy]
       post :mark_all_read, on: :collection
     end

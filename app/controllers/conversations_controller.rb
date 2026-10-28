@@ -2,18 +2,19 @@ class ConversationsController < ApplicationController
   include AccountScoped
   PER_PAGE = 50
 
-  before_action :set_conversation, only: %i[show unread assign stack]
+  before_action :set_conversation, only: %i[show unread assign stack archive]
 
   # Boîte de réception unifiée : les fils de toutes les boîtes auxquelles on a accès.
   # Une pile façon Hey : la réception (par défaut), ?box=feed ou ?box=paper_trail ;
-  # ou une pile personnelle, ?stack=reply_later ou ?stack=set_aside.
+  # ou une pile personnelle, ?stack=reply_later ou ?stack=set_aside ; ou mes fils archivés, ?archived=1.
   def index
+    @archived = params[:archived] == "1"
     @stack = params[:stack].presence_in(ConversationState::STACKS)
     @box = params[:box].presence_in(Screening::BUCKETS) || "imbox"
     @mailboxes = Mailbox.accessible_by(Current.user).order(:address)
     @mailbox = @mailboxes.find(params[:mailbox_id]) if params[:mailbox_id].present?
     @conversations = page(filtered_conversations)
-    @stack_counts = ConversationState::STACKS.index_with { |stack| Conversation.accessible_by(Current.user).in_stack_for(Current.user, stack).count } unless @stack
+    @stack_counts = ConversationState::STACKS.index_with { |stack| Conversation.accessible_by(Current.user).in_stack_for(Current.user, stack).count } unless @stack || @archived
   end
 
   def show
@@ -24,6 +25,7 @@ class ConversationsController < ApplicationController
     @screening = @conversation.screening_for(Current.user)
     @bucket = @conversation.bucket_for(Current.user)
     @stacks = @conversation.stacks_for(Current.user)
+    @archived = @conversation.archived_for?(Current.user)
     @conversation.mark_read_by!(Current.user)
   end
 
@@ -51,6 +53,18 @@ class ConversationsController < ApplicationController
     redirect_back_or_to conversation_path(@conversation), alert: "Pile inconnue."
   end
 
+  # Archiver (on=1) : j'en ai fini, le fil quitte ma réception jusqu'au prochain message. on=0 l'y remet.
+  def archive
+    on = params[:on] != "0"
+    @conversation.archive_for!(Current.user, on: on)
+    if on
+      bucket = @conversation.bucket_for(Current.user)
+      redirect_to conversations_path(box: (bucket unless bucket.in?([ nil, "imbox" ]))), notice: "Fil archivé : il reviendra au prochain message."
+    else
+      redirect_to conversation_path(@conversation), notice: "Fil remis dans la réception."
+    end
+  end
+
   # « Tout marquer comme lu » : utile après l'import de milliers de vieux messages.
   # Depuis le Feed ou le Paper Trail, seulement les fils de cette pile.
   def mark_all_read
@@ -71,7 +85,10 @@ class ConversationsController < ApplicationController
 
   def filtered_conversations
     scope = Conversation.accessible_by(Current.user).with_unread_for(Current.user).includes(:mailbox, :assignee)
-    if @stack
+    if @archived
+      scope = scope.archived_for(Current.user)
+      scope = scope.where(mailbox: @mailbox) if @mailbox
+    elsif @stack
       scope = scope.in_stack_for(Current.user, @stack)
       scope = scope.where(mailbox: @mailbox) if @mailbox
     else

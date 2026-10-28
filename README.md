@@ -109,6 +109,11 @@ obligatoire (`force_ssl`), ce qui convient au certificat géré par Hatchbox.
 - **Répondre plus tard / Mis de côté** : deux piles personnelles (`ConversationState`, par personne et par fil).
   Boutons en haut d'un fil ; le fil quitte alors sa pile habituelle, et un lien « Répondre plus tard (n) » apparaît
   en haut de la réception. Envoyer une réponse depuis SG Mail sort le fil de « Répondre plus tard ».
+- **Archiver** (cadrage §5 et §6) : « j'en ai fini », par personne (`conversation_states.archived_at`). Le fil
+  quitte ma réception, mon Feed ou mon Paper Trail et « Répondre plus tard », et revient tout seul au prochain
+  message. Lien « Voir mes fils archivés » sous la liste. Quand toutes les personnes qui ont accès à une boîte
+  Gmail ont archivé un fil, `ProviderArchiveJob` retire aussi l'étiquette INBOX chez Gmail ; « Remettre dans la
+  réception » la rend. En IMAP, rien n'est déplacé sur le serveur (SG Mail ne suit que INBOX et Envoyés).
 
 ## Recherche
 
@@ -128,7 +133,8 @@ sans action explicite.
   `unread`, `mine`, `before`), `conversations/:id` (+ `read`, `unread`, `notes`, PATCH `assignee_id`),
   `screener` (GET : en attente et bloqués ; POST `address`, `decision` accepted|blocked, `box`),
   `conversations?box=feed|paper_trail` pour les autres piles, `?stack=reply_later|set_aside` pour les piles
-  personnelles (PATCH `conversations/:id` avec `reply_later`, `set_aside` true|false),
+  personnelles (PATCH `conversations/:id` avec `reply_later`, `set_aside`, `archived` true|false ;
+  `?archived=1` liste mes fils archivés),
   `tasks`, `drafts` (+ `deliver` pour envoyer).
 - **MCP** `/mcp` (HTTP « streamable », sans état) : `whoami`, `search_conversations`, `get_conversation`,
   `mark_read`, `mark_unread`, `assign`, `add_note`, `list_screener`, `screen_sender`, `update_stacks`, `list_tasks`, `create_task`, `update_task`,
@@ -152,6 +158,7 @@ sans action explicite.
   sg-mail screener                # puis : accept zoe@example.org [--to feed|paper_trail], block spam@example.com
   sg-mail feed                    # ou : paper-trail, inbox --box feed
   sg-mail later 12                # ou : later (la pile), later 12 --off, aside 12, aside
+  sg-mail archive 12              # ou : archive (mes fils archivés), archive 12 --off
   sg-mail reply 345 "Merci !"     # crée un brouillon, jamais envoyé
   sg-mail send 7                  # demande confirmation
   ```
