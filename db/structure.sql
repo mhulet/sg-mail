@@ -3390,6 +3390,7 @@ ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261028150000'),
 ('20261028140000'),
 ('20261028130000'),
 ('20261028120000'),

@@ -28,4 +28,12 @@ class MessageParserTest < ActiveSupport::TestCase
     assert_nil attrs[:body_html]
     assert_equal "x@example.org", attrs[:thread_key]
   end
+
+  test "l'aperçu d'un message HTML seul est du texte brut décodé" do
+    raw = "From: a@example.org\r\nSubject: Salut\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n" \
+      "<html><head><style>p { color: red }</style></head><body><p>J&#39;ai &quot;peut-&ecirc;tre&quot;</p><p>une id&eacute;e</p></body></html>\r\n"
+    attrs = MessageParser.parse(raw)
+
+    assert_equal %(J'ai "peut-être" une idée), attrs[:snippet]
+  end
 end

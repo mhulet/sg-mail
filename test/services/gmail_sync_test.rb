@@ -95,6 +95,13 @@ class GmailSyncTest < ActiveSupport::TestCase
     assert_equal "105", @mailbox.reload.sync_state["history_id"].to_s
   end
 
+  test "l'aperçu fourni par Gmail est décodé de ses entités HTML" do
+    @gmail.messages["m1"].snippet = "J&#39;ai &quot;peut-être&quot; une question &amp; une idée"
+    sync
+
+    assert_equal %(J'ai "peut-être" une question & une idée), @mailbox.messages.find_by(provider_uid: "m1").snippet
+  end
+
   test "historyId expiré : réimport complet" do
     sync
     @gmail.history_error = Google::Apis::ClientError.new("Not Found", status_code: 404)
