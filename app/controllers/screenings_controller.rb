@@ -9,8 +9,12 @@ class ScreeningsController < ApplicationController
   end
 
   def create
-    screening = Screening.decide!(Current.user, params.require(:address), params.require(:decision))
-    notice = screening.decision == "accepted" ? "#{screening.address} arrive désormais dans ta réception." : "#{screening.address} est bloqué : ses emails restent hors de ta réception."
+    screening = Screening.decide!(Current.user, params.require(:address), params.require(:decision), bucket: params[:bucket])
+    notice = if screening.decision == "accepted"
+      "Les emails de #{screening.address} arrivent désormais dans « #{screening.bucket_label} »."
+    else
+      "#{screening.address} est bloqué : ses emails restent hors de ta réception."
+    end
     redirect_back_or_to screenings_path, notice: notice
   rescue ArgumentError
     redirect_back_or_to screenings_path, alert: "Décision inconnue."

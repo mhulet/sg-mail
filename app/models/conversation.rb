@@ -13,14 +13,16 @@ class Conversation < ApplicationRecord
   scope :inbox, -> { where(in_inbox: true) }
   scope :assigned_to, ->(user) { where(assignee: user) }
 
-  # Screener : un fil ouvert par un expéditeur que la personne a accepté (ou par la boîte elle-même),
-  # ou un fil qui attend sa décision.
-  scope :screened_in_for, ->(user) {
-    where(<<~SQL.squish, user.id)
-      conversations.sender_address IS NULL OR EXISTS (SELECT 1 FROM screenings WHERE screenings.user_id = ?
-        AND screenings.address = conversations.sender_address AND screenings.decision = 'accepted')
+  # Les fils d'une pile (imbox, feed, paper_trail) pour une personne : ceux des expéditeurs qu'elle y a
+  # rangés. Un fil ouvert par la boîte elle-même va dans la réception.
+  scope :in_bucket_for, ->(user, bucket = "imbox") {
+    accepted = where(<<~SQL.squish, user.id, bucket)
+      EXISTS (SELECT 1 FROM screenings WHERE screenings.user_id = ? AND screenings.address = conversations.sender_address
+        AND screenings.decision = 'accepted' AND screenings.bucket = ?)
     SQL
+    bucket == "imbox" ? where(sender_address: nil).or(accepted) : accepted
   }
+  # Screener : un fil qui attend la décision de la personne.
   scope :screening_pending_for, ->(user) {
     where(<<~SQL.squish, user.id)
       conversations.sender_address IS NOT NULL AND NOT EXISTS (SELECT 1 FROM screenings WHERE screenings.user_id = ?
@@ -28,11 +30,15 @@ class Conversation < ApplicationRecord
     SQL
   }
 
-  # Ajoute la colonne « screening » : accepted, blocked, pending, ou nil pour un fil ouvert par la boîte.
+  # Ajoute les colonnes « screening » (accepted, blocked, pending, ou nil pour un fil ouvert par la boîte)
+  # et « bucket » (la pile d'un expéditeur accepté ; imbox pour un fil ouvert par la boîte).
   scope :with_screening_for, ->(user) {
-    select("conversations.*", sanitize_sql_array([ <<~SQL.squish, user.id ]))
+    select("conversations.*", sanitize_sql_array([ <<~SQL.squish, user.id, user.id ]))
       CASE WHEN conversations.sender_address IS NULL THEN NULL ELSE COALESCE((SELECT screenings.decision FROM screenings
-        WHERE screenings.user_id = ? AND screenings.address = conversations.sender_address), 'pending') END AS screening
+        WHERE screenings.user_id = ? AND screenings.address = conversations.sender_address), 'pending') END AS screening,
+      CASE WHEN conversations.sender_address IS NULL THEN 'imbox' ELSE (SELECT screenings.bucket FROM screenings
+        WHERE screenings.user_id = ? AND screenings.address = conversations.sender_address
+        AND screenings.decision = 'accepted') END AS bucket
     SQL
   }
 
@@ -112,12 +118,28 @@ class Conversation < ApplicationRecord
     return self[:screening] if has_attribute?(:screening)
     return unless sender_address
 
-    Screening.find_by(user: user, address: sender_address)&.decision || "pending"
+    screening_record_for(user)&.decision || "pending"
+  end
+
+  # imbox, feed ou paper_trail ; nil tant que l'expéditeur n'est pas accepté.
+  def bucket_for(user)
+    return self[:bucket] if has_attribute?(:bucket)
+    return "imbox" unless sender_address
+
+    screening = screening_record_for(user)
+    screening.bucket if screening&.decision == "accepted"
   end
 
   def mark_read_by!(user) = Reading.mark!(user, messages)
 
   def mark_unread_by!(user)
     Reading.where(user: user, message_id: messages.reorder(sent_at: :desc, id: :desc).limit(1).select(:id)).delete_all
+  end
+
+  private
+
+  def screening_record_for(user)
+    @screening_records ||= {}
+    @screening_records.fetch(user.id) { @screening_records[user.id] = Screening.find_by(user: user, address: sender_address) }
   end
 end

@@ -101,6 +101,11 @@ obligatoire (`force_ssl`), ce qui convient au certificat géré par Hatchbox.
   Acceptés d'office : les expéditeurs déjà présents quand la personne a reçu l'accès à la boîte, et les
   personnes à qui la boîte a écrit (`Screening.accept_known_senders!`, après chaque synchro). Un fil retient
   l'expéditeur qui l'a ouvert (`conversations.sender_address`) ; un fil ouvert par la boîte n'est jamais trié.
+- **Réception / Feed / Paper Trail** : on accepte un expéditeur dans une de ces trois piles (boutons du Screener),
+  et on peut l'y déplacer plus tard depuis un de ses fils. Le Feed reçoit les lettres d'info et lectures,
+  le Paper Trail les reçus, confirmations et notifications. Par personne aussi (`screenings.bucket`) ;
+  un fil ouvert par la boîte va dans la réception. « Tout marquer comme lu » dans le Feed ou le Paper Trail
+  ne touche que cette pile.
 
 ## Recherche
 
@@ -118,7 +123,8 @@ sans action explicite.
   seule fois ; seule son empreinte SHA-256 est gardée. Il cesse de fonctionner si la personne quitte le client.
 - **API JSON** `/api/v1` (en-tête `Authorization: Bearer sgm_…`) : `me`, `conversations` (`q`, `mailbox_id`,
   `unread`, `mine`, `before`), `conversations/:id` (+ `read`, `unread`, `notes`, PATCH `assignee_id`),
-  `screener` (GET : en attente et bloqués ; POST `address`, `decision` accepted|blocked),
+  `screener` (GET : en attente et bloqués ; POST `address`, `decision` accepted|blocked, `box`),
+  `conversations?box=feed|paper_trail` pour les autres piles,
   `tasks`, `drafts` (+ `deliver` pour envoyer).
 - **MCP** `/mcp` (HTTP « streamable », sans état) : `whoami`, `search_conversations`, `get_conversation`,
   `mark_read`, `mark_unread`, `assign`, `add_note`, `list_screener`, `screen_sender`, `list_tasks`, `create_task`, `update_task`,
@@ -139,7 +145,8 @@ sans action explicite.
   cd cli && gem build sg-mail.gemspec && gem install sg-mail-*.gem
   sg-mail login https://<hôte> sgm_…
   sg-mail inbox --unread          # ou : search, show 12 --read, tasks, task-add, note, assign
-  sg-mail screener                # puis : accept zoe@example.org, block spam@example.com
+  sg-mail screener                # puis : accept zoe@example.org [--to feed|paper_trail], block spam@example.com
+  sg-mail feed                    # ou : paper-trail, inbox --box feed
   sg-mail reply 345 "Merci !"     # crée un brouillon, jamais envoyé
   sg-mail send 7                  # demande confirmation
   ```

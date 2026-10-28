@@ -1,8 +1,13 @@
-<%# Accepter ou bloquer un expéditeur ; « current » masque le bouton de la décision déjà prise. %>
+<%# Accepter un expéditeur dans une pile, ou le bloquer. « current » et « bucket » : la décision déjà prise,
+    dont on masque le bouton. %>
 <% current = local_assigns[:current] %>
-<% unless current == "accepted" %>
-  <%= button_to "Accepter", screenings_path, params: { address: address, decision: "accepted" }, form: { class: "inline" } %>
+<% bucket = local_assigns[:bucket] %>
+<% Screening::BUCKETS.each do |pile| %>
+  <% next if current == "accepted" && bucket == pile %>
+  <%= button_to Screening::BUCKET_LABELS.fetch(pile), screenings_path, params: { address: address, decision: "accepted", bucket: pile },
+        form: { class: "inline" }, title: current == "accepted" ? "Ranger ses emails dans : #{Screening::BUCKET_LABELS.fetch(pile)}" : "Accepter dans : #{Screening::BUCKET_LABELS.fetch(pile)}" %>
 <% end %>
 <% unless current == "blocked" %>
-  <%= button_to "Bloquer", screenings_path, params: { address: address, decision: "blocked" }, class: "link", form: { class: "inline" } %>
+  <%= button_to "Bloquer", screenings_path, params: { address: address, decision: "blocked" }, class: "link",
+        form: { class: "inline", data: ({ turbo_confirm: "Ne plus voir #{address} ?" } if current == "accepted") } %>
 <% end %>

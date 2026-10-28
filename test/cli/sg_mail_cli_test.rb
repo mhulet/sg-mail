@@ -55,7 +55,12 @@ class SgMailCliTest < ActionDispatch::IntegrationTest
     end
 
     assert_match(/zoe@example.org +Zoé +Partenariat/, run_cli("screener"))
-    assert_equal "zoe@example.org accepté.\n", run_cli("accept", "zoe@example.org")
+    assert_equal "zoe@example.org accepté, dans feed.\n", run_cli("accept", "zoe@example.org", "--to", "feed")
+    assert_no_match(/Partenariat/, run_cli("inbox"))
+    assert_match(/Partenariat/, run_cli("feed"))
+    run_cli("accept", "zoe@example.org", "--to", "paper_trail")
+    assert_match(/Partenariat/, run_cli("paper-trail"))
+    run_cli("accept", "zoe@example.org", "--to", "imbox")
     assert_match(/Partenariat/, run_cli("inbox"))
     run_cli("block", "zoe@example.org")
     assert_equal "bloqué : zoe@example.org", run_cli("screener").lines.last.strip

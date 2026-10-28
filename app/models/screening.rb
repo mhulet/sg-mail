@@ -1,8 +1,13 @@
 # Screener, façon Hey : la décision d'une personne sur un expéditeur, pour elle seule.
 # Sans décision, les fils de cet expéditeur attendent dans « À trier » ; bloqué, ils restent dehors
 # (rien n'est supprimé chez Gmail ou sur le serveur IMAP, et la recherche les trouve toujours).
+#
+# Un expéditeur accepté est rangé dans une pile : la réception (Imbox), le Feed (lettres d'info, lectures)
+# ou le Paper Trail (reçus, confirmations, notifications).
 class Screening < ApplicationRecord
   DECISIONS = %w[accepted blocked].freeze
+  BUCKETS = %w[imbox feed paper_trail].freeze
+  BUCKET_LABELS = { "imbox" => "Réception", "feed" => "Feed", "paper_trail" => "Paper Trail" }.freeze
 
   acts_as_tenant :account
   belongs_to :user
@@ -10,13 +15,20 @@ class Screening < ApplicationRecord
   normalizes :address, with: ->(address) { address.strip.downcase }
 
   validates :decision, inclusion: { in: DECISIONS }
+  validates :bucket, inclusion: { in: BUCKETS }
   validates :address, presence: true
 
-  def self.decide!(user, address, decision)
+  # Sans pile précisée, un expéditeur accepté garde la sienne (la réception pour un nouveau).
+  def self.decide!(user, address, decision, bucket: nil)
     raise ArgumentError, "decision : accepted ou blocked" unless decision.in?(DECISIONS)
+    raise ArgumentError, "bucket : imbox, feed ou paper_trail" unless bucket.blank? || bucket.in?(BUCKETS)
 
-    find_or_initialize_by(user: user, address: normalize_value_for(:address, address.to_s)).tap { |s| s.update!(decision: decision) }
+    screening = find_or_initialize_by(user: user, address: normalize_value_for(:address, address.to_s))
+    screening.update!(decision: decision, bucket: bucket.presence || screening.bucket)
+    screening
   end
+
+  def bucket_label = BUCKET_LABELS.fetch(bucket)
 
   # Accepte d'office, pour chaque personne qui a accès à la boîte, ce qui n'a rien de nouveau :
   # les expéditeurs déjà là quand elle a reçu l'accès, et les personnes à qui la boîte a écrit.

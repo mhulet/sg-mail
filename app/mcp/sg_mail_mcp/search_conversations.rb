@@ -1,13 +1,15 @@
 class SgMailMcp::SearchConversations < SgMailMcp::Tool
   description <<~TEXT.squish
-    List email threads, most recent first. Without query: the unified inbox (or one mailbox with mailbox_id),
-    without the threads of senders still in my Screener or blocked by me.
+    List email threads, most recent first. Without query: one of my boxes, like Hey: "imbox" (default, the inbox),
+    "feed" (newsletters, reading) or "paper_trail" (receipts, notifications), across mailboxes or in one with mailbox_id.
+    Threads of senders still in my Screener or blocked by me are left out.
     With query: full-text search in subject, sender, recipients and body; words match without accents and by prefix.
     Query filters: "de:anne" (sender), "a:formations" (recipient), "avec:pj" (with attachments).
   TEXT
   read_only!
   input_schema(properties: {
     query: { type: "string" },
+    box: { type: "string", enum: Screening::BUCKETS, description: "Without query; default imbox" },
     mailbox_id: { type: "integer" },
     unread: { type: "boolean", description: "Only threads with messages I have not read" },
     mine: { type: "boolean", description: "Only threads assigned to me" },
@@ -15,8 +17,8 @@ class SgMailMcp::SearchConversations < SgMailMcp::Tool
     limit: { type: "integer", minimum: 1, maximum: 100 }
   })
 
-  def self.perform(actions, serializer, query: nil, mailbox_id: nil, unread: false, mine: false, before: nil, limit: 30)
-    conversations = actions.conversations(query: query, mailbox_id: mailbox_id, unread: unread, mine: mine, before: before, limit: limit)
+  def self.perform(actions, serializer, query: nil, box: nil, mailbox_id: nil, unread: false, mine: false, before: nil, limit: 30)
+    conversations = actions.conversations(query: query, box: box, mailbox_id: mailbox_id, unread: unread, mine: mine, before: before, limit: limit)
     { conversations: conversations.map { |conversation| serializer.conversation(conversation) } }
   end
 end

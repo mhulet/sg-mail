@@ -56,10 +56,14 @@ class McpControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ "zoe@example.org", "Zoé", "Partenariat", "pending" ],
       [ entry["address"], entry["name"], entry.dig("latest_conversation", "subject"), entry.dig("latest_conversation", "screening") ]
 
-    call_tool("screen_sender", address: "zoe@example.org", decision: "accepted")
-    assert_equal "accepted", result["structuredContent"]["screening"]["decision"]
+    call_tool("screen_sender", address: "zoe@example.org", decision: "accepted", box: "feed")
+    assert_equal [ "accepted", "feed" ], result["structuredContent"]["screening"].values_at("decision", "box")
     call_tool("search_conversations")
-    assert_equal 2, result["structuredContent"]["conversations"].size
+    assert_equal 1, result["structuredContent"]["conversations"].size
+    call_tool("search_conversations", box: "feed")
+    assert_equal [ "Partenariat", "feed" ], result["structuredContent"]["conversations"].sole.values_at("subject", "box")
+    call_tool("search_conversations", box: "spam")
+    assert result["isError"]
 
     call_tool("screen_sender", address: "zoe@example.org", decision: "maybe")
     assert result["isError"]
