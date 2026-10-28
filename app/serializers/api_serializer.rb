@@ -18,6 +18,8 @@ class ApiSerializer
     {
       id: conversation.id, subject: conversation.title, mailbox_id: conversation.mailbox_id,
       mailbox: conversation.mailbox.address, last_sender: conversation.last_sender, snippet: conversation.snippet,
+      sender: conversation.sender_address && { address: conversation.sender_address, name: conversation.sender_name },
+      screening: conversation.screening_for(@user),
       messages_count: conversation.messages_count, last_message_at: conversation.last_message_at&.iso8601,
       unread: conversation.has_attribute?(:unread) ? conversation.unread : nil,
       assignee: user(conversation.assignee), url: url("/#{conversation.account_id}/conversations/#{conversation.id}")
@@ -43,6 +45,14 @@ class ApiSerializer
       read_by: people.select { |person| message.read_by?(person) }.map(&:display_name)
     }
   end
+
+  # Un expéditeur du Screener, avec son fil le plus récent.
+  def screener_entry(conversation)
+    { address: conversation.sender_address, name: conversation.sender_name,
+      conversations_count: conversation.sender_conversations_count, latest_conversation: conversation(conversation) }
+  end
+
+  def screening(screening) = { address: screening.address, decision: screening.decision, decided_at: screening.updated_at.iso8601 }
 
   def note(note) = { id: note.id, author: note.user.display_name, body: note.body, created_at: note.created_at.iso8601 }
 

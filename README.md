@@ -92,6 +92,16 @@ obligatoire (`force_ssl`), ce qui convient au certificat géré par Hatchbox.
 - **Notes internes** (`Note`) : sous le fil, visibles de l'équipe seulement, jamais envoyées.
   Seule l'autrice ou l'auteur peut supprimer sa note.
 
+## L'esprit Hey (phase 2)
+
+- **Screener** (« À trier ») : un expéditeur qui écrit pour la première fois n'entre pas dans la réception.
+  Il attend dans « À trier » qu'on l'accepte (ses fils arrivent dans la réception) ou qu'on le bloque
+  (ils restent dehors). Chaque personne décide pour elle seule (`Screening`, par personne et par adresse) ;
+  rien n'est supprimé chez Gmail ou sur le serveur IMAP, et la recherche trouve toujours tout.
+  Acceptés d'office : les expéditeurs déjà présents quand la personne a reçu l'accès à la boîte, et les
+  personnes à qui la boîte a écrit (`Screening.accept_known_senders!`, après chaque synchro). Un fil retient
+  l'expéditeur qui l'a ouvert (`conversations.sender_address`) ; un fil ouvert par la boîte n'est jamais trié.
+
 ## Recherche
 
 Champ « Rechercher… » en haut de chaque page : cherche dans l'objet, l'expéditeur, les destinataires
@@ -108,9 +118,10 @@ sans action explicite.
   seule fois ; seule son empreinte SHA-256 est gardée. Il cesse de fonctionner si la personne quitte le client.
 - **API JSON** `/api/v1` (en-tête `Authorization: Bearer sgm_…`) : `me`, `conversations` (`q`, `mailbox_id`,
   `unread`, `mine`, `before`), `conversations/:id` (+ `read`, `unread`, `notes`, PATCH `assignee_id`),
+  `screener` (GET : en attente et bloqués ; POST `address`, `decision` accepted|blocked),
   `tasks`, `drafts` (+ `deliver` pour envoyer).
 - **MCP** `/mcp` (HTTP « streamable », sans état) : `whoami`, `search_conversations`, `get_conversation`,
-  `mark_read`, `mark_unread`, `assign`, `add_note`, `list_tasks`, `create_task`, `update_task`,
+  `mark_read`, `mark_unread`, `assign`, `add_note`, `list_screener`, `screen_sender`, `list_tasks`, `create_task`, `update_task`,
   `list_drafts`, `create_draft`, `update_draft`, `send_draft`.
   - **claude.ai** (connecteur personnalisé, adresse `https://<hôte>/mcp`) : serveur OAuth 2.1 intégré
     (`app/controllers/oauth/`) avec découverte (RFC 9728 et 8414), enregistrement dynamique (RFC 7591),
@@ -128,6 +139,7 @@ sans action explicite.
   cd cli && gem build sg-mail.gemspec && gem install sg-mail-*.gem
   sg-mail login https://<hôte> sgm_…
   sg-mail inbox --unread          # ou : search, show 12 --read, tasks, task-add, note, assign
+  sg-mail screener                # puis : accept zoe@example.org, block spam@example.com
   sg-mail reply 345 "Merci !"     # crée un brouillon, jamais envoyé
   sg-mail send 7                  # demande confirmation
   ```

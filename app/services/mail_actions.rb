@@ -10,14 +10,16 @@ class MailActions
   def members = ActsAsTenant.current_tenant.users.order(:name)
 
   # Réception (par défaut), une boîte, ou une recherche ; filtres non lus, assignés à moi, avant une date.
+  # Hors recherche, seuls les fils d'expéditeurs acceptés (Screener) apparaissent.
   def conversations(query: nil, mailbox_id: nil, unread: false, mine: false, before: nil, limit: 50)
     mailbox = mailboxes.find(mailbox_id) if mailbox_id.present?
     scope = if query.present?
       MessageSearch.new(@user, query, mailbox: mailbox).conversations
     else
-      mailbox ? accessible_conversations.where(mailbox: mailbox) : accessible_conversations.inbox
+      scope = mailbox ? accessible_conversations.where(mailbox: mailbox) : accessible_conversations.inbox
+      scope.screened_in_for(@user)
     end
-    scope = scope.with_unread_for(@user).includes(:mailbox, :assignee)
+    scope = scope.with_unread_for(@user).with_screening_for(@user).includes(:mailbox, :assignee)
     scope = scope.unread_for(@user) if unread
     scope = scope.assigned_to(@user) if mine
     scope = scope.where(last_message_at: ...Time.zone.iso8601(before.to_s)) if before.present?
@@ -44,6 +46,14 @@ class MailActions
     conversation.update!(assignee: assignee)
     conversation
   end
+
+  # Screener : les expéditeurs qui attendent ma décision, avec leur fil le plus récent.
+  def screener(limit: 100) = Conversation.screener_for(@user, limit: limit.to_i.clamp(1, 200))
+
+  def blocked_senders = Screening.where(user: @user, decision: "blocked").order(updated_at: :desc)
+
+  # decision : accepted (le fil entre dans ma réception) ou blocked (il reste dehors), pour moi seulement.
+  def screen(address, decision) = Screening.decide!(@user, address, decision)
 
   def add_note(conversation_id, body)
     conversation(conversation_id).notes.create!(user: @user, body: body)

@@ -1,0 +1,8 @@
+<%# Accepter ou bloquer un expéditeur ; « current » masque le bouton de la décision déjà prise. %>
+<% current = local_assigns[:current] %>
+<% unless current == "accepted" %>
+  <%= button_to "Accepter", screenings_path, params: { address: address, decision: "accepted" }, form: { class: "inline" } %>
+<% end %>
+<% unless current == "blocked" %>
+  <%= button_to "Bloquer", screenings_path, params: { address: address, decision: "blocked" }, class: "link", form: { class: "inline" } %>
+<% end %>

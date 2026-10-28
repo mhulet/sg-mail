@@ -1,0 +1,40 @@
+<% content_for :title, "À trier · #{current_account.name} · SG Mail" %>
+<h1>À trier</h1>
+<p class="muted">Ces expéditeurs t'écrivent pour la première fois. Accepte-les et leurs emails arrivent dans ta réception ;
+  bloque-les et ils restent dehors. Ta décision ne vaut que pour toi, rien n'est supprimé.</p>
+
+<% if @pending.none? %>
+  <p class="muted">Personne n'attend.</p>
+<% end %>
+
+<table class="screener">
+  <% @pending.each do |conversation| %>
+    <tr id="<%= dom_id(conversation) %>">
+      <td>
+        <strong><%= conversation.sender_display %></strong><br>
+        <span class="muted"><%= conversation.sender_address %></span>
+      </td>
+      <td>
+        <%= link_to conversation.title, conversation_path(conversation) %>
+        <span class="muted"><%= conversation.snippet&.truncate(90) %></span>
+        <% if conversation.sender_conversations_count > 1 %>
+          <span class="muted">· <%= conversation.sender_conversations_count %> fils</span>
+        <% end %>
+      </td>
+      <td class="nowrap"><%= render "screenings/buttons", address: conversation.sender_address %></td>
+    </tr>
+  <% end %>
+</table>
+
+<% if @blocked.any? %>
+  <h2>Bloqués</h2>
+  <table>
+    <% @blocked.each do |screening| %>
+      <tr>
+        <td><%= screening.address %></td>
+        <td class="muted">depuis le <%= l(screening.updated_at.to_date, format: :long) %></td>
+        <td class="nowrap"><%= button_to "Débloquer", screenings_path, params: { address: screening.address, decision: "accepted" }, class: "link" %></td>
+      </tr>
+    <% end %>
+  </table>
+<% end %>

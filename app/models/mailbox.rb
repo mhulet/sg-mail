@@ -35,7 +35,8 @@ class Mailbox < ApplicationRecord
 
   def sync!
     synchronizer.call
-    Conversation.rebuild_for(self)
+    # Marge d'un jour : un message importé pendant la synchro précédente n'échappe pas au Screener.
+    Conversation.rebuild_for(self, since: last_synced_at&.-(1.day))
     GmailWatch.new(self).renew_if_needed if gmail?
     update!(last_synced_at: Time.current, last_sync_error: nil)
   rescue => e

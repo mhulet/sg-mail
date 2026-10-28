@@ -27,6 +27,7 @@ Rails.application.routes.draw do
       post :mark_all_read, on: :collection
     end
     resources :drafts, except: :show
+    resources :screenings, only: %i[index create], path: "screener"
     resource :search, only: :show
     resources :tasks, only: %i[index create update destroy]
     resources :messages, only: :show do
@@ -49,6 +50,7 @@ Rails.application.routes.draw do
         post :unread, on: :member
         resources :notes, only: :create
       end
+      resources :screenings, only: %i[index create], path: "screener"
       resources :tasks, only: %i[index show create update]
       resources :drafts, only: %i[index show create update] do
         post :deliver, on: :member

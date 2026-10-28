@@ -1,6 +1,7 @@
 class SgMailMcp::SearchConversations < SgMailMcp::Tool
   description <<~TEXT.squish
-    List email threads, most recent first. Without query: the unified inbox (or one mailbox with mailbox_id).
+    List email threads, most recent first. Without query: the unified inbox (or one mailbox with mailbox_id),
+    without the threads of senders still in my Screener or blocked by me.
     With query: full-text search in subject, sender, recipients and body; words match without accents and by prefix.
     Query filters: "de:anne" (sender), "a:formations" (recipient), "avec:pj" (with attachments).
   TEXT

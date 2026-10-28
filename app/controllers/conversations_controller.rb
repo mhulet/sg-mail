@@ -16,6 +16,7 @@ class ConversationsController < ApplicationController
     @people = @conversation.mailbox.users_with_access.order(:name).to_a
     @notes = @conversation.notes.includes(:user)
     @tasks = @conversation.tasks.includes(:assignee).by_due_date
+    @screening = @conversation.screening_for(Current.user)
     @conversation.mark_read_by!(Current.user)
   end
 
@@ -47,7 +48,8 @@ class ConversationsController < ApplicationController
   end
 
   def filtered_conversations
-    scope = Conversation.accessible_by(Current.user).with_unread_for(Current.user).includes(:mailbox, :assignee)
+    scope = Conversation.accessible_by(Current.user).screened_in_for(Current.user)
+      .with_unread_for(Current.user).includes(:mailbox, :assignee)
     scope = @mailbox ? scope.where(mailbox: @mailbox) : scope.inbox
     scope = scope.assigned_to(Current.user) if params[:mine] == "1"
     scope = scope.unread_for(Current.user) if params[:unread] == "1"

@@ -13,6 +13,9 @@ class MailboxAccess < ApplicationRecord
   validates :user_id, uniqueness: { scope: :mailbox_id }
   validate :user_is_member
 
+  # Le Screener ne présente pas l'historique de la boîte à qui vient d'y avoir accès.
+  after_create { Screening.accept_known_senders!(mailbox, user: user) }
+
   def can_send? = level.in?(%w[send manage])
   def can_manage? = level == "manage"
   def label = LABELS.fetch(level)

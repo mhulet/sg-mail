@@ -7,6 +7,8 @@ module SgMailMcp
     SG Mail is a shared email client: several people of the same organisation read personal and shared
     mailboxes (Gmail or IMAP). Read status is per person ("read by…"), threads can be assigned to someone,
     and emails become tasks and internal notes that the correspondent never sees.
+    Like Hey, a Screener keeps first-time senders out of each person's inbox until that person accepts them
+    (list_screener, screen_sender); search still finds every thread.
     Start with whoami (mailboxes and colleagues), then search_conversations and get_conversation.
     To answer an email, create a draft with create_draft and show it to the user. Only call send_draft after
     the user explicitly asked to send that draft: it sends a real email. Dates are ISO 8601. Write emails
@@ -14,7 +16,7 @@ module SgMailMcp
   TEXT
 
   TOOLS = [
-    Whoami, SearchConversations, GetConversation, MarkRead, MarkUnread, Assign, AddNote,
+    Whoami, SearchConversations, GetConversation, MarkRead, MarkUnread, Assign, AddNote, ListScreener, ScreenSender,
     ListTasks, CreateTask, UpdateTask, ListDrafts, CreateDraft, UpdateDraft, SendDraft
   ].freeze
 
