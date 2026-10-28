@@ -13,4 +13,22 @@
 
 <% if Current.user.staff? %>
   <p><%= link_to "Créer un client", new_account_path %></p>
+
+  <h2>Tous les clients</h2>
+  <p class="muted">Réservé à l'équipe Super Génial. Supprimer un client efface ses boîtes, emails, tâches, notes, jetons et
+    membres, et rend l'accès Google de ses boîtes Gmail. C'est irréversible.</p>
+  <table>
+    <% @all_accounts.each do |account| %>
+      <tr>
+        <td><%= account.name %></td>
+        <td>
+          <%= form_with url: account_path(account), method: :delete, class: "inline",
+                data: { turbo_confirm: "Supprimer définitivement « #{account.name} » et toutes ses données ?" } do |f| %>
+            <%= f.text_field :confirmation, placeholder: "Retape « #{account.name} »", aria: { label: "Nom du client à supprimer" }, autocomplete: "off" %>
+            <%= f.submit "Supprimer", class: "danger" %>
+          <% end %>
+        </td>
+      </tr>
+    <% end %>
+  </table>
 <% end %>

@@ -18,6 +18,8 @@ class Mailbox < ApplicationRecord
   validates :provider, inclusion: { in: PROVIDERS }
   validates :address, presence: true, uniqueness: { scope: %i[account_id provider] }
 
+  after_destroy_commit :revoke_google_access
+
   def access_for(user) = accesses.find_by(user: user)
 
   def grant!(user, level)
@@ -28,6 +30,11 @@ class Mailbox < ApplicationRecord
 
   def gmail? = provider == "gmail"
   def imap? = provider == "imap"
+
+  def revoke_google_access
+    token = credentials&.dig("refresh_token")
+    RevokeGoogleTokenJob.perform_later(token) if gmail? && token.present?
+  end
 
   def synchronizer
     gmail? ? GmailSync.new(self) : ImapSync.new(self)

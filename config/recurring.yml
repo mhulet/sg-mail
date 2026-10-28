@@ -4,6 +4,10 @@ shared: &shared
   sync_all_mailboxes:
     class: SyncAllMailboxesJob
     schedule: every 5 minutes
+  # Journal d'accès : on garde un an.
+  purge_access_logs:
+    class: PurgeAccessLogsJob
+    schedule: every day at 3am
 
 development:
   <<: *shared

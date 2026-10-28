@@ -6,6 +6,8 @@ class MailActions
     @user = user
   end
 
+  attr_reader :user
+
   def mailboxes = Mailbox.accessible_by(@user).order(:address)
   def members = ActsAsTenant.current_tenant.users.order(:name)
 

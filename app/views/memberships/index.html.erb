@@ -28,6 +28,8 @@
 </table>
 
 <% if current_membership.admin? %>
+  <p><%= link_to "Journal d'accès", access_logs_path %> <span class="muted">· qui a ouvert quoi, et quand</span></p>
+
   <h2>Invitations en attente</h2>
   <% if @invitations.any? %>
     <table>

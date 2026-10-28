@@ -9,6 +9,7 @@ class Api::V1::ConversationsController < Api::V1::BaseController
 
   def show
     conversation = actions.conversation(params[:id], mark_read: params[:mark_read] == "1")
+    AccessLog.record!(Current.user, conversation, via: "api")
     render json: { conversation: serializer.conversation_detail(conversation, people: actions.people(conversation)) }
   end
 
