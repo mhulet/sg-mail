@@ -17,6 +17,20 @@ class BulkActionsTest < ActionDispatch::IntegrationTest
     sign_in_as users(:mohammad)
   end
 
+  test "undo an archive from the confirmation" do
+    post bulk_conversations_path(account_id: @semisto.id), params: { operation: "archive", ids: @ids.first(2) },
+      headers: { "Referer" => account_root_url(account_id: @semisto.id) }
+    follow_redirect!
+    assert_select ".toast button.undo[data-shortcut=z]", "Annuler"
+    assert_select ".toast input[name='ids[]']", 2
+
+    post bulk_conversations_path(account_id: @semisto.id), params: { operation: "unarchive", ids: @ids.first(2) },
+      headers: { "Referer" => account_root_url(account_id: @semisto.id) }
+    follow_redirect!
+    assert_select "table a", "Inscription"
+    assert_select ".toast button.undo", count: 0
+  end
+
   test "archive, mark read and stack several threads at once, for me only" do
     get account_root_path(account_id: @semisto.id)
     assert_select "form#bulk button", "Archiver"

@@ -59,6 +59,7 @@ class ConversationsController < ApplicationController
     on = params[:on] != "0"
     @conversation.archive_for!(Current.user, on: on)
     if on
+      flash[:undo] = [ @conversation.id ]
       bucket = @conversation.bucket_for(Current.user)
       redirect_to conversations_path(box: (bucket unless bucket.in?([ nil, "imbox" ]))), notice: "Fil archivé : il reviendra au prochain message."
     else
@@ -85,6 +86,7 @@ class ConversationsController < ApplicationController
     when "unread" then conversations.each { |c| c.mark_unread_by!(Current.user) }
     else conversations.each { |c| ConversationState.put!(c, Current.user, operation) }
     end
+    flash[:undo] = conversations.map(&:id) if operation == "archive"
     redirect_back_or_to account_root_path, notice: "#{conversations.size} #{conversations.many? ? "fils" : "fil"} #{BULK_NOTICES.fetch(operation)[conversations.many? ? 1 : 0]}."
   end
 

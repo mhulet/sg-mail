@@ -1,25 +1,26 @@
 <% content_for :title, "#{@conversation.title} · SG Mail" %>
-<p>
-  <%= link_to "← #{Screening::BUCKET_LABELS.fetch(@bucket || "imbox")}", conversations_path(box: (@bucket unless @bucket.in?([ nil, "imbox" ]))), data: { shortcut: "u" } %> ·
-  <%= link_to @conversation.mailbox.address, conversations_path(mailbox_id: @conversation.mailbox_id) %>
+<p class="thread-top">
+  <%= link_to "← #{Screening::BUCKET_LABELS.fetch(@bucket || "imbox")}", conversations_path(box: (@bucket unless @bucket.in?([ nil, "imbox" ]))), data: { shortcut: "u" } %>
+  <%= link_to mailbox_chip(@conversation.mailbox.address), conversations_path(mailbox_id: @conversation.mailbox_id) %>
 </p>
-<h1><%= @conversation.title %></h1>
+<h1 class="thread-title"><%= @conversation.title %></h1>
 <% if @screening.in?(%w[pending blocked]) %>
-  <p class="card screening">
+  <p class="card screening" data-controller="stamp">
     <% if @screening == "pending" %>
       <strong><%= @conversation.sender_display %></strong> &lt;<%= @conversation.sender_address %>&gt; t'écrit pour la première fois. Accepter dans :
     <% else %>
       Tu as bloqué <strong><%= @conversation.sender_address %></strong> : ses emails restent hors de ta réception.
     <% end %>
     <%= render "screenings/buttons", address: @conversation.sender_address, current: @screening %>
+    <span class="stamp" data-stamp-target="stamp" aria-hidden="true"></span>
   </p>
 <% end %>
-<div class="actions">
+<div class="actions thread-actions">
   <% if @archived %>
     <span class="muted">Archivé.</span>
     <%= button_to "Remettre dans la réception", archive_conversation_path(@conversation), method: :patch, params: { on: "0" }, class: "link" %>
   <% else %>
-    <%= button_to "Archiver", archive_conversation_path(@conversation), method: :patch, params: { on: "1" }, class: "primary", data: { shortcut: "e" } %>
+    <%= button_to "Archiver", archive_conversation_path(@conversation), method: :patch, params: { on: "1" }, class: "primary hint", data: { shortcut: "e" } %>
   <% end %>
   <%= button_to "Marquer comme non lu", unread_conversation_path(@conversation), class: "link", data: { shortcut: "U" } %>
   <% ConversationState::STACKS.each do |stack| %>
@@ -40,7 +41,7 @@
 </div>
 
 <section class="card internal">
-  <h2>Tâches</h2>
+  <h2>Tâches <span class="muted">· visibles de l'équipe</span></h2>
   <ul class="tasks">
     <%= render partial: "tasks/task", collection: @tasks %>
   </ul>
@@ -49,11 +50,14 @@
 
 <% @messages.each do |message| %>
   <article id="<%= dom_id(message) %>" class="card">
-    <p>
-      <strong><%= message.from_display %></strong>
-      <span class="muted">&lt;<%= message.from_address %>&gt; · <%= message.sent_at && l(message.sent_at, format: :long) %></span><br>
-      <span class="muted">À : <%= message.to_addresses.join(", ") %><%= " · Cc : #{message.cc_addresses.join(", ")}" if message.cc_addresses.any? %></span>
-    </p>
+    <header class="message-head">
+      <%= avatar(message.from_display) %>
+      <p>
+        <strong><%= message.from_display %></strong> <span class="muted">&lt;<%= message.from_address %>&gt;</span><br>
+        <span class="muted">À : <%= message.to_addresses.join(", ") %><%= " · Cc : #{message.cc_addresses.join(", ")}" if message.cc_addresses.any? %></span>
+      </p>
+      <time class="muted"><%= message.sent_at && l(message.sent_at, format: :long) %></time>
+    </header>
 
     <% if message.body_html.present? %>
       <%# Bac à sable : pas de scripts, pas d'accès à la page SG Mail. %>
@@ -73,7 +77,7 @@
       <%= button_to "Afficher les pièces jointes", message_attachments_path(message), class: "link" %>
     <% end %>
 
-    <p class="actions">
+    <p class="actions message-actions">
       <% last = message == @messages.last %>
       <%= link_to "Répondre", new_draft_path(message_id: message.id, kind: "reply"), data: { shortcut: ("r" if last) } %>
       <%= link_to "Répondre à tous", new_draft_path(message_id: message.id, kind: "reply_all"), data: { shortcut: ("a" if last) } %>
@@ -83,6 +87,7 @@
 
     <% readers, others = @people.partition { |person| message.read_by?(person) } %>
     <p class="muted read-by">
+      <span class="avatars"><% readers.each do |reader| %><%= avatar(reader.display_name, size: "small") %><% end %></span>
       <%= readers.any? ? "Lu par #{readers.map(&:display_name).to_sentence}" : "Lu par personne" %>
       <%= "· pas encore par #{others.map(&:display_name).to_sentence}" if others.any? %>
     </p>

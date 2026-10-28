@@ -48,6 +48,14 @@ export default class extends Controller {
     element.click()
   }
 
+  // Archiver depuis une liste : les lignes visées glissent hors de la liste pendant l'envoi.
+  leave(event) {
+    if (event.submitter?.value !== "archive") return
+    this.rowTargets
+      .filter((row) => row.querySelector("input[type=checkbox]")?.checked)
+      .forEach((row) => row.classList.add("leaving"))
+  }
+
   get #current() {
     return this.rowTargets[this.index]
   }

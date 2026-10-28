@@ -2,20 +2,12 @@
 <% box = (@box unless @box == "imbox" || @stack || @archived) %>
 <% stack = @stack %>
 <% content_for :title, "#{[ box_label, @mailbox&.address ].compact.join(" · ")} · #{current_account.name} · SG Mail" %>
-<h1><%= box_label %><%= tag.span(" · #{@mailbox.address}", class: "muted") if @mailbox %></h1>
-<% if @archived %>
-  <p class="muted">Les fils que tu as archivés. Chacun revient dans ta réception dès qu'un nouveau message y arrive.</p>
-<% elsif @stack == "reply_later" %>
-  <p class="muted">Les fils que tu as gardés pour y répondre plus tard. Ils quittent cette pile quand tu y réponds.</p>
-<% elsif @stack == "set_aside" %>
-  <p class="muted">Les fils que tu as mis de côté pour t'y référer.</p>
-<% elsif @box == "feed" %>
-  <p class="muted">Lettres d'info et lectures : à parcourir quand tu as le temps.</p>
-<% elsif @box == "paper_trail" %>
-  <p class="muted">Reçus, confirmations et notifications : gardés ici, sans encombrer ta réception.</p>
-<% end %>
+<header class="space-head">
+  <h1><%= box_label %><%= tag.span(" · #{@mailbox.address}", class: "muted") if @mailbox %></h1>
+  <p class="tagline"><%= space_tagline(@archived ? "archived" : @stack || @box) %></p>
+</header>
 
-<div class="actions">
+<div class="actions filters">
   <% if @mailboxes.many? || @mailbox %>
     <%= form_with url: conversations_path, method: :get, class: "inline" do |f| %>
       <%= f.hidden_field :box, value: box if box %>
@@ -50,13 +42,13 @@
 <% end %>
 
 <% if @mailboxes.none? %>
-  <p class="muted">Aucune boîte encore. <%= link_to "Connecte une boîte", mailboxes_path %> pour commencer.</p>
+  <%= render "shared/empty", line: "Tout commence par une boîte." do %><%= link_to "Connecte une boîte", mailboxes_path %> pour recevoir ton courrier ici.<% end %>
 <% elsif @conversations.none? %>
-  <p class="muted">Rien ici.</p>
+  <%= render "shared/empty", line: space_empty_line(@archived ? "archived" : @stack || @box) %>
 <% end %>
 
 <% if @conversations.any? %>
-  <%= form_with url: bulk_conversations_path, id: "bulk", class: "bulk" do |f| %>
+  <%= form_with url: bulk_conversations_path, id: "bulk", class: "bulk", data: { action: "submit->shortcuts#leave" } do |f| %>
     <span class="muted">Les fils cochés :</span>
     <% unless @archived %><%= f.button "Archiver", name: "operation", value: "archive", class: "link", data: { shortcut: "e", shortcut_bulk: true } %><% end %>
     <% if @archived %><%= f.button "Remettre dans la réception", name: "operation", value: "unarchive", class: "link" %><% end %>
@@ -79,5 +71,5 @@
   <p><%= link_to "Plus anciens →", conversations_path(box: box, stack: stack, archived: ("1" if @archived), mailbox_id: @mailbox&.id, unread: params[:unread].presence, before: @conversations.last.last_message_at.iso8601(6)) %></p>
 <% end %>
 <% unless @archived %>
-  <p class="muted"><%= link_to "Voir mes fils archivés", conversations_path(archived: 1, mailbox_id: @mailbox&.id) %></p>
+  <p class="list-foot"><%= link_to "Voir mes fils archivés", conversations_path(archived: 1, mailbox_id: @mailbox&.id) %></p>
 <% end %>
