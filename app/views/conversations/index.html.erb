@@ -55,9 +55,23 @@
   <p class="muted">Rien ici.</p>
 <% end %>
 
+<% if @conversations.any? %>
+  <%= form_with url: bulk_conversations_path, id: "bulk", class: "bulk" do |f| %>
+    <span class="muted">Les fils cochés :</span>
+    <% unless @archived %><%= f.button "Archiver", name: "operation", value: "archive", class: "link", data: { shortcut: "e", shortcut_bulk: true } %><% end %>
+    <% if @archived %><%= f.button "Remettre dans la réception", name: "operation", value: "unarchive", class: "link" %><% end %>
+    <%= f.button "Marquer comme lus", name: "operation", value: "read", class: "link", data: { shortcut: "I", shortcut_bulk: true } %>
+    <%= f.button "Marquer comme non lus", name: "operation", value: "unread", class: "link", data: { shortcut: "U", shortcut_bulk: true } %>
+    <% unless @stack %>
+      <%= f.button "Répondre plus tard", name: "operation", value: "reply_later", class: "link", data: { shortcut: "l", shortcut_bulk: true } %>
+      <%= f.button "Mettre de côté", name: "operation", value: "set_aside", class: "link", data: { shortcut: "s", shortcut_bulk: true } %>
+    <% end %>
+  <% end %>
+<% end %>
+
 <table class="conversations">
   <% @conversations.each do |conversation| %>
-    <%= render conversation, show_mailbox: !(@mailbox || @mailboxes.one?) %>
+    <%= render conversation, show_mailbox: !(@mailbox || @mailboxes.one?), selectable: true %>
   <% end %>
 </table>
 

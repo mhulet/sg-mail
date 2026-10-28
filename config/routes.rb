@@ -37,6 +37,7 @@ Rails.application.routes.draw do
       patch :archive, on: :member
       resources :notes, only: %i[create destroy]
       post :mark_all_read, on: :collection
+      post :bulk, on: :collection
     end
     resources :drafts, except: :show
     resources :screenings, only: %i[index create], path: "screener"

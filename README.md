@@ -127,6 +127,15 @@ obligatoire (`force_ssl`), ce qui convient au certificat géré par Hatchbox.
   Gmail ont archivé un fil, `ProviderArchiveJob` retire aussi l'étiquette INBOX chez Gmail ; « Remettre dans la
   réception » la rend. En IMAP, rien n'est déplacé sur le serveur (SG Mail ne suit que INBOX et Envoyés).
 
+## Aller vite
+
+- **Actions groupées** : cases à cocher dans chaque liste, puis archiver, marquer lus ou non lus, « Répondre plus
+  tard » ou « Mettre de côté » d'un coup (`conversations#bulk`, pour soi seulement).
+- **Raccourcis clavier** (`shortcuts_controller.js`, aide avec `?`) : `j`/`k` pour se déplacer, `o` pour ouvrir,
+  `x` pour cocher, `e` archiver, `l` répondre plus tard, `s` mettre de côté, `r`/`a`/`f` répondre, à tous,
+  transférer, `u` revenir à la liste, `c` écrire, `/` rechercher, `g` puis `i`, `f`, `p`, `s`, `t`, `d` pour
+  changer de page. Un élément déclare son raccourci avec `data-shortcut`.
+
 ## Recherche
 
 Champ « Rechercher… » en haut de chaque page : cherche dans l'objet, l'expéditeur, les destinataires

@@ -6,7 +6,7 @@ module ApplicationHelper
   end
 
   # Lien de navigation, marqué comme page courante quand on y est.
-  def nav_link(label, path)
-    link_to label, path, aria: { current: ("page" if current_page?(path)) }
+  def nav_link(label, path, shortcut: nil)
+    link_to label, path, aria: { current: ("page" if current_page?(path)) }, data: { shortcut: shortcut }
   end
 end

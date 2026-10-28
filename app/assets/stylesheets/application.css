@@ -113,13 +113,27 @@ code.link { user-select: all; word-break: break-all; }
 
   /* Chaque fil devient une carte : expéditeur et date, puis objet et aperçu. */
   table.conversations, table.conversations tbody { display: block; }
-  table.conversations tr { display: grid; grid-template-columns: 1fr auto; padding: .55rem .7rem; border-bottom: 1px solid var(--line); }
+  table.conversations tr { display: grid; grid-template-columns: auto 1fr auto; padding: .55rem .7rem; border-bottom: 1px solid var(--line); }
   table.conversations td { border: 0; padding: 0; width: auto; }
-  table.conversations td.subject { grid-column: 1 / -1; grid-row: 2; }
-  table.conversations td.mailbox { grid-column: 1 / -1; grid-row: 3; font-size: .85em; }
-  table.conversations td.date { grid-column: 2; grid-row: 1; font-size: .85em; }
+  table.conversations td.subject { grid-column: 2 / -1; grid-row: 2; }
+  table.conversations td.select { grid-column: 1; grid-row: 1 / span 3; padding-right: .5rem; }
+  table.conversations td.sender { grid-column: 2; grid-row: 1; }
+  table.conversations td.mailbox { grid-column: 2 / -1; grid-row: 3; font-size: .85em; }
+  table.conversations td.date { grid-column: 3; grid-row: 1; font-size: .85em; }
   .snippet { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   iframe.body { min-height: 300px; }
 }
 
 input[type=submit].danger { background: var(--danger); border-color: var(--danger); color: #fff; }
+
+/* Actions groupées et raccourcis clavier */
+form.bulk { display: flex; flex-wrap: wrap; gap: .4rem .9rem; align-items: center; margin: .5rem 0; font-size: .92em; }
+td.select { width: 1.5rem; padding-right: 0; }
+td.select input { position: relative; z-index: 1; }
+table.conversations tr.current { box-shadow: inset 3px 0 0 var(--accent); background: var(--accent-soft); }
+dialog.shortcuts { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); color: var(--text); max-width: 46rem; width: calc(100% - 2rem); }
+dialog.shortcuts::backdrop { background: rgb(0 0 0 / .35); }
+dialog.shortcuts .columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr)); gap: 0 2rem; }
+dialog.shortcuts dl { display: grid; grid-template-columns: 8rem 1fr; gap: .35rem .75rem; margin: 0 0 1rem; }
+dialog.shortcuts dt { font-family: ui-monospace, monospace; font-size: .9em; }
+dialog.shortcuts dd { margin: 0; }
