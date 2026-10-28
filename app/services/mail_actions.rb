@@ -128,7 +128,7 @@ class MailActions
       draft = Draft.build_from(message, kind: kind, user: @user, mailbox: mailbox || default_mailbox_for(message))
       draft.body = "#{body}#{draft.body}" if body.present?
     else
-      draft = Draft.new(kind: "new", user: @user, mailbox: mailbox || sendable_mailboxes.first, body: body)
+      draft = Draft.start(user: @user, mailbox: mailbox || sendable_mailboxes.first, body: body)
     end
     draft.assign_attributes(draft_fields(fields))
     draft.save!

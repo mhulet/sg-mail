@@ -50,8 +50,9 @@ class MailSender
 
   private
 
+  # Le nom choisi pour cette boîte (« Semisto Academy »), sinon celui de la personne.
   def sender
-    name = @draft.user.name.presence
+    name = @mailbox.access_for(@draft.user)&.sender_name.presence || @draft.user.name.presence
     address = Mail::Address.new(@mailbox.address)
     address.display_name = name if name
     address.to_s
