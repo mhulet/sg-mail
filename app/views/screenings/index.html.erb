@@ -1,16 +1,20 @@
 <% content_for :title, "À trier · #{current_account.name} · SG Mail" %>
-<h1>À trier</h1>
+<header class="space-head">
+  <h1>À trier</h1>
+  <p class="tagline">Ils t'écrivent pour la première fois. Oui ou non ?</p>
+</header>
 <p class="muted">Ces expéditeurs t'écrivent pour la première fois. Accepte-les dans ta réception, dans le Feed
   (lettres d'info, lectures) ou dans le Paper Trail (reçus, notifications) ; bloque-les et ils restent dehors.
   Ta décision ne vaut que pour toi, rien n'est supprimé.</p>
 
 <% if @pending.none? %>
-  <p class="muted">Personne n'attend.</p>
+  <%= render "shared/empty", line: "Personne n'attend à la porte." %>
 <% end %>
 
 <table class="screener">
   <% @pending.each do |conversation| %>
-    <tr id="<%= dom_id(conversation) %>">
+    <tr id="<%= dom_id(conversation) %>" data-controller="stamp">
+      <td class="who"><%= avatar(conversation.sender_display) %></td>
       <td>
         <strong><%= conversation.sender_display %></strong><br>
         <span class="muted"><%= conversation.sender_address %></span>
@@ -22,7 +26,7 @@
           <span class="muted">· <%= conversation.sender_conversations_count %> fils</span>
         <% end %>
       </td>
-      <td class="nowrap"><%= render "screenings/buttons", address: conversation.sender_address %></td>
+      <td class="decide"><%= render "screenings/buttons", address: conversation.sender_address %><span class="stamp" data-stamp-target="stamp" aria-hidden="true"></span></td>
     </tr>
   <% end %>
 </table>

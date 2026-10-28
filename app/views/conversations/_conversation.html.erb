@@ -3,12 +3,13 @@
   <% if selectable %>
     <td class="select"><%= check_box_tag "ids[]", conversation.id, false, form: "bulk", id: nil, aria: { label: "Choisir « #{conversation.title} »" } %></td>
   <% end %>
-  <td class="sender"><%= conversation.last_sender %><%= tag.span(" (#{conversation.messages_count})", class: "muted") if conversation.messages_count > 1 %></td>
+  <td class="who"><%= avatar(conversation.last_sender) %></td>
+  <td class="sender"><%= conversation.last_sender %><%= tag.span(conversation.messages_count, class: "count", title: "#{conversation.messages_count} messages") if conversation.messages_count > 1 %>
+    <%= tag.span("→ #{conversation.assignee.display_name}", class: "assignee") if conversation.assignee %></td>
   <td class="subject">
     <%= link_to conversation.title, conversation_path(conversation), data: { shortcuts_target: "link" } %>
-    <%= tag.span("→ #{conversation.assignee.display_name}", class: "assignee") if conversation.assignee %>
-    <span class="muted snippet"><%= conversation.snippet&.truncate(90) %></span>
+    <span class="snippet"><%= conversation.snippet&.truncate(140) %></span>
   </td>
-  <% if show_mailbox %><td class="muted mailbox"><%= conversation.mailbox.address %></td><% end %>
-  <td class="muted nowrap date"><%= conversation.last_message_at && l(conversation.last_message_at, format: :short) %></td>
+  <% if show_mailbox %><td class="mailbox"><%= mailbox_chip(conversation.mailbox.address) %></td><% end %>
+  <td class="date"><%= conversation.last_message_at && l(conversation.last_message_at, format: :short) %></td>
 </tr>

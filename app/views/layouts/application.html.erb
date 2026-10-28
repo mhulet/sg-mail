@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="SG Mail">
-    <meta name="theme-color" content="#0f766e">
+    <meta name="theme-color" content="#f7f3ea" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#17111f" media="(prefers-color-scheme: dark)">
     <meta name="application-name" content="SG Mail">
     <meta name="mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
@@ -19,44 +20,69 @@
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
+    <%= preload_link_tag "inter.woff2", as: "font", type: "font/woff2", crossorigin: "anonymous" %>
+    <%= preload_link_tag "eb-garamond.woff2", as: "font", type: "font/woff2", crossorigin: "anonymous" %>
     <%# Includes all stylesheet files in app/assets/stylesheets %>
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
 
-  <body data-controller="shortcuts">
-    <header>
-      <%= link_to "SG Mail", Current.account ? account_root_path : root_path %>
-      <% if Current.account %>
-        <span class="muted"><%= Current.account.name %></span>
-        <nav>
-          <%= nav_link "Réception", account_root_path, shortcut: "g i" %>
-          <%= nav_link "Feed", conversations_path(box: "feed"), shortcut: "g f" %>
-          <%= nav_link "Paper Trail", conversations_path(box: "paper_trail"), shortcut: "g p" %>
-          <%= nav_link screener_label, screenings_path, shortcut: "g s" %>
-          <%= nav_link "Mes tâches", tasks_path, shortcut: "g t" %>
-          <%= nav_link "Écrire", new_draft_path, shortcut: "c" %>
-          <%= nav_link "Brouillons", drafts_path, shortcut: "g d" %>
-          <%= nav_link "Boîtes", mailboxes_path %>
-          <%= nav_link "Membres", memberships_path %>
-        </nav>
-        <%= form_with url: search_path, method: :get, class: "inline search" do |f| %>
-          <%= f.search_field :q, value: params[:q], placeholder: "Rechercher…", aria: { label: "Rechercher" }, data: { shortcut: "/" } %>
+  <body data-controller="shortcuts" data-space="<%= current_space %>" class="<%= authenticated? ? "with-sidebar" : "bare" %>">
+    <% if authenticated? %>
+      <aside class="sidebar">
+        <div class="brand">
+          <%= link_to Current.account ? account_root_path : root_path, class: "brand-name" do %><span class="mark" aria-hidden="true"></span>SG Mail<% end %>
+          <% if Current.account %><span class="account"><%= Current.account.name %></span><% end %>
+        </div>
+        <% if Current.account %>
+          <%= link_to "Écrire", new_draft_path, class: "compose hint", data: { shortcut: "c" } %>
+          <nav class="spaces" aria-label="Espaces">
+            <%= nav_link "Réception", account_root_path, shortcut: "g i", space: "imbox" %>
+            <%= nav_link "Feed", conversations_path(box: "feed"), shortcut: "g f", space: "feed" %>
+            <%= nav_link "Paper Trail", conversations_path(box: "paper_trail"), shortcut: "g p", space: "trail" %>
+            <%= nav_link screener_label, screenings_path, shortcut: "g s", space: "screener" %>
+            <span class="nav-label">Mes piles</span>
+            <%= nav_link "Plus tard", conversations_path(stack: "reply_later"), space: "later" %>
+            <%= nav_link "De côté", conversations_path(stack: "set_aside"), space: "aside" %>
+            <span class="nav-label">À faire</span>
+            <%= nav_link "Mes tâches", tasks_path, shortcut: "g t", space: "note-ink" %>
+            <%= nav_link "Brouillons", drafts_path, shortcut: "g d", space: "muted" %>
+          </nav>
+          <%= form_with url: search_path, method: :get, class: "search" do |f| %>
+            <%= f.search_field :q, value: params[:q], placeholder: "Rechercher", aria: { label: "Rechercher" }, data: { shortcut: "/" } %>
+            <kbd>/</kbd>
+          <% end %>
         <% end %>
-      <% end %>
-      <% if authenticated? %>
-        <nav class="user">
-          <% if Current.user.accounts.many? || Current.user.staff? %><%= link_to "Clients", accounts_path(account_id: nil) %><% end %>
-          <% if Current.account %><%= link_to "Jetons d'API", api_tokens_path %><% end %>
-          <%= link_to "Passkeys", passkeys_path(account_id: nil) %>
-          <span class="muted"><%= Current.user.display_name %></span>
-          <%= button_to "Déconnexion", session_path(account_id: nil), method: :delete, class: "link" %>
-        </nav>
-      <% end %>
-    </header>
-    <% if notice %><p class="flash notice"><%= notice %></p><% end %>
-    <% if alert %><p class="flash alert"><%= alert %></p><% end %>
-    <main><%= yield %></main>
+        <details class="settings">
+          <summary><%= avatar(Current.user.display_name, size: "small") %><span class="name"><%= Current.user.display_name %></span></summary>
+          <nav aria-label="Réglages">
+            <% if Current.account %>
+              <%= nav_link "Boîtes", mailboxes_path %>
+              <%= nav_link "Membres", memberships_path %>
+              <%= nav_link "Jetons d'API", api_tokens_path %>
+            <% end %>
+            <% if Current.user.accounts.many? || Current.user.staff? %><%= link_to "Clients", accounts_path(account_id: nil) %><% end %>
+            <%= link_to "Passkeys", passkeys_path(account_id: nil) %>
+            <%= button_to "Déconnexion", session_path(account_id: nil), method: :delete, class: "link" %>
+          </nav>
+        </details>
+      </aside>
+    <% end %>
+    <div class="page">
+      <% if alert %><p class="flash alert" role="alert"><%= alert %></p><% end %>
+      <main>
+        <% unless authenticated? %><p class="bare-brand"><span class="mark" aria-hidden="true"></span>SG Mail</p><% end %>
+        <%= yield %>
+      </main>
+    </div>
+    <% if notice %>
+      <div class="toast" role="status" data-controller="toast">
+        <p class="flash notice"><%= notice %></p>
+        <% if flash[:undo].present? %>
+          <%= button_to "Annuler", bulk_conversations_path, params: { operation: "unarchive", ids: flash[:undo] }, class: "undo hint", data: { shortcut: "z" } %>
+        <% end %>
+      </div>
+    <% end %>
     <%= render "shared/shortcuts" if authenticated? %>
   </body>
 </html>

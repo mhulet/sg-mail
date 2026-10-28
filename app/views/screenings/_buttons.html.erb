@@ -5,9 +5,9 @@
 <% Screening::BUCKETS.each do |pile| %>
   <% next if current == "accepted" && bucket == pile %>
   <%= button_to Screening::BUCKET_LABELS.fetch(pile), screenings_path, params: { address: address, decision: "accepted", bucket: pile },
-        form: { class: "inline" }, title: current == "accepted" ? "Ranger ses emails dans : #{Screening::BUCKET_LABELS.fetch(pile)}" : "Accepter dans : #{Screening::BUCKET_LABELS.fetch(pile)}" %>
+        form: { class: "inline", data: { action: "turbo:submit-start->stamp#press", stamp_label: "Accepté" } }, class: ("yes" if pile == "imbox"), title: current == "accepted" ? "Ranger ses emails dans : #{Screening::BUCKET_LABELS.fetch(pile)}" : "Accepter dans : #{Screening::BUCKET_LABELS.fetch(pile)}" %>
 <% end %>
 <% unless current == "blocked" %>
-  <%= button_to "Bloquer", screenings_path, params: { address: address, decision: "blocked" }, class: "link",
-        form: { class: "inline", data: ({ turbo_confirm: "Ne plus voir #{address} ?" } if current == "accepted") } %>
+  <%= button_to "Bloquer", screenings_path, params: { address: address, decision: "blocked" }, class: "no",
+        form: { class: "inline", data: { action: "turbo:submit-start->stamp#press", stamp_label: "Bloqué", turbo_confirm: ("Ne plus voir #{address} ?" if current == "accepted") }.compact } %>
 <% end %>
