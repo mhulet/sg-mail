@@ -2,8 +2,10 @@
 <html lang="fr">
   <head>
     <title><%= content_for(:title) || "SG Mail" %></title>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="SG Mail">
+    <meta name="theme-color" content="#0f766e">
     <meta name="application-name" content="SG Mail">
     <meta name="mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
@@ -11,8 +13,7 @@
 
     <%= yield :head %>
 
-    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
-    <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
+    <%= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
 
     <link rel="icon" href="/icon.png" type="image/png">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -27,17 +28,17 @@
     <header>
       <%= link_to "SG Mail", Current.account ? account_root_path : root_path %>
       <% if Current.account %>
-        <span><%= Current.account.name %></span>
+        <span class="muted"><%= Current.account.name %></span>
         <nav>
-          <%= link_to "Réception", account_root_path %>
-          <%= link_to "Feed", conversations_path(box: "feed") %>
-          <%= link_to "Paper Trail", conversations_path(box: "paper_trail") %>
-          <%= link_to screener_label, screenings_path %>
-          <%= link_to "Mes tâches", tasks_path %>
-          <%= link_to "Écrire", new_draft_path %>
-          <%= link_to "Brouillons", drafts_path %>
-          <%= link_to "Boîtes", mailboxes_path %>
-          <%= link_to "Membres", memberships_path %>
+          <%= nav_link "Réception", account_root_path %>
+          <%= nav_link "Feed", conversations_path(box: "feed") %>
+          <%= nav_link "Paper Trail", conversations_path(box: "paper_trail") %>
+          <%= nav_link screener_label, screenings_path %>
+          <%= nav_link "Mes tâches", tasks_path %>
+          <%= nav_link "Écrire", new_draft_path %>
+          <%= nav_link "Brouillons", drafts_path %>
+          <%= nav_link "Boîtes", mailboxes_path %>
+          <%= nav_link "Membres", memberships_path %>
         </nav>
         <%= form_with url: search_path, method: :get, class: "inline search" do |f| %>
           <%= f.search_field :q, value: params[:q], placeholder: "Rechercher…", aria: { label: "Rechercher" } %>

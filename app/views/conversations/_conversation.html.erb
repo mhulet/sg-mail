@@ -1,10 +1,10 @@
 <tr class="<%= "unread" if conversation.unread %>">
-  <td><%= conversation.last_sender %><%= tag.span(" (#{conversation.messages_count})", class: "muted") if conversation.messages_count > 1 %></td>
-  <td>
+  <td class="sender"><%= conversation.last_sender %><%= tag.span(" (#{conversation.messages_count})", class: "muted") if conversation.messages_count > 1 %></td>
+  <td class="subject">
     <%= link_to conversation.title, conversation_path(conversation) %>
     <%= tag.span("→ #{conversation.assignee.display_name}", class: "assignee") if conversation.assignee %>
-    <span class="muted"><%= conversation.snippet&.truncate(90) %></span>
+    <span class="muted snippet"><%= conversation.snippet&.truncate(90) %></span>
   </td>
-  <% if show_mailbox %><td class="muted"><%= conversation.mailbox.address %></td><% end %>
-  <td class="muted nowrap"><%= conversation.last_message_at && l(conversation.last_message_at, format: :short) %></td>
+  <% if show_mailbox %><td class="muted mailbox"><%= conversation.mailbox.address %></td><% end %>
+  <td class="muted nowrap date"><%= conversation.last_message_at && l(conversation.last_message_at, format: :short) %></td>
 </tr>

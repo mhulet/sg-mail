@@ -1,6 +1,10 @@
 Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
 
+  # SG Mail installable comme une app sur mobile et ordinateur (PWA).
+  get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
+  get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
+
   resource :session
   resources :passwords, param: :token
   get "invitations/:token" => "invitation_acceptances#show", as: :invitation_acceptance
