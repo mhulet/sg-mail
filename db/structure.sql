@@ -115,6 +115,43 @@ CREATE TABLE public.ar_internal_metadata (
 
 
 --
+-- Name: conversation_states; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.conversation_states (
+    id bigint NOT NULL,
+    account_id bigint NOT NULL,
+    conversation_id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    reply_later_at timestamp(6) without time zone,
+    set_aside_at timestamp(6) without time zone,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+ALTER TABLE ONLY public.conversation_states FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: conversation_states_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.conversation_states_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: conversation_states_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.conversation_states_id_seq OWNED BY public.conversation_states.id;
+
+
+--
 -- Name: conversations; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1298,6 +1335,13 @@ ALTER TABLE ONLY public.api_tokens ALTER COLUMN id SET DEFAULT nextval('public.a
 
 
 --
+-- Name: conversation_states id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.conversation_states ALTER COLUMN id SET DEFAULT nextval('public.conversation_states_id_seq'::regclass);
+
+
+--
 -- Name: conversations id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -1543,6 +1587,14 @@ ALTER TABLE ONLY public.api_tokens
 
 ALTER TABLE ONLY public.ar_internal_metadata
     ADD CONSTRAINT ar_internal_metadata_pkey PRIMARY KEY (key);
+
+
+--
+-- Name: conversation_states conversation_states_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.conversation_states
+    ADD CONSTRAINT conversation_states_pkey PRIMARY KEY (id);
 
 
 --
@@ -1828,6 +1880,27 @@ CREATE UNIQUE INDEX index_api_tokens_on_token_digest ON public.api_tokens USING 
 --
 
 CREATE INDEX index_api_tokens_on_user_id ON public.api_tokens USING btree (user_id);
+
+
+--
+-- Name: index_conversation_states_on_account_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_conversation_states_on_account_id ON public.conversation_states USING btree (account_id);
+
+
+--
+-- Name: index_conversation_states_on_conversation_id_and_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_conversation_states_on_conversation_id_and_user_id ON public.conversation_states USING btree (conversation_id, user_id);
+
+
+--
+-- Name: index_conversation_states_on_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_conversation_states_on_user_id ON public.conversation_states USING btree (user_id);
 
 
 --
@@ -2573,6 +2646,14 @@ ALTER TABLE ONLY public.readings
 
 
 --
+-- Name: conversation_states fk_rails_2674c34b79; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.conversation_states
+    ADD CONSTRAINT fk_rails_2674c34b79 FOREIGN KEY (account_id) REFERENCES public.accounts(id);
+
+
+--
 -- Name: oauth_authorization_codes fk_rails_2df019e87a; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2717,6 +2798,14 @@ ALTER TABLE ONLY public.tasks
 
 
 --
+-- Name: conversation_states fk_rails_760afbe916; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.conversation_states
+    ADD CONSTRAINT fk_rails_760afbe916 FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
 -- Name: solid_queue_batch_executions fk_rails_7c5e073422; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2746,6 +2835,14 @@ ALTER TABLE ONLY public.messages
 
 ALTER TABLE ONLY public.solid_queue_ready_executions
     ADD CONSTRAINT fk_rails_81fcbd66af FOREIGN KEY (job_id) REFERENCES public.solid_queue_jobs(id) ON DELETE CASCADE;
+
+
+--
+-- Name: conversation_states fk_rails_84e1c78b15; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.conversation_states
+    ADD CONSTRAINT fk_rails_84e1c78b15 FOREIGN KEY (conversation_id) REFERENCES public.conversations(id) ON DELETE CASCADE;
 
 
 --
@@ -2941,6 +3038,13 @@ ALTER TABLE ONLY public.api_tokens
 
 
 --
+-- Name: conversation_states account_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY account_isolation ON public.conversation_states USING (((current_setting('sg_mail.bypass_rls'::text, true) = 'on'::text) OR (account_id = (NULLIF(current_setting('sg_mail.account_id'::text, true), ''::text))::bigint))) WITH CHECK (((current_setting('sg_mail.bypass_rls'::text, true) = 'on'::text) OR (account_id = (NULLIF(current_setting('sg_mail.account_id'::text, true), ''::text))::bigint)));
+
+
+--
 -- Name: conversations account_isolation; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -3011,6 +3115,12 @@ CREATE POLICY account_isolation ON public.tasks USING (((current_setting('sg_mai
 
 
 --
+-- Name: conversation_states; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.conversation_states ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: conversations; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -3077,6 +3187,7 @@ ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261028100000'),
 ('20261028090000'),
 ('20261028080000'),
 ('20261027230000'),

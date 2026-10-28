@@ -20,6 +20,7 @@ class ApiSerializer
       mailbox: conversation.mailbox.address, last_sender: conversation.last_sender, snippet: conversation.snippet,
       sender: conversation.sender_address && { address: conversation.sender_address, name: conversation.sender_name },
       screening: conversation.screening_for(@user), box: conversation.bucket_for(@user),
+      stacks: conversation.stacks_for(@user),
       messages_count: conversation.messages_count, last_message_at: conversation.last_message_at&.iso8601,
       unread: conversation.has_attribute?(:unread) ? conversation.unread : nil,
       assignee: user(conversation.assignee), url: url("/#{conversation.account_id}/conversations/#{conversation.id}")

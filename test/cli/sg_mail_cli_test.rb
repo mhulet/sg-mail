@@ -67,6 +67,17 @@ class SgMailCliTest < ActionDispatch::IntegrationTest
     assert_no_match(/Partenariat/, run_cli("inbox"))
   end
 
+  test "reply later and set aside" do
+    id = with_account(@semisto) { @message.reload.conversation_id }
+    assert_equal "Fil #{id} ajouté à « Répondre plus tard ».\n", run_cli("later", id.to_s)
+    assert_match(/Inscription/, run_cli("later"))
+    assert_equal "Rien ici.\n", run_cli("inbox")
+    run_cli("later", id.to_s, "--off")
+    run_cli("aside", id.to_s)
+    assert_match(/Inscription/, run_cli("aside"))
+    assert_equal "Rien ici.\n", run_cli("later")
+  end
+
   test "errors are readable" do
     error = assert_raises(SgMail::Client::Error) { run_cli("show", "999999") }
     assert_equal "Introuvable, ou pas d'accès.", error.message

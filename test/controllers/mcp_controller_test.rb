@@ -69,6 +69,20 @@ class McpControllerTest < ActionDispatch::IntegrationTest
     assert result["isError"]
   end
 
+  test "stacks: reply later, then list it" do
+    id = with_account(@semisto) { @message.reload.conversation_id }
+    call_tool("update_stacks", conversation_id: id, reply_later: true)
+    assert_equal [ "reply_later" ], result["structuredContent"]["conversation"]["stacks"]
+
+    call_tool("search_conversations")
+    assert_empty result["structuredContent"]["conversations"]
+    call_tool("search_conversations", stack: "reply_later")
+    assert_equal [ id ], result["structuredContent"]["conversations"].map { |c| c["id"] }
+
+    call_tool("update_stacks", conversation_id: id, reply_later: false, set_aside: true)
+    assert_equal [ "set_aside" ], result["structuredContent"]["conversation"]["stacks"]
+  end
+
   private
 
   def rpc(method, **params) = { jsonrpc: "2.0", id: 1, method: method, params: params }.to_json

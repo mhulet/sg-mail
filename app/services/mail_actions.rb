@@ -9,19 +9,23 @@ class MailActions
   def mailboxes = Mailbox.accessible_by(@user).order(:address)
   def members = ActsAsTenant.current_tenant.users.order(:name)
 
-  # Une pile (box : imbox par défaut, feed, paper_trail), une boîte, ou une recherche ; filtres non lus,
-  # assignés à moi, avant une date. Hors recherche, seuls les fils d'expéditeurs acceptés (Screener)
-  # et rangés dans cette pile apparaissent.
-  def conversations(query: nil, box: nil, mailbox_id: nil, unread: false, mine: false, before: nil, limit: 50)
+  # Une pile (box : imbox par défaut, feed, paper_trail), une pile personnelle (stack : reply_later, set_aside),
+  # une boîte, ou une recherche ; filtres non lus, assignés à moi, avant une date. Pour une pile, seuls les fils
+  # d'expéditeurs acceptés (Screener), rangés dans cette pile et dans aucune pile personnelle apparaissent.
+  def conversations(query: nil, box: nil, stack: nil, mailbox_id: nil, unread: false, mine: false, before: nil, limit: 50)
     raise ArgumentError, "box : imbox, feed ou paper_trail" unless box.blank? || box.in?(Screening::BUCKETS)
+    raise ArgumentError, "stack : reply_later ou set_aside" unless stack.blank? || stack.in?(ConversationState::STACKS)
     mailbox = mailboxes.find(mailbox_id) if mailbox_id.present?
     scope = if query.present?
       MessageSearch.new(@user, query, mailbox: mailbox).conversations
+    elsif stack.present?
+      scope = accessible_conversations.in_stack_for(@user, stack)
+      mailbox ? scope.where(mailbox: mailbox) : scope
     else
       scope = mailbox ? accessible_conversations.where(mailbox: mailbox) : accessible_conversations.inbox
-      scope.in_bucket_for(@user, box.presence || "imbox")
+      scope.in_bucket_for(@user, box.presence || "imbox").outside_stacks_for(@user)
     end
-    scope = scope.with_unread_for(@user).with_screening_for(@user).includes(:mailbox, :assignee)
+    scope = scope.with_unread_for(@user).with_screening_for(@user).includes(:mailbox, :assignee, :states)
     scope = scope.unread_for(@user) if unread
     scope = scope.assigned_to(@user) if mine
     scope = scope.where(last_message_at: ...Time.zone.iso8601(before.to_s)) if before.present?
@@ -57,6 +61,17 @@ class MailActions
   # decision : accepted (ses fils entrent dans la pile « bucket », imbox par défaut) ou blocked
   # (ils restent dehors), pour moi seulement. Accepter à nouveau avec une autre pile y déplace l'expéditeur.
   def screen(address, decision, bucket: nil) = Screening.decide!(@user, address, decision, bucket: bucket)
+
+  # Met le fil dans mes piles « Répondre plus tard » ou « Mis de côté » (true), ou l'en retire (false).
+  # Une valeur nil ne change rien.
+  def update_stacks(id, reply_later: nil, set_aside: nil)
+    conversation = conversation(id)
+    { "reply_later" => reply_later, "set_aside" => set_aside }.each do |stack, on|
+      ConversationState.put!(conversation, @user, stack, on: on) unless on.nil?
+    end
+    conversation.states.reset
+    conversation
+  end
 
   def add_note(conversation_id, body)
     conversation(conversation_id).notes.create!(user: @user, body: body)

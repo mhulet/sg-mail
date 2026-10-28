@@ -106,6 +106,9 @@ obligatoire (`force_ssl`), ce qui convient au certificat géré par Hatchbox.
   le Paper Trail les reçus, confirmations et notifications. Par personne aussi (`screenings.bucket`) ;
   un fil ouvert par la boîte va dans la réception. « Tout marquer comme lu » dans le Feed ou le Paper Trail
   ne touche que cette pile.
+- **Répondre plus tard / Mis de côté** : deux piles personnelles (`ConversationState`, par personne et par fil).
+  Boutons en haut d'un fil ; le fil quitte alors sa pile habituelle, et un lien « Répondre plus tard (n) » apparaît
+  en haut de la réception. Envoyer une réponse depuis SG Mail sort le fil de « Répondre plus tard ».
 
 ## Recherche
 
@@ -124,10 +127,11 @@ sans action explicite.
 - **API JSON** `/api/v1` (en-tête `Authorization: Bearer sgm_…`) : `me`, `conversations` (`q`, `mailbox_id`,
   `unread`, `mine`, `before`), `conversations/:id` (+ `read`, `unread`, `notes`, PATCH `assignee_id`),
   `screener` (GET : en attente et bloqués ; POST `address`, `decision` accepted|blocked, `box`),
-  `conversations?box=feed|paper_trail` pour les autres piles,
+  `conversations?box=feed|paper_trail` pour les autres piles, `?stack=reply_later|set_aside` pour les piles
+  personnelles (PATCH `conversations/:id` avec `reply_later`, `set_aside` true|false),
   `tasks`, `drafts` (+ `deliver` pour envoyer).
 - **MCP** `/mcp` (HTTP « streamable », sans état) : `whoami`, `search_conversations`, `get_conversation`,
-  `mark_read`, `mark_unread`, `assign`, `add_note`, `list_screener`, `screen_sender`, `list_tasks`, `create_task`, `update_task`,
+  `mark_read`, `mark_unread`, `assign`, `add_note`, `list_screener`, `screen_sender`, `update_stacks`, `list_tasks`, `create_task`, `update_task`,
   `list_drafts`, `create_draft`, `update_draft`, `send_draft`.
   - **claude.ai** (connecteur personnalisé, adresse `https://<hôte>/mcp`) : serveur OAuth 2.1 intégré
     (`app/controllers/oauth/`) avec découverte (RFC 9728 et 8414), enregistrement dynamique (RFC 7591),
@@ -147,6 +151,7 @@ sans action explicite.
   sg-mail inbox --unread          # ou : search, show 12 --read, tasks, task-add, note, assign
   sg-mail screener                # puis : accept zoe@example.org [--to feed|paper_trail], block spam@example.com
   sg-mail feed                    # ou : paper-trail, inbox --box feed
+  sg-mail later 12                # ou : later (la pile), later 12 --off, aside 12, aside
   sg-mail reply 345 "Merci !"     # crée un brouillon, jamais envoyé
   sg-mail send 7                  # demande confirmation
   ```

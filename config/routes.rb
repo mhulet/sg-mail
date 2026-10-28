@@ -23,6 +23,7 @@ Rails.application.routes.draw do
     resources :conversations, only: %i[index show] do
       post :unread, on: :member
       patch :assign, on: :member
+      patch :stack, on: :member
       resources :notes, only: %i[create destroy]
       post :mark_all_read, on: :collection
     end

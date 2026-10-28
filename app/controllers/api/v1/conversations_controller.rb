@@ -1,7 +1,8 @@
 class Api::V1::ConversationsController < Api::V1::BaseController
-  # Paramètres : q, box (imbox, feed, paper_trail), mailbox_id, unread=1, mine=1, before (date ISO 8601), limit.
+  # Paramètres : q, box (imbox, feed, paper_trail), stack (reply_later, set_aside), mailbox_id, unread=1, mine=1,
+  # before (date ISO 8601), limit.
   def index
-    conversations = actions.conversations(query: params[:q], box: params[:box], mailbox_id: params[:mailbox_id], unread: params[:unread] == "1",
+    conversations = actions.conversations(query: params[:q], box: params[:box], stack: params[:stack], mailbox_id: params[:mailbox_id], unread: params[:unread] == "1",
       mine: params[:mine] == "1", before: params[:before], limit: params[:limit] || 50)
     render json: { conversations: conversations.map { |conversation| serializer.conversation(conversation) } }
   end
@@ -21,7 +22,10 @@ class Api::V1::ConversationsController < Api::V1::BaseController
     head :no_content
   end
 
+  # Paramètres (chacun facultatif) : assignee_id (vide pour personne), reply_later et set_aside (true ou false).
   def update
-    render json: { conversation: serializer.conversation(actions.assign(params[:id], params[:assignee_id])) }
+    actions.assign(params[:id], params[:assignee_id]) if params.key?(:assignee_id)
+    stacks = %i[reply_later set_aside].index_with { |key| ActiveModel::Type::Boolean.new.cast(params[key]) if params.key?(key) }
+    render json: { conversation: serializer.conversation(actions.update_stacks(params[:id], **stacks)) }
   end
 end
