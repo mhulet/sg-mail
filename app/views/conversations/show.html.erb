@@ -1,6 +1,6 @@
 <% content_for :title, "#{@conversation.title} · SG Mail" %>
 <p>
-  <%= link_to "← #{Screening::BUCKET_LABELS.fetch(@bucket || "imbox")}", conversations_path(box: (@bucket unless @bucket.in?([ nil, "imbox" ]))) %> ·
+  <%= link_to "← #{Screening::BUCKET_LABELS.fetch(@bucket || "imbox")}", conversations_path(box: (@bucket unless @bucket.in?([ nil, "imbox" ]))), data: { shortcut: "u" } %> ·
   <%= link_to @conversation.mailbox.address, conversations_path(mailbox_id: @conversation.mailbox_id) %>
 </p>
 <h1><%= @conversation.title %></h1>
@@ -19,13 +19,14 @@
     <span class="muted">Archivé.</span>
     <%= button_to "Remettre dans la réception", archive_conversation_path(@conversation), method: :patch, params: { on: "0" }, class: "link" %>
   <% else %>
-    <%= button_to "Archiver", archive_conversation_path(@conversation), method: :patch, params: { on: "1" }, class: "primary" %>
+    <%= button_to "Archiver", archive_conversation_path(@conversation), method: :patch, params: { on: "1" }, class: "primary", data: { shortcut: "e" } %>
   <% end %>
-  <%= button_to "Marquer comme non lu", unread_conversation_path(@conversation), class: "link" %>
+  <%= button_to "Marquer comme non lu", unread_conversation_path(@conversation), class: "link", data: { shortcut: "U" } %>
   <% ConversationState::STACKS.each do |stack| %>
     <% on = @stacks.include?(stack) %>
     <%= button_to on ? "Retirer de « #{ConversationState::STACK_LABELS.fetch(stack)} »" : ConversationState::ACTION_LABELS.fetch(stack),
-          stack_conversation_path(@conversation), method: :patch, params: { stack: stack, on: on ? "0" : "1" }, class: "link" %>
+          stack_conversation_path(@conversation), method: :patch, params: { stack: stack, on: on ? "0" : "1" }, class: "link",
+          data: { shortcut: { "reply_later" => "l", "set_aside" => "s" }.fetch(stack) } %>
   <% end %>
   <% if @screening == "accepted" %>
     <span class="muted">Emails de <%= @conversation.sender_address %> rangés dans « <%= Screening::BUCKET_LABELS.fetch(@bucket) %> ». Déplacer vers :</span>
@@ -73,9 +74,10 @@
     <% end %>
 
     <p class="actions">
-      <%= link_to "Répondre", new_draft_path(message_id: message.id, kind: "reply") %>
-      <%= link_to "Répondre à tous", new_draft_path(message_id: message.id, kind: "reply_all") %>
-      <%= link_to "Transférer", new_draft_path(message_id: message.id, kind: "forward") %>
+      <% last = message == @messages.last %>
+      <%= link_to "Répondre", new_draft_path(message_id: message.id, kind: "reply"), data: { shortcut: ("r" if last) } %>
+      <%= link_to "Répondre à tous", new_draft_path(message_id: message.id, kind: "reply_all"), data: { shortcut: ("a" if last) } %>
+      <%= link_to "Transférer", new_draft_path(message_id: message.id, kind: "forward"), data: { shortcut: ("f" if last) } %>
       <%= button_to "Créer une tâche", tasks_path(task: { message_id: message.id, title: "Traiter : #{@conversation.title}", assignee_id: Current.user.id }), class: "link" %>
     </p>
 

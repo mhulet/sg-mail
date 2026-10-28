@@ -66,6 +66,28 @@ class ConversationsController < ApplicationController
     end
   end
 
+  # Singulier, pluriel.
+  BULK_NOTICES = {
+    "archive" => [ "archivé", "archivés" ], "unarchive" => [ "remis dans la réception" ] * 2,
+    "read" => [ "marqué comme lu", "marqués comme lus" ], "unread" => [ "marqué comme non lu", "marqués comme non lus" ],
+    "reply_later" => [ "ajouté à « Répondre plus tard »", "ajoutés à « Répondre plus tard »" ], "set_aside" => [ "mis de côté" ] * 2
+  }.freeze
+
+  # Actions groupées sur les fils cochés dans une liste, pour moi seulement.
+  def bulk
+    operation = params[:operation].presence_in(BULK_NOTICES.keys)
+    conversations = Conversation.accessible_by(Current.user).where(id: Array(params[:ids])).to_a
+    return redirect_back_or_to(account_root_path, alert: "Coche au moins un fil.") if operation.nil? || conversations.empty?
+
+    case operation
+    when "archive", "unarchive" then conversations.each { |c| c.archive_for!(Current.user, on: operation == "archive") }
+    when "read" then Reading.mark!(Current.user, Message.where(conversation_id: conversations.map(&:id)))
+    when "unread" then conversations.each { |c| c.mark_unread_by!(Current.user) }
+    else conversations.each { |c| ConversationState.put!(c, Current.user, operation) }
+    end
+    redirect_back_or_to account_root_path, notice: "#{conversations.size} #{conversations.many? ? "fils" : "fil"} #{BULK_NOTICES.fetch(operation)[conversations.many? ? 1 : 0]}."
+  end
+
   # « Tout marquer comme lu » : utile après l'import de milliers de vieux messages.
   # Depuis le Feed ou le Paper Trail, seulement les fils de cette pile.
   def mark_all_read

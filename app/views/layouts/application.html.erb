@@ -24,24 +24,24 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body>
+  <body data-controller="shortcuts">
     <header>
       <%= link_to "SG Mail", Current.account ? account_root_path : root_path %>
       <% if Current.account %>
         <span class="muted"><%= Current.account.name %></span>
         <nav>
-          <%= nav_link "Réception", account_root_path %>
-          <%= nav_link "Feed", conversations_path(box: "feed") %>
-          <%= nav_link "Paper Trail", conversations_path(box: "paper_trail") %>
-          <%= nav_link screener_label, screenings_path %>
-          <%= nav_link "Mes tâches", tasks_path %>
-          <%= nav_link "Écrire", new_draft_path %>
-          <%= nav_link "Brouillons", drafts_path %>
+          <%= nav_link "Réception", account_root_path, shortcut: "g i" %>
+          <%= nav_link "Feed", conversations_path(box: "feed"), shortcut: "g f" %>
+          <%= nav_link "Paper Trail", conversations_path(box: "paper_trail"), shortcut: "g p" %>
+          <%= nav_link screener_label, screenings_path, shortcut: "g s" %>
+          <%= nav_link "Mes tâches", tasks_path, shortcut: "g t" %>
+          <%= nav_link "Écrire", new_draft_path, shortcut: "c" %>
+          <%= nav_link "Brouillons", drafts_path, shortcut: "g d" %>
           <%= nav_link "Boîtes", mailboxes_path %>
           <%= nav_link "Membres", memberships_path %>
         </nav>
         <%= form_with url: search_path, method: :get, class: "inline search" do |f| %>
-          <%= f.search_field :q, value: params[:q], placeholder: "Rechercher…", aria: { label: "Rechercher" } %>
+          <%= f.search_field :q, value: params[:q], placeholder: "Rechercher…", aria: { label: "Rechercher" }, data: { shortcut: "/" } %>
         <% end %>
       <% end %>
       <% if authenticated? %>
@@ -57,5 +57,6 @@
     <% if notice %><p class="flash notice"><%= notice %></p><% end %>
     <% if alert %><p class="flash alert"><%= alert %></p><% end %>
     <main><%= yield %></main>
+    <%= render "shared/shortcuts" if authenticated? %>
   </body>
 </html>
