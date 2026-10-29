@@ -17,6 +17,7 @@ Rails.application.routes.draw do
   end
   resources :passwords, param: :token
   get "invitations/:token" => "invitation_acceptances#show", as: :invitation_acceptance
+  get "inline/:token" => "inline_images#show", as: :inline_image
   post "invitations/:token" => "invitation_acceptances#create"
 
   resources :accounts, only: %i[index new create destroy]
@@ -48,7 +49,10 @@ Rails.application.routes.draw do
     resource :search, only: :show
     resources :tasks, only: %i[index create update destroy]
     resources :messages, only: :show do
-      resources :attachments, only: %i[show create]
+      resources :attachments, only: %i[show create] do
+        get :thumbnail, on: :member
+        get :archive, on: :collection
+      end
     end
     resources :memberships, only: %i[index update destroy]
     resource :sharing, only: %i[show update], path: "partage"

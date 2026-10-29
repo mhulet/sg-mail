@@ -1,0 +1,38 @@
+<% attachments = message.listed_attachments %>
+<% if attachments.any? %>
+  <div class="attachments">
+    <% if attachments.size > 1 %>
+      <p class="attachments-head muted">
+        <%= pluralize(attachments.size, "pièce jointe", plural: "pièces jointes") %> · <%= number_to_human_size(attachments.sum { |a| a["size"].to_i }) %>
+        · <%= link_to "Tout télécharger (.zip)", archive_message_attachments_path(message), data: { turbo: false } %>
+      </p>
+    <% end %>
+    <ul class="attachment-cards">
+      <% attachments.each do |attachment| %>
+        <% download = message_attachment_path(message, attachment["index"]) %>
+        <% kind = attachment_viewer_kind(attachment) %>
+        <li class="attachment-card" data-family="<%= attachment_family(attachment) %>">
+          <%= link_to (kind ? message_attachment_path(message, attachment["index"], view: 1) : download),
+                class: "attachment-preview", title: attachment["filename"],
+                data: { turbo: false, action: ("viewer#open" if kind), viewer_target: "item", viewer_kind: kind,
+                        viewer_name: attachment["filename"], viewer_download: download } do %>
+            <span class="file-icon" aria-hidden="true"><%= attachment_extension(attachment).presence || "?" %></span>
+            <% if attachment_thumbnail?(attachment) %>
+              <img src="<%= thumbnail_message_attachment_path(message, attachment["index"]) %>" alt="" loading="lazy" data-action="error->viewer#broken">
+            <% end %>
+          <% end %>
+          <div class="attachment-meta">
+            <span class="attachment-name"><%= attachment["filename"] %></span>
+            <span class="muted"><%= number_to_human_size(attachment["size"]) %></span>
+          </div>
+          <%= link_to download, class: "attachment-download", title: "Télécharger #{attachment["filename"]}", data: { turbo: false } do %>
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v10m0 0-4-4m4 4 4-4M4 16h12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="visually-hidden">Télécharger</span>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  </div>
+<% elsif message.has_attachments && message.attachments.empty? %>
+  <%= button_to "Afficher les pièces jointes", message_attachments_path(message), class: "link" %>
+<% end %>

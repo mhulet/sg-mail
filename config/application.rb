@@ -20,6 +20,10 @@ module SgMail
     config.i18n.available_locales = %i[fr en]
     config.time_zone = "Brussels"
 
+    # Les pièces jointes gardées ne passent que par AttachmentsController, qui vérifie l'accès :
+    # pas d'adresses publiques /rails/active_storage.
+    config.active_storage.draw_routes = false
+
     # Configuration for the application, engines, and railties goes here.
     #
     # These settings can be overridden in specific environments using the files

@@ -296,8 +296,68 @@ article.card { box-shadow: var(--shadow); }
 .message-head time { margin-left: auto; font-size: .82rem; white-space: nowrap; }
 iframe.body { width: 100%; min-height: 400px; border: 1px solid var(--rule); border-radius: 10px; background: #fff; }
 pre.body { white-space: pre-wrap; font-family: inherit; font-size: 1rem; line-height: 1.65; max-width: 68ch; margin: 0; }
-ul.attachments { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: .5rem; }
-ul.attachments li { padding: .3rem .75rem; border: 1px solid var(--rule); border-radius: 999px; font-size: .9rem; }
+
+/* Pièces jointes : des cartes, avec vignette pour les images et les PDF, sinon une icône par famille. */
+.viewer-scope { display: contents; }
+.attachments { margin: 1rem 0 .4rem; }
+.attachments-head { margin: 0 0 .5rem; font-size: .85rem; }
+.attachments-head a { color: var(--space); }
+.attachment-cards { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr)); gap: .75rem; }
+.attachment-card { --c: var(--muted); position: relative; display: flex; flex-direction: column; border: 1px solid var(--rule); border-radius: 12px;
+  background: var(--sheet-2); overflow: hidden; transition: border-color .15s, transform .2s var(--ease), box-shadow .2s var(--ease); }
+.attachment-card:hover { border-color: var(--c); transform: translateY(-1px); box-shadow: var(--shadow); }
+.attachment-card[data-family="pdf"] { --c: var(--later); }
+.attachment-card[data-family="image"] { --c: var(--aside); }
+.attachment-card[data-family="sheet"] { --c: var(--feed); }
+.attachment-card[data-family="doc"] { --c: var(--imbox); }
+.attachment-card[data-family="slides"] { --c: var(--trail); }
+.attachment-card[data-family="archive"], .attachment-card[data-family="calendar"] { --c: var(--screener); }
+.attachment-card[data-family="audio"], .attachment-card[data-family="video"] { --c: var(--aside); }
+.attachment-preview { position: relative; display: grid; place-items: center; aspect-ratio: 4 / 3; background: color-mix(in srgb, var(--c) 9%, var(--sheet));
+  border-bottom: 1px solid var(--rule); text-decoration: none; cursor: zoom-in; }
+.attachment-preview:not([data-viewer-kind]) { cursor: pointer; }
+.attachment-preview img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: var(--sheet); }
+.attachment-card[data-family="pdf"] .attachment-preview img { object-fit: contain; object-position: top; padding: .5rem .5rem 0; }
+/* Une feuille au coin plié, avec l'extension du fichier. */
+.file-icon { display: grid; place-items: end center; width: 3.1rem; height: 3.9rem; padding-bottom: .55rem; border-radius: 5px; color: var(--on-space);
+  background: linear-gradient(225deg, transparent .75rem, var(--c) 0); font: 700 .68rem var(--sans); letter-spacing: .06em; position: relative; }
+.file-icon::before { content: ""; position: absolute; top: 0; right: 0; width: 1.06rem; height: 1.06rem; border-bottom-left-radius: 4px;
+  background: color-mix(in srgb, var(--c) 55%, var(--sheet)); }
+.attachment-meta { display: flex; flex-direction: column; gap: .1rem; padding: .5rem 2.4rem .55rem .7rem; min-width: 0; font-size: .85rem; }
+.attachment-name { color: var(--ink); font-weight: 550; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.attachment-meta .muted { font-size: .8rem; }
+.attachment-download { position: absolute; right: .45rem; bottom: .5rem; display: grid; place-items: center; width: 1.9rem; height: 1.9rem;
+  border-radius: 50%; color: var(--muted); }
+.attachment-download:hover { color: var(--c); background: color-mix(in srgb, var(--c) 12%, transparent); }
+.attachment-download svg { width: 1.05rem; height: 1.05rem; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* La visionneuse : plein écran, sur un fond d'encre. */
+dialog.viewer { width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; background: rgb(23 17 31 / .97); color: #f3eefb; }
+dialog.viewer[open] { display: grid; grid-template-rows: auto 1fr; animation: viewer-in .2s var(--ease); }
+dialog.viewer::backdrop { background: transparent; }
+@keyframes viewer-in { from { opacity: 0; } }
+.viewer-bar { display: flex; align-items: center; gap: .75rem; padding: .7rem 1rem; font-size: .92rem; }
+.viewer-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.viewer-count { color: #b8afc6; font-variant-numeric: tabular-nums; margin-right: auto; }
+dialog.viewer .viewer-button { flex-shrink: 0; padding: .35rem .85rem; border: 1px solid rgb(255 255 255 / .25); border-radius: 999px; background: none; color: inherit;
+  font: inherit; text-decoration: none; cursor: pointer; }
+dialog.viewer .viewer-button:hover { background: rgb(255 255 255 / .1); }
+.viewer-stage { display: grid; place-items: center; min-height: 0; padding: 0 4rem 1.5rem; }
+.viewer-stage img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 4px; box-shadow: 0 20px 60px -20px rgb(0 0 0 / .8); animation: viewer-in .25s var(--ease); }
+.viewer-stage iframe { width: min(100%, 64rem); height: 100%; border: 0; border-radius: 4px; background: #fff; }
+dialog.viewer .viewer-nav { position: absolute; padding: 0; top: 50%; translate: 0 -50%; width: 2.8rem; height: 2.8rem; border-radius: 50%; border: 0; background: rgb(255 255 255 / .12);
+  color: #fff; font-size: 1.8rem; line-height: 1; cursor: pointer; display: grid; place-items: center; }
+dialog.viewer .viewer-nav:hover { background: rgb(255 255 255 / .22); }
+.viewer-nav.prev { left: .75rem; }
+.viewer-nav.next { right: .75rem; }
+dialog.viewer .viewer-nav[hidden] { display: none; }
+.viewer-stage:focus { outline: none; }
+@media (max-width: 720px) {
+  .attachment-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; }
+  .viewer-stage { padding: 0 .5rem 1rem; }
+  dialog.viewer .viewer-nav { display: none; }
+}
 .message-actions { margin-bottom: 0; font-weight: 550; }
 .message-actions a { text-decoration: none; }
 p.read-by { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; font-size: .85rem; margin: .6rem 0 0; }
