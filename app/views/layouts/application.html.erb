@@ -36,7 +36,7 @@
           <% if Current.account %><span class="account"><%= Current.account.name %></span><% end %>
         </div>
         <% if Current.account %>
-          <%= link_to "Écrire", new_draft_path, class: "compose hint", data: { shortcut: "c" } %>
+          <%= link_to "Écrire", new_draft_path, class: "compose-button hint", data: { shortcut: "c" } %>
           <nav class="spaces" aria-label="Espaces">
             <%= nav_link "Réception", account_root_path, shortcut: "g i", space: "imbox" %>
             <%= nav_link "Feed", conversations_path(box: "feed"), shortcut: "g f", space: "feed" %>
