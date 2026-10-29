@@ -42,4 +42,31 @@ class AccountsControllerTest < ActionDispatch::IntegrationTest
     end
     assert_redirected_to accounts_path
   end
+
+  test "a member of several accounts switches from the sidebar and comes back to the last one" do
+    with_account(accounts(:silvea)) { accounts(:silvea).memberships.create!(user: users(:mohammad), role: "member") }
+    sign_in_as users(:mohammad)
+
+    get root_path
+    assert_response :success
+
+    get account_root_path(account_id: accounts(:semisto).id)
+    assert_select ".account-switcher summary[data-shortcut='g c']", /Semisto/
+    assert_select ".account-switcher nav a[aria-current]", "Semisto"
+    assert_select ".account-switcher nav a[href=?]", account_root_path(account_id: accounts(:silvea).id), "Silvéa"
+
+    get account_root_path(account_id: accounts(:silvea).id)
+    get root_path
+    assert_redirected_to account_root_path(account_id: accounts(:silvea).id)
+
+    get accounts_path
+    assert_response :success
+  end
+
+  test "a member of a single account has no switcher" do
+    sign_in_as users(:mohammad)
+    get account_root_path(account_id: accounts(:semisto).id)
+    assert_select ".account-switcher", count: 0
+    assert_select ".brand .account", "Semisto"
+  end
 end

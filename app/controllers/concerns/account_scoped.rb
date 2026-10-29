@@ -14,6 +14,7 @@ module AccountScoped
     Current.membership = Current.user.memberships.includes(:account).find_by(account_id: requested_account_id)
     return redirect_to(accounts_path(account_id: nil), alert: "Ce client n'existe pas ou tu n'en fais pas partie.") unless Current.membership
 
+    cookies.permanent[:last_account_id] = Current.account.id
     Tenancy.with_account(Current.account, &block)
   end
 
