@@ -7,7 +7,7 @@
         <% @conversations.each do |conversation| %>
           <%= link_to conversation_path(conversation), class: class_names("result", unread: conversation.unread), role: "option" do %>
             <span class="sender"><%= conversation.last_sender %></span>
-            <span class="subject"><%= conversation.title %></span>
+            <span class="subject"><%= highlight_words(conversation.title, @search.highlights) %></span>
             <span class="date"><%= conversation.last_message_at && l(conversation.last_message_at, format: :short) %></span>
           <% end %>
         <% end %>

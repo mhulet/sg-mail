@@ -13,6 +13,8 @@ class SearchesController < ApplicationController
     @conversations = @search.blank? ? [] :
       @search.conversations.with_unread_for(Current.user).includes(:mailbox, :assignee).recent
         .limit(preview ? PREVIEW_LIMIT : LIMIT).to_a
-    render :preview if preview
+    return render :preview if preview
+
+    @matches = @search.matching_messages(@conversations.map(&:id))
   end
 end

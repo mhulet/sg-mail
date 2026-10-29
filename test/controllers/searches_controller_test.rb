@@ -14,6 +14,9 @@ class SearchesControllerTest < ActionDispatch::IntegrationTest
     sign_in_as users(:mohammad)
     get search_path(account_id: semisto.id, q: "inscription")
     assert_select "table.conversations tr", 1
+    assert_select "td.subject a mark", text: "Inscription"
+    get search_path(account_id: semisto.id, q: "bonjour")
+    assert_select "td.subject .snippet mark", text: "Bonjour"
     get search_path(account_id: semisto.id, q: "rien")
     assert_select "p", text: "Aucun résultat."
     get search_path(account_id: semisto.id, q: "from:anne is:starred")

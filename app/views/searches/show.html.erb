@@ -39,9 +39,12 @@
   <% elsif @conversations.none? %>
     <p class="muted">Aucun résultat.</p>
   <% else %>
-    <p class="muted"><%= pluralize(@conversations.size, "fil") %><%= " (les #{SearchesController::LIMIT} plus récents)" if @conversations.size == SearchesController::LIMIT %></p>
+    <p class="muted"><%= pluralize(@conversations.size, "fil", plural: "fils") %><%= " (les #{SearchesController::LIMIT} plus récents)" if @conversations.size == SearchesController::LIMIT %></p>
     <table class="conversations">
-      <%= render partial: "conversations/conversation", collection: @conversations, locals: { show_mailbox: @mailboxes.many? && !@mailbox } %>
+      <% @conversations.each do |conversation| %>
+        <%= render "conversations/conversation", conversation: conversation, show_mailbox: @mailboxes.many? && !@mailbox,
+              highlights: @search.highlights, match: @matches[conversation.id] %>
+      <% end %>
     </table>
   <% end %>
 <% end %>
