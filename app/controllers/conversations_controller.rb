@@ -14,7 +14,8 @@ class ConversationsController < ApplicationController
     @mailboxes = Mailbox.accessible_by(Current.user).by_display_name
     @mailbox = @mailboxes.find(params[:mailbox_id]) if params[:mailbox_id].present?
     @conversations = page(filtered_conversations)
-    @stack_counts = ConversationState::STACKS.index_with { |stack| Conversation.accessible_by(Current.user).in_stack_for(Current.user, stack).count } unless @stack || @archived
+    Conversation.load_twins(@conversations, Current.user) unless @mailbox
+    @stack_counts = ConversationState::STACKS.index_with { |stack| Conversation.accessible_by(Current.user).in_stack_for(Current.user, stack).one_per_email.count } unless @stack || @archived
   end
 
   def show
@@ -26,6 +27,7 @@ class ConversationsController < ApplicationController
     @bucket = @conversation.bucket_for(Current.user)
     @stacks = @conversation.stacks_for(Current.user)
     @archived = @conversation.archived_for?(Current.user)
+    @twins = @conversation.twins_for(Current.user)
     @conversation.mark_read_by!(Current.user)
     AccessLog.record!(Current.user, @conversation, via: "web")
   end
@@ -47,7 +49,7 @@ class ConversationsController < ApplicationController
   def stack
     stack = params.require(:stack)
     on = params[:on] == "1"
-    ConversationState.put!(@conversation, Current.user, stack, on: on)
+    @conversation.put_in_stack_for!(Current.user, stack, on: on)
     label = ConversationState::STACK_LABELS.fetch(stack)
     redirect_back_or_to conversation_path(@conversation), notice: on ? "Fil ajouté à « #{label} »." : "Fil retiré de « #{label} »."
   rescue ArgumentError
@@ -84,7 +86,7 @@ class ConversationsController < ApplicationController
     when "archive", "unarchive" then conversations.each { |c| c.archive_for!(Current.user, on: operation == "archive") }
     when "read" then Reading.mark!(Current.user, Message.where(conversation_id: conversations.map(&:id)))
     when "unread" then conversations.each { |c| c.mark_unread_by!(Current.user) }
-    else conversations.each { |c| ConversationState.put!(c, Current.user, operation) }
+    else conversations.each { |c| c.put_in_stack_for!(Current.user, operation) }
     end
     flash[:undo] = conversations.map(&:id) if operation == "archive"
     redirect_back_or_to account_root_path, notice: "#{conversations.size} #{conversations.many? ? "fils" : "fil"} #{BULK_NOTICES.fetch(operation)[conversations.many? ? 1 : 0]}."
@@ -122,7 +124,7 @@ class ConversationsController < ApplicationController
     end
     scope = scope.assigned_to(Current.user) if params[:mine] == "1"
     scope = scope.unread_for(Current.user) if params[:unread] == "1"
-    scope
+    @mailbox ? scope : scope.one_per_email
   end
 
   # Pagination par date : ?before=<horodatage du dernier fil affiché>.

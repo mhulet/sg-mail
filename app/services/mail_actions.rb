@@ -28,6 +28,7 @@ class MailActions
       scope = mailbox ? accessible_conversations.where(mailbox: mailbox) : accessible_conversations.inbox
       scope.in_bucket_for(@user, box.presence || "imbox").outside_stacks_for(@user)
     end
+    scope = scope.one_per_email unless mailbox # un email reçu dans plusieurs boîtes : un seul fil
     scope = scope.with_unread_for(@user).with_screening_for(@user).includes(:mailbox, :assignee, :states)
     scope = scope.unread_for(@user) if unread
     scope = scope.assigned_to(@user) if mine
@@ -72,7 +73,7 @@ class MailActions
     conversation = conversation(id)
     conversation.archive_for!(@user, on: archived) unless archived.nil?
     { "reply_later" => reply_later, "set_aside" => set_aside }.each do |stack, on|
-      ConversationState.put!(conversation, @user, stack, on: on) unless on.nil?
+      conversation.put_in_stack_for!(@user, stack, on: on) unless on.nil?
     end
     conversation.states.reset
     conversation

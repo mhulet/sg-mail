@@ -11,8 +11,9 @@ class SearchesController < ApplicationController
     @search = MessageSearch.new(Current.user, params[:q], mailbox: @mailbox)
     preview = turbo_frame_request_id == "search_preview"
     @conversations = @search.blank? ? [] :
-      @search.conversations.with_unread_for(Current.user).includes(:mailbox, :assignee).recent
-        .limit(preview ? PREVIEW_LIMIT : LIMIT).to_a
+      @search.conversations.then { |scope| @mailbox ? scope : scope.one_per_email }
+        .with_unread_for(Current.user).includes(:mailbox, :assignee).recent.limit(preview ? PREVIEW_LIMIT : LIMIT).to_a
+    Conversation.load_twins(@conversations, Current.user) unless @mailbox
     return render :preview if preview
 
     @matches = @search.matching_messages(@conversations.map(&:id))

@@ -56,6 +56,21 @@ class NewMailNotifierTest < ActiveSupport::TestCase
     assert_empty @sent
   end
 
+  test "rings once for an email sent to two of my mailboxes" do
+    personal = Mailbox.create!(provider: "imap", address: "michael@semisto.org")
+    personal.grant!(@michael, "manage")
+    first = personal.messages.create!(provider_uid: "p1", thread_key: "p1", message_id_header: "same@example.org",
+      from_address: "anne@example.org", subject: "Inscription", sent_at: Time.current)
+    first.update_columns(created_at: 30.seconds.ago)
+    Conversation.rebuild_for(personal)
+    @mailbox.messages.create!(provider_uid: "1", thread_key: "1", message_id_header: "same@example.org",
+      from_address: "anne@example.org", subject: "Inscription", sent_at: Time.current)
+    Conversation.rebuild_for(@mailbox)
+
+    NewMailNotifier.new(@mailbox, since: @since).call
+    assert_empty @sent
+  end
+
   test "forgets a device the push service no longer knows" do
     receive("1", from: "anne@example.org", subject: "Inscription")
     Conversation.rebuild_for(@mailbox)
