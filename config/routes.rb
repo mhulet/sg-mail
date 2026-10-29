@@ -4,6 +4,7 @@ Rails.application.routes.draw do
   # SG Mail installable comme une app sur mobile et ordinateur (PWA).
   get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
   get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
+  get "installer" => "installs#show", as: :install
 
   resource :session
   post "session/passkey/options" => "passkey_sessions#options", as: :passkey_session_options

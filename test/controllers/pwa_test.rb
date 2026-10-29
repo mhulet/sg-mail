@@ -14,4 +14,17 @@ class PwaTest < ActionDispatch::IntegrationTest
     get new_session_path
     assert_select "link[rel=manifest][href=?]", "/manifest.json"
   end
+
+  test "the install page is public and offers the button and the steps for each browser" do
+    get install_path
+    assert_response :success
+    assert_select "[data-controller=install] button[data-action='install#install']"
+    %w[chromium safari firefox ios android].each { |browser| assert_select "details[data-browser=?]", browser }
+  end
+
+  test "signed-in people find the install page in their settings" do
+    sign_in_as users(:michael)
+    get push_subscriptions_path
+    assert_select "a.install-link[href=?]", install_path
+  end
 end
