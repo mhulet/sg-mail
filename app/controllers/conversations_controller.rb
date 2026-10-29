@@ -11,7 +11,7 @@ class ConversationsController < ApplicationController
     @archived = params[:archived] == "1"
     @stack = params[:stack].presence_in(ConversationState::STACKS)
     @box = params[:box].presence_in(Screening::BUCKETS) || "imbox"
-    @mailboxes = Mailbox.accessible_by(Current.user).order(:address)
+    @mailboxes = Mailbox.accessible_by(Current.user).by_display_name
     @mailbox = @mailboxes.find(params[:mailbox_id]) if params[:mailbox_id].present?
     @conversations = page(filtered_conversations)
     @stack_counts = ConversationState::STACKS.index_with { |stack| Conversation.accessible_by(Current.user).in_stack_for(Current.user, stack).count } unless @stack || @archived

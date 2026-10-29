@@ -15,7 +15,7 @@
         <tr>
           <th scope="col">Membre</th>
           <% @mailboxes.each do |mailbox| %>
-            <th scope="col"><%= link_to mailbox.address, mailbox_accesses_path(mailbox), title: "Partage de #{mailbox.address}" %></th>
+            <th scope="col"><%= link_to mailbox.display_name, mailbox_accesses_path(mailbox), title: "Partage de #{mailbox.address}" %></th>
           <% end %>
         </tr>
       </thead>
@@ -31,7 +31,7 @@
                   <%= hidden_field_tag :mailbox_id, mailbox.id, id: nil %>
                   <%= hidden_field_tag :user_id, user.id, id: nil %>
                   <%= select_tag :level, options_for_select([ [ "—", "" ] ] + MailboxAccess::SHORT_LABELS.map { |key, label| [ label, key ] }, level.to_s),
-                        id: nil, onchange: "this.form.requestSubmit()", aria: { label: "Accès de #{user.display_name} à #{mailbox.address}" } %>
+                        id: nil, onchange: "this.form.requestSubmit()", aria: { label: "Accès de #{user.display_name} à #{mailbox.display_name}" } %>
                   <noscript><%= f.submit "OK" %></noscript>
                 <% end %>
               </td>

@@ -406,7 +406,8 @@ CREATE TABLE public.mailboxes (
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
     account_id bigint NOT NULL,
-    connected_by_id bigint
+    connected_by_id bigint,
+    label character varying
 );
 
 ALTER TABLE ONLY public.mailboxes FORCE ROW LEVEL SECURITY;
@@ -3463,6 +3464,7 @@ ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261029220000'),
 ('20261029200000'),
 ('20261028220000'),
 ('20261028150000'),

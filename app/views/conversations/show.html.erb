@@ -1,7 +1,7 @@
 <% content_for :title, "#{@conversation.title} · SG Mail" %>
 <p class="thread-top">
   <%= link_to "← #{Screening::BUCKET_LABELS.fetch(@bucket || "imbox")}", conversations_path(box: (@bucket unless @bucket.in?([ nil, "imbox" ]))), data: { shortcut: "u" } %>
-  <%= link_to mailbox_chip(@conversation.mailbox.address), conversations_path(mailbox_id: @conversation.mailbox_id) %>
+  <%= link_to mailbox_chip(@conversation.mailbox), conversations_path(mailbox_id: @conversation.mailbox_id) %>
 </p>
 <h1 class="thread-title"><%= @conversation.title %></h1>
 <% if @screening.in?(%w[pending blocked]) %>

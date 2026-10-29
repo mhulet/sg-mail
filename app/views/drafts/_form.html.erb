@@ -6,7 +6,7 @@
   <%= hidden_field_tag "draft[source_message_id]", draft.source_message_id if draft.new_record? && draft.source_message_id %>
 
   <%= f.label :mailbox_id, "De" %>
-  <%= f.select :mailbox_id, @mailboxes.map { |m| [ m.address, m.id ] } %>
+  <%= f.select :mailbox_id, mailbox_options(@mailboxes, with_address: true) %>
   <%= f.label :to_list, "À" %>
   <%= f.text_field :to_list, placeholder: "prenom@exemple.be, autre@exemple.be" %>
   <%= f.label :cc_list, "Cc" %>

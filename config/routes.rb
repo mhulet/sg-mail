@@ -29,7 +29,7 @@ Rails.application.routes.draw do
 
   # Tout ce qui appartient à un client vit sous /<id du client>/.
   scope "/:account_id", constraints: { account_id: /\d+/ } do
-    resources :mailboxes, only: %i[index show new create destroy] do
+    resources :mailboxes, only: %i[index show new create edit update destroy] do
       post :sync, on: :member
       patch :preferences, on: :member
       resources :accesses, controller: "mailbox_accesses", only: %i[index update]
