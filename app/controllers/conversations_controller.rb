@@ -117,8 +117,8 @@ class ConversationsController < ApplicationController
       scope = scope.in_stack_for(Current.user, @stack)
       scope = scope.where(mailbox: @mailbox) if @mailbox
     else
-      scope = scope.in_bucket_for(Current.user, @box).outside_stacks_for(Current.user)
-      scope = @mailbox ? scope.where(mailbox: @mailbox) : scope.inbox
+      scope = scope.in_bucket_for(Current.user, @box).outside_stacks_for(Current.user).inbox
+      scope = scope.where(mailbox: @mailbox) if @mailbox
     end
     scope = scope.assigned_to(Current.user) if params[:mine] == "1"
     scope = scope.unread_for(Current.user) if params[:unread] == "1"

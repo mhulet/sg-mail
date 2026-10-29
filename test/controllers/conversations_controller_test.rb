@@ -26,7 +26,8 @@ class ConversationsControllerTest < ActionDispatch::IntegrationTest
       assert_select "a", { text: "Ancien", count: 0 }
 
       get path(mailbox_id: @shared.id)
-      assert_select "a", "Ancien"
+      assert_select "tr.unread a", "Inscription"
+      assert_select "a", { text: "Ancien", count: 0 }
     end
   end
 
@@ -71,5 +72,37 @@ class ConversationsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a", { text: "Inscription", count: 0 }
     get conversation_path(@conversation, account_id: @semisto.id)
     assert_response :not_found
+  end
+
+  test "the sidebar lists each mailbox under Réception, with its unread count" do
+    with_account(@semisto) do
+      personal = Mailbox.create!(provider: "imap", address: "mohammad@semisto.org")
+      personal.grant!(users(:mohammad), "manage")
+      hidden = Mailbox.create!(provider: "imap", address: "secret@semisto.org")
+      hidden.grant!(users(:michael), "manage")
+    end
+    sign_in_as users(:mohammad)
+
+    get account_root_path(account_id: @semisto.id)
+    assert_select "nav.spaces a[aria-current=page]", text: "Réception"
+    assert_select ".sub-spaces a.sub", count: 2
+    assert_select ".sub-spaces a.sub[href=?]", account_root_path(account_id: @semisto.id, mailbox_id: @shared.id) do
+      assert_select ".label", "formations@semisto.org"
+      assert_select ".count", "1"
+    end
+    assert_select ".sub-spaces a.sub", { text: /mohammad@semisto.org/ } do
+      assert_select ".count", count: 0
+    end
+    assert_select ".sub-spaces a", { text: /secret@/, count: 0 }
+
+    get account_root_path(account_id: @semisto.id, mailbox_id: @shared.id)
+    assert_select "nav.spaces a[aria-current=page]", count: 1
+    assert_select ".sub-spaces a.sub[aria-current=page] .label", "formations@semisto.org"
+  end
+
+  test "with a single mailbox, no sub-items under Réception" do
+    sign_in_as users(:mohammad)
+    get path
+    assert_select ".sub-spaces", count: 0
   end
 end
