@@ -1,5 +1,5 @@
 <% selectable = local_assigns.fetch(:selectable, false) %>
-<tr class="<%= "unread" if conversation.unread %>" data-shortcuts-target="row">
+<tr class="<%= "unread" if conversation.unread_anywhere? %>" data-shortcuts-target="row">
   <% if selectable %>
     <td class="select"><%= check_box_tag "ids[]", conversation.id, false, form: "bulk", id: nil, aria: { label: "Choisir « #{conversation.title} »" } %></td>
   <% end %>
@@ -10,6 +10,6 @@
     <%= link_to conversation.title, conversation_path(conversation), data: { shortcuts_target: "link" } %>
     <span class="snippet"><%= conversation.snippet&.truncate(140) %></span>
   </td>
-  <% if show_mailbox %><td class="mailbox"><%= mailbox_chip(conversation.mailbox.address) %></td><% end %>
+  <% if show_mailbox %><td class="mailbox"><% conversation.mailboxes_with_twins.each do |mailbox| %><%= mailbox_chip(mailbox.address) %><% end %></td><% end %>
   <td class="date"><%= conversation.last_message_at && l(conversation.last_message_at, format: :short) %></td>
 </tr>

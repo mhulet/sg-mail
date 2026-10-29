@@ -33,7 +33,7 @@ class NewMailNotifier
   def messages_for(user, messages)
     imbox = Conversation.where(id: messages.map(&:conversation_id)).in_bucket_for(user, "imbox").pluck(:id).to_set
     read = Reading.where(user: user, message_id: messages.map(&:id)).pluck(:message_id).to_set
-    messages.select { |message| imbox.include?(message.conversation_id) && !read.include?(message.id) }
+    messages.select { |message| imbox.include?(message.conversation_id) && !read.include?(message.id) && !copy_already_arrived?(user, message) }
   end
 
   def notify(user, messages)
@@ -47,9 +47,16 @@ class NewMailNotifier
     end
   end
 
+  # Le même email envoyé à deux boîtes : la notification de la première copie suffit.
+  def copy_already_arrived?(user, message)
+    message.message_id_header.present? &&
+      Message.where(message_id_header: message.message_id_header, mailbox_id: Mailbox.accessible_by(user).select(:id))
+        .where.not(mailbox_id: mailbox.id).where(created_at: ...message.created_at).exists?
+  end
+
   def single(message)
     { title: message.from_display.to_s, body: [ message.conversation.title, message.snippet ].compact_blank.join("\n"),
-      url: routes.conversation_path(message.conversation, account_id: mailbox.account_id), tag: "conversation-#{message.conversation_id}" }
+      url: routes.conversation_path(message.conversation, account_id: mailbox.account_id), tag: "conversation-#{message.conversation.root_message_id || message.conversation_id}" }
   end
 
   def grouped(messages)

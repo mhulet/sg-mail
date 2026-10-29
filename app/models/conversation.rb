@@ -97,7 +97,7 @@ class Conversation < ApplicationRecord
     inbound = sanitize_sql_array([ "messages.from_address IS NOT NULL AND lower(messages.from_address) <> ?", mailbox.address.downcase ])
     connection.execute(sanitize_sql_array([ <<~SQL, mailbox.id ]))
       INSERT INTO conversations (account_id, mailbox_id, thread_key, subject, last_sender, snippet,
-        last_message_at, messages_count, in_inbox, sender_address, sender_name, created_at, updated_at)
+        last_message_at, messages_count, in_inbox, sender_address, sender_name, root_message_id, created_at, updated_at)
       SELECT messages.account_id, messages.mailbox_id, #{key},
         (array_agg(messages.subject ORDER BY messages.sent_at NULLS LAST, messages.id))[1],
         (array_agg(COALESCE(NULLIF(messages.from_name, ''), messages.from_address) ORDER BY messages.sent_at DESC NULLS LAST, messages.id DESC))[1],
@@ -106,6 +106,7 @@ class Conversation < ApplicationRecord
         bool_or(messages.labels @> '["INBOX"]' OR COALESCE(mail_folders.name = 'INBOX', false)),
         (array_agg(lower(messages.from_address) ORDER BY messages.sent_at NULLS LAST, messages.id) FILTER (WHERE #{inbound}))[1],
         (array_agg(NULLIF(messages.from_name, '') ORDER BY messages.sent_at NULLS LAST, messages.id) FILTER (WHERE #{inbound}))[1],
+        (array_agg(messages.message_id_header ORDER BY messages.sent_at NULLS LAST, messages.id) FILTER (WHERE messages.message_id_header IS NOT NULL))[1],
         now(), now()
       FROM messages LEFT JOIN mail_folders ON mail_folders.id = messages.mail_folder_id
       WHERE messages.mailbox_id = ?
@@ -114,9 +115,9 @@ class Conversation < ApplicationRecord
         subject = EXCLUDED.subject, last_sender = EXCLUDED.last_sender, snippet = EXCLUDED.snippet,
         last_message_at = EXCLUDED.last_message_at, messages_count = EXCLUDED.messages_count,
         in_inbox = EXCLUDED.in_inbox, sender_address = EXCLUDED.sender_address, sender_name = EXCLUDED.sender_name,
-        updated_at = now()
-      WHERE (conversations.last_message_at, conversations.messages_count, conversations.in_inbox, conversations.sender_address)
-        IS DISTINCT FROM (EXCLUDED.last_message_at, EXCLUDED.messages_count, EXCLUDED.in_inbox, EXCLUDED.sender_address)
+        root_message_id = EXCLUDED.root_message_id, updated_at = now()
+      WHERE (conversations.last_message_at, conversations.messages_count, conversations.in_inbox, conversations.sender_address, conversations.root_message_id)
+        IS DISTINCT FROM (EXCLUDED.last_message_at, EXCLUDED.messages_count, EXCLUDED.in_inbox, EXCLUDED.sender_address, EXCLUDED.root_message_id)
     SQL
     connection.execute(sanitize_sql_array([ <<~SQL, mailbox.id ]))
       UPDATE messages SET conversation_id = conversations.id
@@ -128,6 +129,43 @@ class Conversation < ApplicationRecord
     where(mailbox: mailbox).where.not(id: Message.where(mailbox: mailbox).where.not(conversation_id: nil).select(:conversation_id)).delete_all
     Screening.accept_known_senders!(mailbox, since: since)
   end
+
+  # Un même email reçu dans plusieurs boîtes (envoyé à communication@ et à michael@) donne un fil par boîte :
+  # des « jumeaux », reliés par le Message-ID de leur premier message. La réception unifiée et la recherche n'en
+  # montrent qu'un, le plus récent ; lu, archivé ou mis dans une pile, l'un entraîne les autres.
+  TWIN_KEY = "COALESCE(conversations.root_message_id, conversations.id::text)"
+
+  # Garde un seul fil par email parmi ceux du périmètre.
+  def self.one_per_email
+    representatives = all.unscope(:select, :order, :includes, :limit)
+      .select("DISTINCT ON (#{TWIN_KEY}) conversations.id")
+      .reorder(Arel.sql("#{TWIN_KEY}, conversations.last_message_at DESC NULLS LAST, conversations.id DESC"))
+    where(id: representatives)
+  end
+
+  # Charge en une requête les jumeaux des fils d'une liste (avec leur colonne « unread »), pour afficher
+  # toutes les boîtes où l'email est arrivé.
+  def self.load_twins(conversations, user)
+    keys = conversations.filter_map(&:root_message_id).uniq
+    twins = keys.empty? ? [] : accessible_by(user).with_unread_for(user).where(root_message_id: keys).includes(:mailbox).order(:id).to_a
+    by_key = twins.group_by(&:root_message_id)
+    conversations.each { |conversation| conversation.twins = (by_key[conversation.root_message_id] || []).reject { |twin| twin.id == conversation.id } }
+  end
+
+  attr_writer :twins
+
+  # Les autres fils du même email, dans les boîtes que cette personne voit.
+  def twins_for(user)
+    @twins ||= root_message_id ? Conversation.accessible_by(user).where(root_message_id: root_message_id).where.not(id: id).includes(:mailbox).order(:id).to_a : []
+  end
+
+  def with_twins_for(user) = [ self, *twins_for(user) ]
+
+  # Les boîtes où l'email est arrivé : la sienne, puis celles des jumeaux chargés.
+  def mailboxes_with_twins = [ mailbox, *Array(@twins).map(&:mailbox) ].uniq
+
+  # Non lu, ici ou dans un jumeau chargé par load_twins.
+  def unread_anywhere? = (has_attribute?(:unread) && self[:unread]) || Array(@twins).any? { |twin| twin.has_attribute?(:unread) && twin[:unread] }
 
   def title = subject.presence || "(sans objet)"
 
@@ -147,11 +185,19 @@ class Conversation < ApplicationRecord
     ConversationState::COLUMNS.filter_map { |stack, column| stack if state&.public_send(column) }
   end
 
-  # Archive le fil pour cette personne (ou le remet dans sa réception), et le reporte chez le fournisseur.
+  # Archive le fil et ses jumeaux pour cette personne (ou les remet dans sa réception), et le reporte chez le fournisseur.
   def archive_for!(user, on: true)
-    ConversationState.archive!(self, user, on: on)
+    with_twins_for(user).each do |conversation|
+      ConversationState.archive!(conversation, user, on: on)
+      conversation.states.reset
+      ProviderArchiveJob.perform_later(conversation, archive: on) if conversation.mailbox.gmail?
+    end
+  end
+
+  # Met le fil et ses jumeaux dans une pile personnelle (on: true), ou les en retire.
+  def put_in_stack_for!(user, stack, on: true)
+    with_twins_for(user).each { |conversation| ConversationState.put!(conversation, user, stack, on: on) }
     states.reset
-    ProviderArchiveJob.perform_later(self, archive: on) if mailbox.gmail?
   end
 
   def archived_for?(user) = states.find { |s| s.user_id == user.id }&.archived?(self) || false
@@ -174,7 +220,9 @@ class Conversation < ApplicationRecord
   def mark_read_by!(user) = Reading.mark!(user, messages)
 
   def mark_unread_by!(user)
-    Reading.where(user: user, message_id: messages.reorder(sent_at: :desc, id: :desc).limit(1).select(:id)).delete_all
+    with_twins_for(user).each do |conversation|
+      Reading.where(user: user, message_id: conversation.messages.reorder(sent_at: :desc, id: :desc).limit(1).select(:id)).delete_all
+    end
   end
 
   private

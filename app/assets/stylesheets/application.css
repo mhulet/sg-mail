@@ -245,7 +245,7 @@ table.conversations td.who { grid-column: 2; grid-row: 1 / span 2; }
 table.conversations td.sender { grid-column: 3; grid-row: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 table.conversations td.subject { grid-column: 3; grid-row: 2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--muted); font-size: .94rem; }
 table.conversations td.date { grid-column: 4; grid-row: 1; justify-self: end; font-size: .8rem; color: var(--faint); font-variant-numeric: tabular-nums; white-space: nowrap; }
-table.conversations td.mailbox { grid-column: 4; grid-row: 2; justify-self: end; }
+table.conversations td.mailbox { grid-column: 4; grid-row: 2; justify-self: end; display: flex; gap: .8rem; }
 table.conversations tr:hover { background: var(--sheet-2); }
 table.conversations a { color: var(--text); text-decoration: none; }
 table.conversations td.subject a::after { content: ""; position: absolute; inset: 0; }
@@ -275,6 +275,7 @@ table.conversations tr.leaving { opacity: 0; transform: translateX(2.5rem); poin
 /* ─── Un fil ─── */
 .thread-top { display: flex; flex-wrap: wrap; gap: .4rem 1rem; align-items: center; margin: 0; font-size: .92rem; }
 .thread-top a { text-decoration: none; }
+.thread-top .twins { display: inline-flex; flex-wrap: wrap; gap: .4rem .8rem; align-items: center; font-size: .8rem; }
 .thread-title { font-size: clamp(1.9rem, 3.4vw, 2.6rem); margin: .4rem 0 .2rem; }
 .thread-actions { padding-bottom: 1rem; border-bottom: 1px solid var(--rule); }
 .thread-actions button.link { text-decoration: none; padding: .32rem .85rem; border: 1px solid var(--rule-strong); border-radius: 999px; color: var(--text); font-size: .9rem; }

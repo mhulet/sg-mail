@@ -18,6 +18,8 @@ class ApiSerializer
     {
       id: conversation.id, subject: conversation.title, mailbox_id: conversation.mailbox_id,
       mailbox: conversation.mailbox.address, last_sender: conversation.last_sender, snippet: conversation.snippet,
+      # Le même email reçu dans d'autres boîtes : leurs fils.
+      also_in: conversation.twins_for(@user).map { |twin| { id: twin.id, mailbox: twin.mailbox.address } },
       sender: conversation.sender_address && { address: conversation.sender_address, name: conversation.sender_name },
       screening: conversation.screening_for(@user), box: conversation.bucket_for(@user),
       stacks: conversation.stacks_for(@user), archived: conversation.archived_for?(@user),

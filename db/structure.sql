@@ -209,7 +209,8 @@ CREATE TABLE public.conversations (
     updated_at timestamp(6) without time zone NOT NULL,
     assignee_id bigint,
     sender_address character varying,
-    sender_name character varying
+    sender_name character varying,
+    root_message_id character varying
 );
 
 ALTER TABLE ONLY public.conversations FORCE ROW LEVEL SECURITY;
@@ -2098,6 +2099,13 @@ CREATE INDEX index_conversations_on_account_id_and_last_message_at ON public.con
 
 
 --
+-- Name: index_conversations_on_account_id_and_root_message_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_conversations_on_account_id_and_root_message_id ON public.conversations USING btree (account_id, root_message_id);
+
+
+--
 -- Name: index_conversations_on_assignee_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2277,6 +2285,13 @@ CREATE INDEX index_memberships_on_user_id ON public.memberships USING btree (use
 --
 
 CREATE INDEX index_messages_on_account_id ON public.messages USING btree (account_id);
+
+
+--
+-- Name: index_messages_on_account_id_and_message_id_header; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_messages_on_account_id_and_message_id_header ON public.messages USING btree (account_id, message_id_header);
 
 
 --
@@ -3463,6 +3478,7 @@ ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261029220000'),
 ('20261029200000'),
 ('20261028220000'),
 ('20261028150000'),
