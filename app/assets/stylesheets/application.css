@@ -168,6 +168,19 @@ td, th { text-align: left; padding: .65rem .8rem; border-bottom: 1px solid var(-
 th { font-size: .75rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); background: var(--sheet-2); }
 tr:last-child td { border-bottom: 0; }
 
+/* Partage global : membres × boîtes, la colonne des membres reste en place quand on fait défiler. */
+.matrix { overflow-x: auto; border-radius: var(--radius); }
+table.sharing th { white-space: nowrap; }
+table.sharing thead th a { color: inherit; text-transform: none; letter-spacing: 0; font-size: .85rem; }
+table.sharing tbody th { position: sticky; left: 0; z-index: 1; background: var(--sheet); font-size: inherit; font-weight: 500; letter-spacing: 0;
+  text-transform: none; color: var(--text); border-right: 1px solid var(--rule); }
+table.sharing tbody th .muted { display: block; font-size: .8rem; font-weight: 400; }
+table.sharing td { vertical-align: middle; }
+table.sharing tr:last-child th { border-bottom: 0; }
+table.sharing td select { padding: .2rem .4rem; }
+table.sharing td[data-level=none] select { color: var(--faint); }
+table.sharing td[data-level=manage] { background: var(--space-soft); }
+
 /* ─── Un espace : titre, filtres, liste ─── */
 .space-head { margin-bottom: .5rem; }
 .space-head h1 { font-size: clamp(2.3rem, 4vw, 3rem); }

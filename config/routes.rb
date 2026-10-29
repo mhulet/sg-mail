@@ -51,6 +51,7 @@ Rails.application.routes.draw do
       resources :attachments, only: %i[show create]
     end
     resources :memberships, only: %i[index update destroy]
+    resource :sharing, only: %i[show update], path: "partage"
     resources :invitations, only: %i[create destroy]
     resources :api_tokens, only: %i[index create destroy]
     resources :access_logs, only: :index, path: "journal"

@@ -2,6 +2,7 @@
 class MailboxAccess < ApplicationRecord
   LEVELS = %w[read send manage].freeze
   LABELS = { "read" => "Lecture", "send" => "Lecture et envoi", "manage" => "Gestion" }.freeze
+  SHORT_LABELS = { "read" => "Lecture", "send" => "Envoi", "manage" => "Gestion" }.freeze
 
   acts_as_tenant :account
   belongs_to :mailbox
@@ -19,6 +20,10 @@ class MailboxAccess < ApplicationRecord
   def can_send? = level.in?(%w[send manage])
   def can_manage? = level == "manage"
   def label = LABELS.fetch(level)
+
+  def self.change_notice(user, mailbox, level)
+    level ? "#{user.display_name} : #{LABELS.fetch(level).downcase} sur #{mailbox.address}." : "#{user.display_name} n'a plus accès à #{mailbox.address}."
+  end
 
   private
 
