@@ -14,6 +14,7 @@ class Mailbox < ApplicationRecord
   has_many :users_with_access, through: :accesses, source: :user
 
   scope :accessible_by, ->(user) { where(id: MailboxAccess.where(user: user).select(:mailbox_id)) }
+  scope :managed_by, ->(user) { where(id: MailboxAccess.where(user: user, level: "manage").select(:mailbox_id)) }
 
   validates :provider, inclusion: { in: PROVIDERS }
   validates :address, presence: true, uniqueness: { scope: %i[account_id provider] }
@@ -24,6 +25,19 @@ class Mailbox < ApplicationRecord
 
   def grant!(user, level)
     accesses.find_or_initialize_by(user: user).update!(level: level)
+  end
+
+  class LastManagerError < StandardError; end
+
+  # Change l'accès d'une personne depuis une page de partage (level vide = retirer l'accès).
+  # La boîte garde toujours au moins une personne qui la gère.
+  def change_access!(user, level)
+    level = level.presence
+    if level != "manage" && access_for(user)&.can_manage? && accesses.where(level: "manage").count == 1
+      raise LastManagerError, "Il faut garder au moins une personne qui gère #{address}."
+    end
+
+    level ? grant!(user, level) : accesses.where(user: user).delete_all
   end
 
   def shared? = accesses.size > 1

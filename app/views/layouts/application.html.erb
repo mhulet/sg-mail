@@ -71,6 +71,7 @@
           <nav aria-label="Réglages">
             <% if Current.account %>
               <%= nav_link "Boîtes", mailboxes_path %>
+              <%= nav_link "Partage", sharing_path %>
               <%= nav_link "Membres", memberships_path %>
               <%= nav_link "Jetons d'API", api_tokens_path %>
             <% end %>

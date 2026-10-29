@@ -5,6 +5,8 @@
   <%= link_to "Connecter une boîte Google", google_oauth_path, data: { turbo: false } %>
   ·
   <%= link_to "Connecter une boîte IMAP", new_mailbox_path %>
+  ·
+  <%= link_to "Partage de toutes les boîtes", sharing_path %>
 </div>
 
 <% if @mailboxes.none? %>

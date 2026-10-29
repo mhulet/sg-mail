@@ -1,0 +1,51 @@
+<% content_for :title, "Partage · #{current_account.name} · SG Mail" %>
+<% turbo_refreshes_with method: :morph, scroll: :preserve %>
+<h1>Qui a accès à quelles boîtes ?</h1>
+<p class="muted">
+  Lecture : voir les emails. Envoi : répondre et écrire depuis l'adresse.
+  Gestion : en plus, choisir qui a accès et déconnecter la boîte.
+</p>
+
+<% if @mailboxes.none? %>
+  <p class="muted">Tu ne gères encore aucune boîte. <%= link_to "Connecter une boîte", mailboxes_path %>, puis reviens ici pour la partager.</p>
+<% else %>
+  <div class="matrix">
+    <table class="sharing">
+      <thead>
+        <tr>
+          <th scope="col">Membre</th>
+          <% @mailboxes.each do |mailbox| %>
+            <th scope="col"><%= link_to mailbox.address, mailbox_accesses_path(mailbox), title: "Partage de #{mailbox.address}" %></th>
+          <% end %>
+        </tr>
+      </thead>
+      <tbody>
+        <% @memberships.each do |membership| %>
+          <% user = membership.user %>
+          <tr>
+            <th scope="row"><%= user.display_name %> <span class="muted"><%= user.email_address %></span></th>
+            <% @mailboxes.each do |mailbox| %>
+              <% level = @levels[[ mailbox.id, user.id ]] %>
+              <td data-level="<%= level || "none" %>">
+                <%= form_with url: sharing_path, method: :patch, class: "inline" do |f| %>
+                  <%= hidden_field_tag :mailbox_id, mailbox.id, id: nil %>
+                  <%= hidden_field_tag :user_id, user.id, id: nil %>
+                  <%= select_tag :level, options_for_select([ [ "—", "" ] ] + MailboxAccess::SHORT_LABELS.map { |key, label| [ label, key ] }, level.to_s),
+                        id: nil, onchange: "this.form.requestSubmit()", aria: { label: "Accès de #{user.display_name} à #{mailbox.address}" } %>
+                  <noscript><%= f.submit "OK" %></noscript>
+                <% end %>
+              </td>
+            <% end %>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% end %>
+
+<% if @unmanaged_count.positive? %>
+  <p class="muted">
+    <%= @unmanaged_count == 1 ? "Une boîte à laquelle tu as accès n'apparaît pas ici" : "#{@unmanaged_count} boîtes auxquelles tu as accès n'apparaissent pas ici" %> :
+    seules les personnes qui gèrent une boîte choisissent qui y a accès.
+  </p>
+<% end %>

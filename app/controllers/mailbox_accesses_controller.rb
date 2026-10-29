@@ -12,19 +12,11 @@ class MailboxAccessesController < ApplicationController
   def update
     user = current_account.users.find(params[:id])
     level = params[:level].presence
-
-    if level.nil? && @mailbox.accesses.where(level: "manage").where.not(user: user).none?
-      redirect_to mailbox_accesses_path(@mailbox), alert: "Il faut garder au moins une personne qui gère la boîte."
-    elsif level.nil?
-      @mailbox.accesses.where(user: user).delete_all
-      redirect_to mailbox_accesses_path(@mailbox), notice: "#{user.display_name} n'a plus accès à #{@mailbox.address}."
-    elsif level != "manage" && @mailbox.access_for(user)&.can_manage? && @mailbox.accesses.where(level: "manage").count == 1
-      redirect_to mailbox_accesses_path(@mailbox), alert: "Il faut garder au moins une personne qui gère la boîte."
-    else
-      @mailbox.grant!(user, level)
-      redirect_to mailbox_accesses_path(@mailbox), notice: "#{user.display_name} : #{MailboxAccess::LABELS.fetch(level).downcase}."
-    end
-  rescue KeyError, ActiveRecord::RecordInvalid
+    @mailbox.change_access!(user, level)
+    redirect_to mailbox_accesses_path(@mailbox), notice: MailboxAccess.change_notice(user, @mailbox, level)
+  rescue Mailbox::LastManagerError => e
+    redirect_to mailbox_accesses_path(@mailbox), alert: e.message
+  rescue ActiveRecord::RecordInvalid
     redirect_to mailbox_accesses_path(@mailbox), alert: "Niveau d'accès inconnu."
   end
 
