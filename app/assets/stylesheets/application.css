@@ -75,10 +75,10 @@ body.bare main { max-width: 26rem; padding-top: 12vh; }
 .brand-name { display: inline-flex; align-items: center; gap: .55rem; font-weight: 650; color: var(--ink); text-decoration: none; }
 .brand .mark { width: 13px; height: 13px; border-radius: 4px; background: var(--imbox); }
 .brand .account { margin-left: auto; font-size: .8rem; color: var(--faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.compose { display: flex; justify-content: space-between; align-items: center; padding: .55rem .9rem; border-radius: 999px;
+.compose-button { display: flex; justify-content: space-between; align-items: center; padding: .55rem .9rem; border-radius: 999px;
   background: var(--ink); color: var(--paper); font-weight: 600; text-decoration: none; transition: transform .2s var(--ease); }
-.compose:hover { transform: translateY(-1px); }
-.compose.hint::after { opacity: .6; }
+.compose-button:hover { transform: translateY(-1px); }
+.compose-button.hint::after { opacity: .6; }
 nav.spaces { display: flex; flex-direction: column; gap: 1px; }
 .nav-label { font-size: .7rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); padding: .8rem .65rem .25rem; }
 .sidebar nav a { display: flex; align-items: center; gap: .65rem; padding: .42rem .65rem; border-radius: 9px; color: var(--text);
@@ -284,8 +284,8 @@ dialog.shortcuts dd { margin: 0; }
   .sidebar { position: sticky; z-index: 10; height: auto; overflow: visible; display: grid; grid-template-columns: 1fr auto auto; align-items: center;
     gap: .6rem; padding: .6rem .75rem .5rem; padding-top: max(.6rem, env(safe-area-inset-top)); border-right: 0; border-bottom: 1px solid var(--rule); }
   .brand { padding: 0; min-width: 0; }
-  .compose { padding: .35rem .8rem; font-size: .9rem; }
-  .compose.hint::after { display: none; }
+  .compose-button { padding: .35rem .8rem; font-size: .9rem; }
+  .compose-button.hint::after { display: none; }
   nav.spaces { grid-column: 1 / -1; grid-row: 2; flex-direction: row; overflow-x: auto; scrollbar-width: none; gap: .25rem; margin: 0 -.75rem; padding: 0 .75rem; }
   nav.spaces::-webkit-scrollbar { display: none; }
   .nav-label { display: none; }
