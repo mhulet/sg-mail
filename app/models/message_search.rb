@@ -125,7 +125,7 @@ class MessageSearch
     when "subject" then unaccent_like("coalesce(messages.subject, '')", value)
     when "filename" then unaccent_like("jsonb_path_query_array(messages.attachments, '$[*].filename')::text", value)
     when "has" then { has_attachments: true }
-    when "mailbox" then [ "messages.mailbox_id IN (SELECT id FROM mailboxes WHERE address ILIKE ?)", like(value) ]
+    when "mailbox" then [ "messages.mailbox_id IN (SELECT id FROM mailboxes WHERE address ILIKE :v OR label ILIKE :v)", { v: like(value) } ]
     when "after" then [ "messages.sent_at >= ?", date(value).beginning_of_day ]
     when "before" then [ "messages.sent_at < ?", date(value).beginning_of_day ]
     when "newer_than" then [ "messages.sent_at >= ?", ago(value) ]
@@ -152,12 +152,12 @@ class MessageSearch
     end
   end
 
-  # La valeur d'un in: : une pile, une page, ou le début de l'adresse d'une boîte accessible.
+  # La valeur d'un in: : une pile, une page, ou le début du libellé ou de l'adresse d'une boîte accessible.
   def in_value(value)
     value = IN_ALIASES.fetch(value, value)
     return value if value.in?(%w[imbox feed paper_trail screener reply_later set_aside archive sent anywhere])
 
-    "mailbox" if Mailbox.accessible_by(@user).where("address ILIKE ?", "#{ActiveRecord::Base.sanitize_sql_like(value)}%").exists?
+    "mailbox" if Mailbox.accessible_by(@user).starting_with(value).exists?
   end
 
   def in_condition(name, value)
@@ -171,7 +171,7 @@ class MessageSearch
     when "sent"
       conversations.where(id: Message.joins(:mailbox).where("lower(messages.from_address) = lower(mailboxes.address)").select(:conversation_id))
     when "mailbox"
-      conversations.where(mailbox_id: Mailbox.where("address ILIKE ?", "#{ActiveRecord::Base.sanitize_sql_like(value)}%").select(:id))
+      conversations.where(mailbox_id: Mailbox.starting_with(value).select(:id))
     end
   end
 

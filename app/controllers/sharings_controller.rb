@@ -4,7 +4,7 @@ class SharingsController < ApplicationController
   include AccountScoped
 
   def show
-    @mailboxes = Mailbox.managed_by(Current.user).order(:address)
+    @mailboxes = Mailbox.managed_by(Current.user).by_display_name
     @memberships = current_account.memberships.includes(:user).order(:created_at)
     @levels = MailboxAccess.where(mailbox: @mailboxes).pluck(:mailbox_id, :user_id, :level).to_h { |mailbox_id, user_id, level| [ [ mailbox_id, user_id ], level ] }
     @unmanaged_count = Mailbox.accessible_by(Current.user).count - @mailboxes.size

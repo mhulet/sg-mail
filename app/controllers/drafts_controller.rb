@@ -43,7 +43,7 @@ class DraftsController < ApplicationController
   private
 
   def set_sendable_mailboxes
-    @mailboxes = Mailbox.where(id: MailboxAccess.where(user: Current.user, level: %w[send manage]).select(:mailbox_id)).order(:address).to_a
+    @mailboxes = Mailbox.where(id: MailboxAccess.where(user: Current.user, level: %w[send manage]).select(:mailbox_id)).by_display_name.to_a
   end
 
   def set_draft
@@ -64,7 +64,7 @@ class DraftsController < ApplicationController
     if @draft.save
       if sending
         SendDraftJob.perform_later(@draft)
-        redirect_to(@draft.conversation ? conversation_path(@draft.conversation) : drafts_path, notice: "Envoi en cours depuis #{@draft.mailbox.address}.")
+        redirect_to(@draft.conversation ? conversation_path(@draft.conversation) : drafts_path, notice: "Envoi en cours depuis #{@draft.mailbox.display_name}.")
       else
         redirect_to edit_draft_path(@draft), notice: "Brouillon enregistré."
       end

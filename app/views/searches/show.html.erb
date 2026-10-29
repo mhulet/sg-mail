@@ -6,7 +6,7 @@
   <%= f.search_field :q, value: @search.query, autofocus: true, size: 48, autocomplete: "off", aria: { label: "Rechercher" },
         placeholder: "Mots, from:anne, has:attachment, after:2026/09/01…", data: { search_target: "input", action: "input->search#type" } %>
   <% if @mailboxes.many? %>
-    <%= f.select :mailbox_id, [ [ "Toutes les boîtes", "" ] ] + @mailboxes.map { |m| [ m.address, m.id ] },
+    <%= f.select :mailbox_id, [ [ "Toutes les boîtes", "" ] ] + mailbox_options(@mailboxes),
           { selected: @mailbox&.id }, aria: { label: "Boîte" }, data: { action: "search#type" } %>
   <% end %>
   <%= f.submit "Chercher" %>

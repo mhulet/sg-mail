@@ -1,0 +1,52 @@
+<% content_for :title, "Réglages de #{@mailbox.display_name} · SG Mail" %>
+<p><%= link_to "← #{@mailbox.display_name}", @mailbox %></p>
+<h1>Réglages de <%= @mailbox.address %></h1>
+
+<%= render "shared/errors", record: @mailbox %>
+
+<%= form_with model: @mailbox, url: mailbox_path(@mailbox), method: :patch, class: "stacked" do |f| %>
+  <%= f.label :label, "Libellé" %>
+  <%= f.text_field :label, maxlength: 40, placeholder: @mailbox.address.split("@").first.capitalize %>
+  <p class="muted">Affiché partout à la place de l'adresse : barre latérale, listes, recherche, champ « De ». Vide : l'adresse.</p>
+
+  <% if @mailbox.imap? %>
+    <% credentials = @mailbox.credentials || {} %>
+    <h2>Connexion IMAP</h2>
+    <%= label_tag "imap[host]", "Serveur IMAP" %>
+    <%= text_field_tag "imap[host]", credentials["host"], required: true %>
+    <%= label_tag "imap[port]", "Port" %>
+    <%= number_field_tag "imap[port]", credentials["port"].presence || 993 %>
+    <%= label_tag "imap[username]", "Identifiant" %>
+    <%= text_field_tag "imap[username]", credentials["username"], required: true, autocomplete: "off" %>
+    <%= label_tag "imap[password]", "Mot de passe (ou mot de passe d'application)" %>
+    <%= password_field_tag "imap[password]", nil, autocomplete: "new-password", placeholder: "Inchangé" %>
+    <p class="muted">Laisse vide pour garder le mot de passe actuel.</p>
+    <%= hidden_field_tag "imap[ssl]", "0", id: nil %>
+    <label><%= check_box_tag "imap[ssl]", "1", credentials["ssl"] != false %> SSL/TLS</label>
+    <%= label_tag "imap[smtp_host]", "Serveur d'envoi (SMTP), si différent du serveur IMAP" %>
+    <%= text_field_tag "imap[smtp_host]", credentials["smtp_host"] %>
+    <%= label_tag "imap[smtp_port]", "Port d'envoi" %>
+    <%= number_field_tag "imap[smtp_port]", credentials["smtp_port"].presence || 587 %>
+    <p class="muted">Si la connexion change, elle est testée avant d'être enregistrée, puis la boîte se resynchronise.</p>
+  <% end %>
+
+  <p><%= f.submit "Enregistrer" %></p>
+<% end %>
+
+<% if @mailbox.gmail? %>
+  <section class="card">
+    <h2>Compte Google</h2>
+    <p class="muted">Si la synchronisation échoue (accès retiré, mot de passe Google changé), reconnecte le compte en choisissant <%= @mailbox.address %>.</p>
+    <p><%= link_to "Reconnecter le compte Google", google_oauth_path, data: { turbo: false } %></p>
+  </section>
+<% end %>
+
+<section class="card">
+  <h2>Ailleurs</h2>
+  <ul>
+    <li><%= link_to "Partage (#{@mailbox.accesses.size})", mailbox_accesses_path(@mailbox) %> : qui lit, écrit ou gère cette boîte.</li>
+    <li><%= link_to "Ma signature", mailbox_path(@mailbox, anchor: "signature") %> : mon nom d'expéditeur et ma signature dans cette boîte.</li>
+  </ul>
+</section>
+
+<%= button_to "Déconnecter cette boîte", mailbox_path(@mailbox), method: :delete, form: { data: { turbo_confirm: "Déconnecter et effacer les messages importés ?" } } %>

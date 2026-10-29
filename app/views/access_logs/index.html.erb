@@ -22,7 +22,7 @@
           <%= AccessLog::ACTIONS.fetch(log.action) %>
           <% if log.conversation %>
             « <%= link_to log.conversation.title, conversation_path(log.conversation) %> »
-            <span class="muted">(<%= log.conversation.mailbox.address %>)</span>
+            <span class="muted">(<%= log.conversation.mailbox.display_name %>)</span>
           <% else %>
             <span class="muted">un fil supprimé depuis</span>
           <% end %>

@@ -10,7 +10,7 @@ class ApiSerializer
   def account(account) = { id: account.id, name: account.name }
 
   def mailbox(mailbox)
-    { id: mailbox.id, address: mailbox.address, provider: mailbox.provider, shared: mailbox.shared?,
+    { id: mailbox.id, address: mailbox.address, label: mailbox.label, provider: mailbox.provider, shared: mailbox.shared?,
       access: mailbox.access_for(@user)&.level }
   end
 

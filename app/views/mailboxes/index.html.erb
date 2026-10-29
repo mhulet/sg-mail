@@ -14,10 +14,10 @@
 <% end %>
 
 <table>
-  <tr><th>Adresse</th><th>Type</th><th>Accès</th><th>Messages</th><th>Dernière synchro</th><th>Erreur</th></tr>
+  <tr><th>Boîte</th><th>Type</th><th>Accès</th><th>Messages</th><th>Dernière synchro</th><th>Erreur</th></tr>
   <% @mailboxes.each do |mailbox| %>
     <tr>
-      <td><%= link_to mailbox.address, mailbox %></td>
+      <td><%= link_to mailbox.display_name, mailbox %><%= tag.div(mailbox.address, class: "muted") if mailbox.label %></td>
       <td><%= mailbox.provider %></td>
       <td><%= mailbox.shared? ? "partagée (#{mailbox.accesses.size})" : "perso" %></td>
       <td><%= mailbox.messages.count %></td>

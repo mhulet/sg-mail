@@ -1,6 +1,6 @@
-<% content_for :title, "Partage de #{@mailbox.address} · SG Mail" %>
-<p><%= link_to "← #{@mailbox.address}", @mailbox %></p>
-<h1>Qui a accès à <%= @mailbox.address %> ?</h1>
+<% content_for :title, "Partage de #{@mailbox.display_name} · SG Mail" %>
+<p><%= link_to "← #{@mailbox.display_name}", @mailbox %></p>
+<h1>Qui a accès à <%= @mailbox.display_name %> ?</h1>
 <p class="muted">
   Lecture : voir les emails. Envoi : répondre et écrire depuis cette adresse.
   Gestion : en plus, choisir qui a accès et déconnecter la boîte.

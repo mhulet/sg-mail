@@ -1,10 +1,10 @@
 <% content_for :title, "#{@conversation.title} · SG Mail" %>
 <p class="thread-top">
   <%= link_to "← #{Screening::BUCKET_LABELS.fetch(@bucket || "imbox")}", conversations_path(box: (@bucket unless @bucket.in?([ nil, "imbox" ]))), data: { shortcut: "u" } %>
-  <%= link_to mailbox_chip(@conversation.mailbox.address), conversations_path(mailbox_id: @conversation.mailbox_id) %>
+  <%= link_to mailbox_chip(@conversation.mailbox), conversations_path(mailbox_id: @conversation.mailbox_id) %>
   <% if @twins.any? %>
     <span class="twins muted">aussi reçu dans
-      <% @twins.each do |twin| %><%= link_to mailbox_chip(twin.mailbox.address), conversation_path(twin), title: "Ouvrir la copie de #{twin.mailbox.address}" %><% end %>
+      <% @twins.each do |twin| %><%= link_to mailbox_chip(twin.mailbox), conversation_path(twin), title: "Ouvrir la copie de #{twin.mailbox.address}" %><% end %>
     </span>
   <% end %>
 </p>
