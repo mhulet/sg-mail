@@ -122,6 +122,8 @@ nav.spaces { display: flex; flex-direction: column; gap: 1px; }
 .search-preview .date { font-size: .8rem; }
 .search-preview a.all { display: block; margin-top: .2rem; border-top: 1px solid var(--rule); border-radius: 0 0 9px 9px;
   color: var(--space); font-weight: 550; }
+/* Mots cherchés, surlignés au feutre dans la couleur de l'espace. */
+mark { background: color-mix(in srgb, var(--space) 22%, transparent); color: inherit; border-radius: 3px; padding: 0 .1em; }
 .search-page input[type=search] { max-width: 100%; }
 .search-help { margin: .8rem 0 1.2rem; font-size: .9rem; }
 .search-help summary { cursor: pointer; color: var(--muted); }
@@ -256,6 +258,11 @@ td.sender .count { margin-left: .4rem; font-size: .78rem; color: var(--faint); f
 .assignee { margin-left: .4rem; font-size: .76rem; background: var(--space-soft); color: var(--space); border-radius: 999px; padding: .05rem .5rem; font-weight: 600; }
 .snippet::before { content: " — "; }
 .snippet:empty::before { content: none; }
+/* En recherche, l'extrait passe sous l'objet, sur deux lignes au plus, pour que les mots trouvés restent visibles. */
+table.conversations td.subject:has(.excerpt) { white-space: normal; }
+.snippet.excerpt { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin-top: .15rem;
+  font-size: .9rem; line-height: 1.45; }
+.snippet.excerpt::before { content: none; }
 tr.unread td.sender { font-weight: 700; color: var(--ink); }
 tr.unread td.subject a { font-weight: 600; color: var(--ink); }
 tr.unread .avatar::after { content: ""; position: absolute; right: -2px; top: -2px; width: 11px; height: 11px; border-radius: 50%;
