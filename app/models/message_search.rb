@@ -57,6 +57,18 @@ class MessageSearch
     scope
   end
 
+  # Les mots à surligner dans les résultats (ceux qu'on cherche, pas ceux qu'on exclut).
+  def highlights = words.reject(&:negated).flat_map(&:value).uniq
+
+  # Pour chaque fil, le message le plus récent qui répond à la recherche : { conversation_id => message }.
+  def matching_messages(conversation_ids)
+    return {} if blank? || conversation_ids.empty?
+
+    messages.where(conversation_id: conversation_ids)
+      .select("DISTINCT ON (messages.conversation_id) messages.*")
+      .reorder("messages.conversation_id", sent_at: :desc, id: :desc).index_by(&:conversation_id)
+  end
+
   private
 
   def parse

@@ -7,8 +7,13 @@
   <td class="sender"><%= conversation.last_sender %><%= tag.span(conversation.messages_count, class: "count", title: "#{conversation.messages_count} messages") if conversation.messages_count > 1 %>
     <%= tag.span("→ #{conversation.assignee.display_name}", class: "assignee") if conversation.assignee %></td>
   <td class="subject">
-    <%= link_to conversation.title, conversation_path(conversation), data: { shortcuts_target: "link" } %>
-    <span class="snippet"><%= conversation.snippet&.truncate(140) %></span>
+    <% if local_assigns[:highlights] %>
+      <%= link_to highlight_words(conversation.title, highlights), conversation_path(conversation), data: { shortcuts_target: "link" } %>
+      <span class="snippet excerpt"><%= search_excerpt(local_assigns[:match], highlights, fallback: conversation.snippet) %></span>
+    <% else %>
+      <%= link_to conversation.title, conversation_path(conversation), data: { shortcuts_target: "link" } %>
+      <span class="snippet"><%= conversation.snippet&.truncate(140) %></span>
+    <% end %>
   </td>
   <% if show_mailbox %><td class="mailbox"><% conversation.mailboxes_with_twins.each do |mailbox| %><%= mailbox_chip(mailbox) %><% end %></td><% end %>
   <td class="date"><%= conversation.last_message_at && l(conversation.last_message_at, format: :short) %></td>

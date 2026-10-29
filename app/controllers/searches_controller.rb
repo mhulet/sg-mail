@@ -14,6 +14,8 @@ class SearchesController < ApplicationController
       @search.conversations.then { |scope| @mailbox ? scope : scope.one_per_email }
         .with_unread_for(Current.user).includes(:mailbox, :assignee).recent.limit(preview ? PREVIEW_LIMIT : LIMIT).to_a
     Conversation.load_twins(@conversations, Current.user) unless @mailbox
-    render :preview if preview
+    return render :preview if preview
+
+    @matches = @search.matching_messages(@conversations.map(&:id))
   end
 end
