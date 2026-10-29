@@ -1,0 +1,12 @@
+<%# Visionneuse des pièces jointes du fil : ← → pour passer de l'une à l'autre, d pour télécharger, Échap pour fermer. %>
+<dialog class="viewer" data-viewer-target="dialog" data-action="keydown->viewer#keydown click->viewer#backdrop close->viewer#closed touchstart->viewer#touchstart touchend->viewer#touchend" aria-label="Pièce jointe">
+  <header class="viewer-bar">
+    <span class="viewer-name" data-viewer-target="name"></span>
+    <span class="viewer-count muted" data-viewer-target="count"></span>
+    <a class="viewer-button" data-viewer-target="download" data-turbo="false" title="Télécharger (d)">Télécharger</a>
+    <button type="button" class="viewer-button" data-action="viewer#close" title="Fermer (Échap)">Fermer</button>
+  </header>
+  <div class="viewer-stage" data-viewer-target="stage" tabindex="-1" autofocus></div>
+  <button type="button" class="viewer-nav prev" data-viewer-target="prev" data-action="viewer#previous" title="Précédente (←)" aria-label="Pièce jointe précédente">‹</button>
+  <button type="button" class="viewer-nav next" data-viewer-target="next" data-action="viewer#next" title="Suivante (→)" aria-label="Pièce jointe suivante">›</button>
+</dialog>

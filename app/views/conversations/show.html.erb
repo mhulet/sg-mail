@@ -53,6 +53,7 @@
   <%= render "tasks/form", people: @people, conversation: @conversation %>
 </section>
 
+<div data-controller="viewer" class="viewer-scope">
 <% @messages.each do |message| %>
   <article id="<%= dom_id(message) %>" class="card">
     <header class="message-head">
@@ -66,21 +67,12 @@
 
     <% if message.body_html.present? %>
       <%# Bac à sable : pas de scripts, pas d'accès à la page SG Mail. %>
-      <iframe class="body" sandbox srcdoc="<%= message.body_html %>" title="Contenu du message"></iframe>
+      <iframe class="body" sandbox srcdoc="<%= message_body_html(message) %>" title="Contenu du message"></iframe>
     <% else %>
       <pre class="body"><%= message.body_text %></pre>
     <% end %>
 
-    <% if message.attachments.any? %>
-      <ul class="attachments">
-        <% message.attachments.each do |attachment| %>
-          <li>📎 <%= link_to attachment["filename"], message_attachment_path(message, attachment["index"]), data: { turbo: false } %>
-            <span class="muted"><%= number_to_human_size(attachment["size"]) %></span></li>
-        <% end %>
-      </ul>
-    <% elsif message.has_attachments %>
-      <%= button_to "Afficher les pièces jointes", message_attachments_path(message), class: "link" %>
-    <% end %>
+    <%= render "attachments/list", message: message %>
 
     <p class="actions message-actions">
       <% last = message == @messages.last %>
@@ -98,6 +90,8 @@
     </p>
   </article>
 <% end %>
+<%= render "attachments/viewer" %>
+</div>
 
 <section class="card internal">
   <h2>Notes internes</h2>
