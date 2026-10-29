@@ -1,0 +1,59 @@
+<% content_for :title, "Installer l'app · SG Mail" %>
+<header class="space-head">
+  <h1>Installer SG Mail</h1>
+  <p class="tagline">Une vraie fenêtre à part, une icône dans le Dock ou la barre des tâches.</p>
+</header>
+<p class="muted">SG Mail s'installe depuis ton navigateur, sur Windows, Mac, Linux, iPhone et Android. Rien à télécharger :
+  l'app se met à jour toute seule, affiche le nombre de fils non lus sur son icône et peut te prévenir des nouveaux
+  messages (<%= link_to "Notifications", push_subscriptions_path(account_id: nil) %>).</p>
+
+<div class="card install" data-controller="install">
+  <p data-install-target="ready" hidden><button class="primary" data-action="install#install">Installer SG Mail sur cet appareil</button></p>
+  <p data-install-target="installed" hidden>SG Mail est installé sur cet appareil.</p>
+  <div data-install-target="manual">
+    <p>Choisis ton navigateur :</p>
+
+    <details data-install-target="guide" data-browser="chromium">
+      <summary><strong>Chrome, Edge ou Brave</strong> (Windows, Mac, Linux)</summary>
+      <ol>
+        <li>Ouvre SG Mail dans le navigateur.</li>
+        <li>Clique sur l'icône d'installation à droite de la barre d'adresse (un écran avec une flèche), ou ouvre le menu
+          <strong>⋮</strong>, puis <strong>Caster, enregistrer et partager</strong> et <strong>Installer SG Mail</strong>
+          (Edge : <strong>Applications</strong>, puis <strong>Installer SG Mail</strong>).</li>
+        <li>Confirme : SG Mail s'ouvre dans sa fenêtre. Épingle-le à la barre des tâches ou garde-le dans le Dock.</li>
+      </ol>
+    </details>
+
+    <details data-install-target="guide" data-browser="safari">
+      <summary><strong>Safari</strong> (Mac)</summary>
+      <ol>
+        <li>Ouvre SG Mail dans Safari.</li>
+        <li>Menu <strong>Fichier</strong>, puis <strong>Ajouter au Dock</strong>.</li>
+        <li>Ouvre SG Mail depuis le Dock ou le Launchpad.</li>
+      </ol>
+    </details>
+
+    <details data-install-target="guide" data-browser="firefox">
+      <summary><strong>Firefox</strong></summary>
+      <p>Firefox n'installe pas les apps web comme les autres navigateurs. Ouvre SG Mail dans Chrome, Edge ou Brave (ou Safari sur Mac),
+        puis suis les étapes de ce navigateur.</p>
+    </details>
+
+    <details data-install-target="guide" data-browser="ios">
+      <summary><strong>iPhone et iPad</strong></summary>
+      <ol>
+        <li>Ouvre SG Mail dans Safari.</li>
+        <li>Touche <strong>Partager</strong>, puis <strong>Sur l'écran d'accueil</strong>.</li>
+        <li>Ouvre SG Mail depuis l'écran d'accueil.</li>
+      </ol>
+    </details>
+
+    <details data-install-target="guide" data-browser="android">
+      <summary><strong>Android</strong></summary>
+      <ol>
+        <li>Ouvre SG Mail dans Chrome.</li>
+        <li>Menu <strong>⋮</strong>, puis <strong>Installer l'application</strong> (ou <strong>Ajouter à l'écran d'accueil</strong>).</li>
+      </ol>
+    </details>
+  </div>
+</div>

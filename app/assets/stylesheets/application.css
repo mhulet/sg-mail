@@ -151,6 +151,11 @@ form.compose textarea { line-height: 1.6; }
 .actions { display: flex; flex-wrap: wrap; gap: .5rem .9rem; align-items: center; margin: 1rem 0; }
 .card { background: var(--sheet); border: 1px solid var(--rule); border-radius: var(--radius); padding: 1.1rem 1.25rem; margin: 1rem 0; }
 .card > h2:first-child { margin-top: 0; }
+.install details { border-top: 1px solid var(--rule); padding: .6rem 0; }
+.install details summary { cursor: pointer; }
+.install details ol { margin: .5rem 0 0; }
+/* Déjà dans l'app installée : plus besoin du lien « Installer l'app ». */
+@media (display-mode: standalone) { .install-link { display: none; } }
 code { font-family: var(--mono); font-size: .88em; }
 code.link { user-select: all; word-break: break-all; }
 .nowrap { white-space: nowrap; }

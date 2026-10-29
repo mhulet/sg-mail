@@ -7,6 +7,17 @@ if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("/service-worker", { scope: "/" }).catch(() => {})
 }
 
+// Chrome, Edge et Brave annoncent qu'on peut installer l'app : on garde l'invitation pour le bouton « Installer ».
+window.addEventListener("beforeinstallprompt", (event) => {
+  event.preventDefault()
+  window.sgInstallPrompt = event
+  window.dispatchEvent(new Event("sg:installable"))
+})
+window.addEventListener("appinstalled", () => {
+  window.sgInstallPrompt = null
+  window.sgInstalled = true
+})
+
 // La pastille de l'icône (app installée) suit les non-lus de la réception à chaque page.
 document.addEventListener("turbo:load", () => {
   const count = Number(document.body.dataset.badge)

@@ -75,6 +75,7 @@
               <%= nav_link "Jetons d'API", api_tokens_path %>
             <% end %>
             <% if !Current.account && (Current.user.accounts.many? || Current.user.staff?) %><%= link_to "Clients", accounts_path(account_id: nil) %><% end %>
+            <%= link_to "Installer l'app", install_path(account_id: nil), class: "install-link" %>
             <%= link_to "Notifications", push_subscriptions_path(account_id: nil) %>
             <%= link_to "Passkeys", passkeys_path(account_id: nil) %>
             <%= button_to "Déconnexion", session_path(account_id: nil), method: :delete, class: "link" %>
