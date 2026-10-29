@@ -1,0 +1,18 @@
+<%= turbo_frame_tag "search_preview", target: "_top" do %>
+  <% unless @search.blank? %>
+    <div class="search-preview" role="listbox" aria-label="Résultats">
+      <% if @conversations.none? %>
+        <p class="muted">Aucun résultat.</p>
+      <% else %>
+        <% @conversations.each do |conversation| %>
+          <%= link_to conversation_path(conversation), class: class_names("result", unread: conversation.unread), role: "option" do %>
+            <span class="sender"><%= conversation.last_sender %></span>
+            <span class="subject"><%= conversation.title %></span>
+            <span class="date"><%= conversation.last_message_at && l(conversation.last_message_at, format: :short) %></span>
+          <% end %>
+        <% end %>
+      <% end %>
+      <%= link_to "Tous les résultats ↵", search_path(q: @search.query), class: "all" %>
+    </div>
+  <% end %>
+<% end %>

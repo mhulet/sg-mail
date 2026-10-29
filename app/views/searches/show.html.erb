@@ -1,22 +1,47 @@
 <% content_for :title, "Recherche · SG Mail" %>
 <h1>Recherche</h1>
 
-<%= form_with url: search_path, method: :get, class: "inline" do |f| %>
-  <%= f.search_field :q, value: @search.query, autofocus: true, size: 40, aria: { label: "Rechercher" } %>
+<%= form_with url: search_path, method: :get, class: "inline search-page",
+      data: { controller: "search", turbo_frame: "search_results", turbo_action: "advance" } do |f| %>
+  <%= f.search_field :q, value: @search.query, autofocus: true, size: 48, autocomplete: "off", aria: { label: "Rechercher" },
+        placeholder: "Mots, from:anne, has:attachment, after:2026/09/01…", data: { search_target: "input", action: "input->search#type" } %>
   <% if @mailboxes.many? %>
     <%= f.select :mailbox_id, [ [ "Toutes les boîtes", "" ] ] + @mailboxes.map { |m| [ m.address, m.id ] },
-          { selected: @mailbox&.id }, aria: { label: "Boîte" } %>
+          { selected: @mailbox&.id }, aria: { label: "Boîte" }, data: { action: "search#type" } %>
   <% end %>
   <%= f.submit "Chercher" %>
 <% end %>
-<p class="muted">Astuces : <code>de:anne</code>, <code>a:formations</code>, <code>avec:pj</code>. Les accents et la fin des mots sont facultatifs.</p>
 
-<% if @search.blank? %>
-<% elsif @conversations.none? %>
-  <p class="muted">Aucun résultat.</p>
-<% else %>
-  <p class="muted"><%= pluralize(@conversations.size, "fil") %><%= " (les #{SearchesController::LIMIT} plus récents)" if @conversations.size == SearchesController::LIMIT %></p>
-  <table class="conversations">
-    <%= render partial: "conversations/conversation", collection: @conversations, locals: { show_mailbox: @mailboxes.many? && !@mailbox } %>
-  </table>
+<details class="search-help">
+  <summary>Filtres, comme sur Gmail</summary>
+  <dl>
+    <dt><code>from:anne</code> <code>to:formations</code> <code>cc:marc</code></dt><dd>expéditeur, destinataires, copie</dd>
+    <dt><code>subject:devis</code> <code>"bon de commande"</code></dt><dd>dans l'objet, expression exacte</dd>
+    <dt><code>has:attachment</code> <code>filename:pdf</code></dt><dd>avec pièce jointe, nom de la pièce jointe</dd>
+    <dt><code>has:note</code> <code>has:task</code></dt><dd>fils avec une note interne ou une tâche</dd>
+    <dt><code>after:2026/09/01</code> <code>before:2026/10/01</code></dt><dd>dates (aussi 01/09/2026)</dd>
+    <dt><code>newer_than:7d</code> <code>older_than:1y</code></dt><dd>jours <code>d</code>, semaines <code>w</code>, mois <code>m</code>, années <code>y</code></dd>
+    <dt><code>is:unread</code> <code>is:read</code> <code>is:assigned</code> <code>is:unassigned</code></dt><dd>lu par moi, assigné</dd>
+    <dt><code>assignee:me</code> <code>assignee:anne</code></dt><dd>assigné à quelqu'un</dd>
+    <dt><code>in:inbox</code> <code>in:feed</code> <code>in:paper_trail</code> <code>in:screener</code></dt><dd>mes piles</dd>
+    <dt><code>in:reply_later</code> <code>in:set_aside</code> <code>in:archive</code> <code>in:sent</code></dt><dd>plus tard, de côté, archivés, envoyés</dd>
+    <dt><code>in:formations</code> <code>mailbox:semisto</code></dt><dd>une boîte (début ou partie de l'adresse)</dd>
+    <dt><code>-from:anne</code> <code>-facture</code></dt><dd>exclure</dd>
+  </dl>
+  <p class="muted">Les mots cherchent partout, aussi dans les noms des pièces jointes, les notes internes et les tâches. Les accents et la fin des mots sont facultatifs.</p>
+</details>
+
+<%= turbo_frame_tag "search_results", target: "_top" do %>
+  <% if @search.errors.any? %>
+    <p class="muted">Filtre non compris, ignoré : <%= safe_join(@search.errors.map { |error| tag.code(error) }, ", ") %></p>
+  <% end %>
+  <% if @search.blank? %>
+  <% elsif @conversations.none? %>
+    <p class="muted">Aucun résultat.</p>
+  <% else %>
+    <p class="muted"><%= pluralize(@conversations.size, "fil") %><%= " (les #{SearchesController::LIMIT} plus récents)" if @conversations.size == SearchesController::LIMIT %></p>
+    <table class="conversations">
+      <%= render partial: "conversations/conversation", collection: @conversations, locals: { show_mailbox: @mailboxes.many? && !@mailbox } %>
+    </table>
+  <% end %>
 <% end %>

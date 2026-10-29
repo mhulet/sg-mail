@@ -4,8 +4,12 @@ class SgMailMcp::SearchConversations < SgMailMcp::Tool
     "feed" (newsletters, reading) or "paper_trail" (receipts, notifications), across mailboxes or in one with mailbox_id.
     Threads of senders still in my Screener or blocked by me are left out, and so are threads in my stacks:
     list those with stack "reply_later" or "set_aside". Threads I archived are left out too: list them with archived.
-    With query: full-text search in subject, sender, recipients and body; words match without accents and by prefix.
-    Query filters: "de:anne" (sender), "a:formations" (recipient), "avec:pj" (with attachments).
+    With query: Gmail-style search. Words match subject, sender, recipients, body and attachment names, without
+    accents and by prefix, and also the thread's internal notes and tasks; "exact phrase"; -word excludes.
+    Operators: from:, to:, cc:, subject:, filename:, has:attachment, has:note, has:task, before:YYYY/MM/DD,
+    after:YYYY/MM/DD, older_than:/newer_than: (7d, 2w, 3m, 1y), is:unread, is:read, is:assigned, is:unassigned,
+    assignee:me or a name, in:inbox|feed|paper_trail|screener|reply_later|set_aside|archive|sent or a mailbox
+    address prefix, mailbox:; prefix any operator with - to exclude, quote values with spaces (subject:"bon de commande").
   TEXT
   read_only!
   input_schema(properties: {
