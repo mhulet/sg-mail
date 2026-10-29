@@ -138,10 +138,25 @@ obligatoire (`force_ssl`), ce qui convient au certificat géré par Hatchbox.
 
 ## Recherche
 
-Champ « Rechercher… » en haut de chaque page : cherche dans l'objet, l'expéditeur, les destinataires
-et le corps des messages des boîtes accessibles, et rend les fils. Sans accents et en début de mot
-(« inscri ete » trouve « Inscription formation d'été »). Filtres : `de:anne`, `a:formations`, `avec:pj`.
-Index plein texte Postgres (`messages.search_vector`, colonne calculée, extension `unaccent`).
+Champ « Rechercher » en haut de chaque page (`/`) : les résultats s'affichent pendant la frappe (flèches pour
+les parcourir, Entrée pour la page complète, qui se met aussi à jour en direct). Les mots cherchent dans
+l'objet, l'expéditeur, les destinataires, le corps et les noms des pièces jointes des boîtes accessibles,
+ainsi que dans les notes internes et les tâches des fils. Sans accents et en début de mot (« inscri ete »
+trouve « Inscription formation d'été ») ; `"bon de commande"` cherche l'expression exacte, `-mot` exclut.
+
+Opérateurs, en anglais comme sur Gmail (`-` devant exclut, guillemets pour une valeur avec espaces) :
+
+| Opérateur | Exemple |
+| --- | --- |
+| `from:` `to:` `cc:` `subject:` | `from:anne`, `subject:"devis jardin"` |
+| `has:` `filename:` | `has:attachment`, `has:note`, `has:task`, `filename:pdf` |
+| `before:` `after:` `older_than:` `newer_than:` | `after:2026/09/01`, `before:01/10/2026`, `newer_than:7d` (d, w, m, y) |
+| `is:` `assignee:` | `is:unread`, `is:read`, `is:assigned`, `is:unassigned`, `assignee:me` |
+| `in:` `mailbox:` | `in:inbox`, `in:feed`, `in:paper_trail`, `in:screener`, `in:reply_later`, `in:set_aside`, `in:archive`, `in:sent`, `in:formations` |
+
+Les anciens filtres `de:`, `a:` et `avec:pj` restent compris. Un filtre non compris est signalé et ignoré.
+Index plein texte Postgres (`messages.search_vector`, colonne calculée, extension `unaccent`) ; la logique
+est dans `MessageSearch`, partagée par l'interface, l'API, le MCP et la CLI.
 
 ## API, MCP et CLI
 

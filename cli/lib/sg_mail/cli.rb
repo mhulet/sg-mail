@@ -48,7 +48,7 @@ module SgMail
     option :limit, type: :numeric, default: 30
     def paper_trail = list_conversations(nil, box: "paper_trail")
 
-    desc "search REQUÊTE", "Recherche (filtres : de:anne a:formations avec:pj)"
+    desc "search REQUÊTE", "Recherche, avec les opérateurs de Gmail (from:anne has:attachment after:2026/09/01 is:unread…)"
     option :mailbox, type: :numeric
     option :limit, type: :numeric, default: 30
     def search(*words)

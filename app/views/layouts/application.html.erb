@@ -66,9 +66,14 @@
             <%= nav_link "Mes tâches", tasks_path, shortcut: "g t", space: "note-ink" %>
             <%= nav_link "Brouillons", drafts_path, shortcut: "g d", space: "muted" %>
           </nav>
-          <%= form_with url: search_path, method: :get, class: "search" do |f| %>
-            <%= f.search_field :q, value: params[:q], placeholder: "Rechercher", aria: { label: "Rechercher" }, data: { shortcut: "/" } %>
-            <kbd>/</kbd>
+          <% unless controller_name == "searches" %>
+            <%= form_with url: search_path, method: :get, class: "search",
+                  data: { controller: "search", action: "keydown->search#keydown focusout->search#leave" } do |f| %>
+              <%= f.search_field :q, value: params[:q], placeholder: "Rechercher", autocomplete: "off", aria: { label: "Rechercher" },
+                    data: { shortcut: "/", search_target: "input", action: "input->search#type" } %>
+              <kbd>/</kbd>
+              <%= turbo_frame_tag "search_preview", target: "_top", data: { search_target: "preview" } %>
+            <% end %>
           <% end %>
         <% end %>
         <details class="settings">

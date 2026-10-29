@@ -492,7 +492,7 @@ CREATE TABLE public.messages (
     account_id bigint NOT NULL,
     conversation_id bigint,
     attachments jsonb DEFAULT '[]'::jsonb NOT NULL,
-    search_vector tsvector GENERATED ALWAYS AS ((((setweight(to_tsvector('simple'::regconfig, public.sg_mail_unaccent((COALESCE(subject, ''::character varying))::text)), 'A'::"char") || setweight(to_tsvector('simple'::regconfig, public.sg_mail_unaccent((((COALESCE(from_name, ''::character varying))::text || ' '::text) || (COALESCE(from_address, ''::character varying))::text))), 'B'::"char")) || setweight(to_tsvector('simple'::regconfig, public.sg_mail_unaccent((((to_addresses)::text || ' '::text) || (cc_addresses)::text))), 'C'::"char")) || setweight(to_tsvector('simple'::regconfig, public.sg_mail_unaccent("left"(COALESCE(body_text, regexp_replace("left"(body_html, 400000), '<[^>]*>'::text, ' '::text, 'g'::text), ''::text), 200000))), 'D'::"char"))) STORED
+    search_vector tsvector GENERATED ALWAYS AS (((((setweight(to_tsvector('simple'::regconfig, public.sg_mail_unaccent((COALESCE(subject, ''::character varying))::text)), 'A'::"char") || setweight(to_tsvector('simple'::regconfig, public.sg_mail_unaccent((((COALESCE(from_name, ''::character varying))::text || ' '::text) || (COALESCE(from_address, ''::character varying))::text))), 'B'::"char")) || setweight(to_tsvector('simple'::regconfig, public.sg_mail_unaccent((((to_addresses)::text || ' '::text) || (cc_addresses)::text))), 'C'::"char")) || setweight(to_tsvector('simple'::regconfig, regexp_replace(public.sg_mail_unaccent((jsonb_path_query_array(attachments, '$[*]."filename"'::jsonpath))::text), '[^[:alnum:]]+'::text, ' '::text, 'g'::text)), 'C'::"char")) || setweight(to_tsvector('simple'::regconfig, public.sg_mail_unaccent("left"(COALESCE(body_text, regexp_replace("left"(body_html, 400000), '<[^>]*>'::text, ' '::text, 'g'::text), ''::text), 200000))), 'D'::"char"))) STORED
 );
 
 ALTER TABLE ONLY public.messages FORCE ROW LEVEL SECURITY;
@@ -3463,6 +3463,7 @@ ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261029200000'),
 ('20261028220000'),
 ('20261028150000'),
 ('20261028140000'),
