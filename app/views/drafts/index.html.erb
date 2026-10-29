@@ -10,7 +10,7 @@
       <td><%= draft.editable? ? link_to(draft.subject.presence || "(sans objet)", edit_draft_path(draft)) : (draft.subject.presence || "(sans objet)") %>
         <span class="muted">à <%= draft.to_addresses.join(", ").presence || "personne" %></span>
         <% if draft.status == "failed" %><br><span class="field-errors"><%= draft.error&.truncate(120) %></span><% end %></td>
-      <td class="muted"><%= draft.mailbox.address %></td>
+      <td class="muted" title="<%= draft.mailbox.address %>"><%= draft.mailbox.display_name %></td>
       <td class="muted nowrap"><%= l(draft.sent_at || draft.updated_at, format: :short) %></td>
     </tr>
   <% end %>

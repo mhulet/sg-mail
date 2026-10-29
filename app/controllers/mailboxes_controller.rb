@@ -1,11 +1,11 @@
 class MailboxesController < ApplicationController
   include AccountScoped
-  before_action :set_mailbox, only: %i[show sync preferences destroy]
-  before_action :require_manage_access, only: :destroy
+  before_action :set_mailbox, only: %i[show edit update sync preferences destroy]
+  before_action :require_manage_access, only: %i[edit update destroy]
 
   # Seules les boîtes auxquelles on a accès : une boîte perso reste privée, même pour les admins.
   def index
-    @mailboxes = Mailbox.accessible_by(Current.user).includes(:accesses).order(:address)
+    @mailboxes = Mailbox.accessible_by(Current.user).includes(:accesses).by_display_name
   end
 
   def show
@@ -31,6 +31,32 @@ class MailboxesController < ApplicationController
   rescue Net::IMAP::Error, SocketError, SystemCallError, OpenSSL::SSL::SSLError, ActiveRecord::RecordInvalid => e
     flash.now[:alert] = "Connexion IMAP impossible : #{e.message}"
     render :new, status: :unprocessable_entity
+  end
+
+  def edit
+  end
+
+  # Réglages de la boîte, pour qui la gère : libellé et, pour une boîte IMAP, serveurs et identifiants.
+  # De nouveaux identifiants IMAP sont testés avant d'être enregistrés.
+  def update
+    @mailbox.label = params.dig(:mailbox, :label)
+    if @mailbox.imap? && params[:imap]
+      credentials = @mailbox.imap_credentials_with(params.require(:imap).permit(*Mailbox::IMAP_SETTINGS))
+      if credentials != @mailbox.credentials
+        ImapSync.connect(credentials).tap { |imap| imap.logout rescue nil; imap.disconnect rescue nil }
+        @mailbox.credentials = credentials
+        @mailbox.last_sync_error = nil
+        resync = true
+      end
+    end
+    @mailbox.save!
+    SyncMailboxJob.perform_later(@mailbox) if resync
+    redirect_to @mailbox, notice: resync ? "Réglages enregistrés. Synchronisation relancée." : "Réglages enregistrés."
+  rescue Net::IMAP::Error, SocketError, SystemCallError, OpenSSL::SSL::SSLError => e
+    flash.now[:alert] = "Connexion IMAP impossible, rien n'a été changé : #{e.message}"
+    render :edit, status: :unprocessable_entity
+  rescue ActiveRecord::RecordInvalid
+    render :edit, status: :unprocessable_entity
   end
 
   # Ma signature et mon nom d'expéditeur dans cette boîte.

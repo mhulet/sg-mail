@@ -8,6 +8,8 @@ fr:
     attributes:
       account:
         name: Nom
+      mailbox:
+        label: Libellé
       invitation:
         email_address: Adresse email
         role: Rôle

@@ -26,7 +26,7 @@ module ApplicationHelper
 
   # Les boîtes auxquelles j'ai accès, sous « Réception » dans la barre latérale.
   def sidebar_mailboxes
-    @sidebar_mailboxes ||= Mailbox.accessible_by(Current.user).order(:address).to_a
+    @sidebar_mailboxes ||= Mailbox.accessible_by(Current.user).by_display_name.to_a
   end
 
   # La réception d'une seule boîte est affichée (pas une pile, pas les archives).
@@ -41,10 +41,10 @@ module ApplicationHelper
       .not_archived_for(Current.user).unread_for(Current.user).group(:mailbox_id).count
   end
 
-  # Une boîte sous « Réception » : son adresse et, s'il y en a, ses fils non lus.
+  # Une boîte sous « Réception » : son libellé (ou son adresse) et, s'il y en a, ses fils non lus.
   def mailbox_nav_link(mailbox)
     count = imbox_unread_counts_by_mailbox[mailbox.id].to_i
-    content = safe_join([ tag.span(mailbox.address, class: "label"), (tag.span(count, class: "count", title: "#{count} non lu#{"s" if count > 1}") if count.positive?) ])
+    content = safe_join([ tag.span(mailbox.display_name, class: "label"), (tag.span(count, class: "count", title: "#{count} non lu#{"s" if count > 1}") if count.positive?) ])
     link_to content, account_root_path(mailbox_id: mailbox.id), class: "sub", title: mailbox.address,
       aria: { current: ("page" if imbox_mailbox_page?(mailbox)) }
   end
@@ -91,8 +91,14 @@ module ApplicationHelper
     tag.span(initials.presence || "?", class: [ "avatar", size ], style: "--av: #{tint_for(name)}", aria: { hidden: true })
   end
 
-  # La boîte d'un fil, avec une pastille de sa couleur.
-  def mailbox_chip(address)
-    tag.span(address, class: "mailbox-chip", style: "--mb: #{tint_for(address)}")
+  # La boîte d'un fil, avec une pastille de sa couleur (tirée de l'adresse : elle ne change pas avec le libellé).
+  def mailbox_chip(mailbox)
+    tag.span(mailbox.display_name, class: "mailbox-chip", style: "--mb: #{tint_for(mailbox.address)}",
+      title: (mailbox.address if mailbox.label))
+  end
+
+  # Les options d'un menu de boîtes : leur libellé (ou leur adresse).
+  def mailbox_options(mailboxes, with_address: false)
+    mailboxes.map { |mailbox| [ with_address ? mailbox.display_name_with_address : mailbox.display_name, mailbox.id ] }
   end
 end

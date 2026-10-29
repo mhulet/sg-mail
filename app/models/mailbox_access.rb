@@ -22,7 +22,7 @@ class MailboxAccess < ApplicationRecord
   def label = LABELS.fetch(level)
 
   def self.change_notice(user, mailbox, level)
-    level ? "#{user.display_name} : #{LABELS.fetch(level).downcase} sur #{mailbox.address}." : "#{user.display_name} n'a plus accès à #{mailbox.address}."
+    level ? "#{user.display_name} : #{LABELS.fetch(level).downcase} sur #{mailbox.display_name}." : "#{user.display_name} n'a plus accès à #{mailbox.display_name}."
   end
 
   private

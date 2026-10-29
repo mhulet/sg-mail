@@ -14,10 +14,19 @@ class Mailbox < ApplicationRecord
   has_many :users_with_access, through: :accesses, source: :user
 
   scope :accessible_by, ->(user) { where(id: MailboxAccess.where(user: user).select(:mailbox_id)) }
+  scope :by_display_name, -> { order(Arel.sql("lower(coalesce(mailboxes.label, mailboxes.address))")) }
+  # in:formations dans la recherche : le début du libellé ou de l'adresse.
+  scope :starting_with, ->(prefix) {
+    pattern = "#{sanitize_sql_like(prefix)}%"
+    where("mailboxes.address ILIKE :p OR mailboxes.label ILIKE :p", p: pattern)
+  }
   scope :managed_by, ->(user) { where(id: MailboxAccess.where(user: user, level: "manage").select(:mailbox_id)) }
 
   validates :provider, inclusion: { in: PROVIDERS }
   validates :address, presence: true, uniqueness: { scope: %i[account_id provider] }
+  validates :label, length: { maximum: 40 }
+
+  normalizes :label, with: ->(label) { label.squish.presence }
 
   after_destroy_commit :revoke_google_access
 
@@ -41,6 +50,23 @@ class Mailbox < ApplicationRecord
   end
 
   def shared? = accesses.size > 1
+
+  # Ce que l'interface affiche : le libellé s'il y en a un, sinon l'adresse.
+  def display_name = label || address
+
+  # Pour le champ « De » : « Formations <formations@semisto.org> », ou l'adresse seule.
+  def display_name_with_address = label ? "#{label} <#{address}>" : address
+
+  IMAP_SETTINGS = %w[host port username password ssl smtp_host smtp_port].freeze
+
+  # Nouveaux réglages IMAP : un mot de passe laissé vide garde l'actuel.
+  def imap_credentials_with(settings)
+    settings = settings.to_h.slice(*IMAP_SETTINGS)
+    settings.delete("password") if settings["password"].blank?
+    settings.reject! { |key, value| value.blank? && credentials.to_h[key].blank? }
+    settings["ssl"] = settings["ssl"] != "0" if settings.key?("ssl")
+    (credentials || {}).merge(settings)
+  end
 
   def gmail? = provider == "gmail"
   def imap? = provider == "imap"

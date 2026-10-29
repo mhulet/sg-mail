@@ -10,6 +10,6 @@
     <%= link_to conversation.title, conversation_path(conversation), data: { shortcuts_target: "link" } %>
     <span class="snippet"><%= conversation.snippet&.truncate(140) %></span>
   </td>
-  <% if show_mailbox %><td class="mailbox"><%= mailbox_chip(conversation.mailbox.address) %></td><% end %>
+  <% if show_mailbox %><td class="mailbox"><%= mailbox_chip(conversation.mailbox) %></td><% end %>
   <td class="date"><%= conversation.last_message_at && l(conversation.last_message_at, format: :short) %></td>
 </tr>
