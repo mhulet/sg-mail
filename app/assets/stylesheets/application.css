@@ -99,6 +99,11 @@ nav.spaces { display: flex; flex-direction: column; gap: 1px; }
 .sidebar nav a:hover { background: var(--rule); }
 .sidebar nav a .dot { width: 10px; height: 10px; border-radius: 3px; background: var(--c, var(--faint)); flex-shrink: 0; }
 .sidebar nav a[aria-current] { background: var(--space-soft); color: var(--ink); font-weight: 600; }
+.sub-spaces { display: flex; flex-direction: column; gap: 1px; margin-bottom: .2rem; }
+.sidebar nav a.sub { padding: .3rem .65rem .3rem calc(1.3rem + 10px); font-size: .88rem; color: var(--muted); min-width: 0; }
+.sidebar nav a.sub .label { overflow: hidden; text-overflow: ellipsis; }
+.sidebar nav a.sub .count { margin-left: auto; font-size: .78rem; font-variant-numeric: tabular-nums; color: var(--imbox); font-weight: 600; }
+.sidebar nav a.sub[aria-current] { color: var(--ink); }
 .sidebar .search { position: relative; }
 .sidebar .search input { width: 100%; border-radius: 999px; padding-right: 2rem; background: var(--sheet); }
 .sidebar .search kbd { position: absolute; right: .6rem; top: 50%; transform: translateY(-50%); pointer-events: none; }
@@ -320,6 +325,7 @@ dialog.shortcuts dd { margin: 0; }
   nav.spaces { grid-column: 1 / -1; grid-row: 2; flex-direction: row; overflow-x: auto; scrollbar-width: none; gap: .25rem; margin: 0 -.75rem; padding: 0 .75rem; }
   nav.spaces::-webkit-scrollbar { display: none; }
   .nav-label { display: none; }
+  .sub-spaces { display: none; }
   .sidebar .search { grid-column: 1 / -1; grid-row: 3; }
   .sidebar .search kbd { display: none; }
   .settings { margin: 0; position: relative; grid-column: 3; grid-row: 1; }

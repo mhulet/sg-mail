@@ -13,14 +13,40 @@ module ApplicationHelper
 
   # Les fils non lus de ma réception : la pastille sur l'icône de l'app installée.
   def imbox_unread_count
-    Conversation.accessible_by(Current.user).in_bucket_for(Current.user, "imbox").not_archived_for(Current.user).unread_for(Current.user).count
+    Conversation.accessible_by(Current.user).in_bucket_for(Current.user, "imbox").inbox.not_archived_for(Current.user).unread_for(Current.user).count
   end
 
   # Lien de navigation, marqué comme page courante quand on y est. Avec space:, une pastille de sa couleur.
-  def nav_link(label, path, shortcut: nil, space: nil)
+  # current: force l'état courant quand l'adresse seule ne suffit pas à le dire.
+  def nav_link(label, path, shortcut: nil, space: nil, current: current_page?(path))
     content = space ? safe_join([ tag.span(class: "dot", aria: { hidden: true }), label ]) : label
-    link_to content, path, aria: { current: ("page" if current_page?(path)) }, data: { shortcut: shortcut },
+    link_to content, path, aria: { current: ("page" if current) }, data: { shortcut: shortcut },
       style: ("--c: var(--#{space})" if space)
+  end
+
+  # Les boîtes auxquelles j'ai accès, sous « Réception » dans la barre latérale.
+  def sidebar_mailboxes
+    @sidebar_mailboxes ||= Mailbox.accessible_by(Current.user).order(:address).to_a
+  end
+
+  # La réception d'une seule boîte est affichée (pas une pile, pas les archives).
+  def imbox_mailbox_page?(mailbox = nil)
+    controller_name == "conversations" && action_name == "index" && !@stack && !@archived && @box == "imbox" &&
+      (mailbox ? @mailbox == mailbox : @mailbox.nil?)
+  end
+
+  # Les fils non lus de ma réception, boîte par boîte.
+  def imbox_unread_counts_by_mailbox
+    @imbox_unread_counts_by_mailbox ||= Conversation.accessible_by(Current.user).in_bucket_for(Current.user, "imbox").inbox
+      .not_archived_for(Current.user).unread_for(Current.user).group(:mailbox_id).count
+  end
+
+  # Une boîte sous « Réception » : son adresse et, s'il y en a, ses fils non lus.
+  def mailbox_nav_link(mailbox)
+    count = imbox_unread_counts_by_mailbox[mailbox.id].to_i
+    content = safe_join([ tag.span(mailbox.address, class: "label"), (tag.span(count, class: "count", title: "#{count} non lu#{"s" if count > 1}") if count.positive?) ])
+    link_to content, account_root_path(mailbox_id: mailbox.id), class: "sub", title: mailbox.address,
+      aria: { current: ("page" if imbox_mailbox_page?(mailbox)) }
   end
 
   # L'espace de la page affichée, pour sa couleur : la pile ou la boîte de la liste, le Screener, sinon la réception.

@@ -50,7 +50,12 @@
         <% if Current.account %>
           <%= link_to "Écrire", new_draft_path, class: "compose-button hint", data: { shortcut: "c" } %>
           <nav class="spaces" aria-label="Espaces">
-            <%= nav_link "Réception", account_root_path, shortcut: "g i", space: "imbox" %>
+            <%= nav_link "Réception", account_root_path, shortcut: "g i", space: "imbox", current: imbox_mailbox_page? %>
+            <% if sidebar_mailboxes.many? %>
+              <div class="sub-spaces" role="group" aria-label="Réception par boîte">
+                <% sidebar_mailboxes.each do |mailbox| %><%= mailbox_nav_link(mailbox) %><% end %>
+              </div>
+            <% end %>
             <%= nav_link "Feed", conversations_path(box: "feed"), shortcut: "g f", space: "feed" %>
             <%= nav_link "Paper Trail", conversations_path(box: "paper_trail"), shortcut: "g p", space: "trail" %>
             <%= nav_link screener_label, screenings_path, shortcut: "g s", space: "screener" %>
