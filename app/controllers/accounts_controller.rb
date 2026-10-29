@@ -1,11 +1,16 @@
 class AccountsController < ApplicationController
   before_action :require_staff, only: %i[new create destroy]
 
-  # Choix du client ; on y va directement s'il n'y en a qu'un. L'équipe Super Génial voit aussi tous les clients.
+  # Choix du client ; on y va directement s'il n'y en a qu'un, ou, depuis la racine, au dernier client ouvert.
+  # L'équipe Super Génial voit aussi tous les clients.
   def index
     @accounts = Current.user.accounts.order(:name)
     @all_accounts = Account.order(:name) if Current.user.staff?
-    redirect_to account_root_path(account_id: @accounts.first.id) if @accounts.one? && !Current.user.staff?
+    if @accounts.one? && !Current.user.staff?
+      redirect_to account_root_path(account_id: @accounts.first.id)
+    elsif request.path == root_path && (last_account = @accounts.find_by(id: cookies[:last_account_id]))
+      redirect_to account_root_path(account_id: last_account.id)
+    end
   end
 
   def new

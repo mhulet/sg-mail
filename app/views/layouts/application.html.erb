@@ -33,7 +33,19 @@
       <aside class="sidebar">
         <div class="brand">
           <%= link_to Current.account ? account_root_path : root_path, class: "brand-name" do %><span class="mark" aria-hidden="true"></span>SG Mail<% end %>
-          <% if Current.account %><span class="account"><%= Current.account.name %></span><% end %>
+          <% if Current.account && (Current.user.accounts.many? || Current.user.staff?) %>
+            <details class="account-switcher">
+              <summary data-shortcut="g c" title="Changer de client (g puis c)"><span class="account"><%= Current.account.name %></span></summary>
+              <nav aria-label="Clients">
+                <% Current.user.accounts.order(:name).each do |account| %>
+                  <%= link_to account.name, account_root_path(account_id: account.id), aria: { current: (account == Current.account) || nil } %>
+                <% end %>
+                <%= link_to "Tous les clients", accounts_path(account_id: nil), class: "all" %>
+              </nav>
+            </details>
+          <% elsif Current.account %>
+            <span class="account"><%= Current.account.name %></span>
+          <% end %>
         </div>
         <% if Current.account %>
           <%= link_to "Écrire", new_draft_path, class: "compose-button hint", data: { shortcut: "c" } %>
@@ -62,7 +74,7 @@
               <%= nav_link "Membres", memberships_path %>
               <%= nav_link "Jetons d'API", api_tokens_path %>
             <% end %>
-            <% if Current.user.accounts.many? || Current.user.staff? %><%= link_to "Clients", accounts_path(account_id: nil) %><% end %>
+            <% if !Current.account && (Current.user.accounts.many? || Current.user.staff?) %><%= link_to "Clients", accounts_path(account_id: nil) %><% end %>
             <%= link_to "Notifications", push_subscriptions_path(account_id: nil) %>
             <%= link_to "Passkeys", passkeys_path(account_id: nil) %>
             <%= button_to "Déconnexion", session_path(account_id: nil), method: :delete, class: "link" %>

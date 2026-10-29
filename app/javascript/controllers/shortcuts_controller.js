@@ -32,6 +32,7 @@ export default class extends Controller {
     }
     if (key === "?" && this.hasHelpTarget) return this.#handled(event, () => this.helpTarget.showModal())
     if (key === "Escape" && document.activeElement?.matches("input[type=search]")) return document.activeElement.blur()
+    if (key === "Escape" && document.querySelector("details[open]")) return document.querySelectorAll("details[open]").forEach((details) => (details.open = false))
 
     if (this.rowTargets.length) {
       if (key === "j") return this.#handled(event, () => this.#move(1))
