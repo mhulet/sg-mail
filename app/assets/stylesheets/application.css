@@ -397,9 +397,37 @@ p.read-by { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; fon
 
 /* ─── Screener : oui, non, et le coup de tampon ─── */
 .screening { background: var(--screener-soft); border-color: transparent; display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; position: relative; overflow: hidden; }
-table.screener tr { position: relative; }
-table.screener td { vertical-align: middle; }
+/* Une ligne par expéditeur : qui, l'objet, l'aperçu, une ligne chacun ; les boutons à droite (dessous sur téléphone). */
+table.screener, table.screener tbody { display: block; }
+table.screener tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .1rem 1.2rem; align-items: center;
+  padding: .75rem 1rem .75rem 1.1rem; border-bottom: 1px solid var(--rule); position: relative; }
+table.screener tr:last-child { border-bottom: 0; }
+table.screener td { border: 0; padding: 0; min-width: 0; }
+table.screener td.sender { grid-column: 1; grid-row: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+table.screener td.sender .muted { font-size: .88rem; margin-left: .3rem; }
+table.screener td.subject { grid-column: 1; grid-row: 2; font-size: .94rem; }
+table.screener td.subject > * { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+table.screener td.subject a { color: var(--text); font-weight: 550; text-decoration: none; }
+table.screener td.subject a:hover { text-decoration: underline; }
+table.screener td.decide { grid-column: 2; grid-row: 1 / span 2; display: flex; gap: .4rem; align-items: center; }
+td.address { overflow-wrap: anywhere; }
+@media (max-width: 820px) {
+  table.screener tr { grid-template-columns: minmax(0, 1fr); padding: .75rem .9rem; }
+  table.screener td.sender .address { display: block; margin-left: 0; overflow: hidden; text-overflow: ellipsis; }
+  table.screener td.subject { margin-top: .35rem; }
+  table.screener td.decide { grid-column: 1; grid-row: 3; margin-top: .6rem; gap: .3rem; }
+  table.screener td.decide form { flex: 1 1 auto; }
+  table.screener td.decide button { width: 100%; padding: .38rem .4rem; font-size: .85rem; }
+  table.blocked-senders, table.blocked-senders tbody { display: block; }
+  table.blocked-senders tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: .9rem; padding: .6rem .8rem;
+    border-bottom: 1px solid var(--rule); }
+  table.blocked-senders tr:last-child { border-bottom: 0; }
+  table.blocked-senders td { border: 0; padding: 0; }
+  table.blocked-senders td:nth-child(2) { grid-row: 2; font-size: .85rem; }
+  table.blocked-senders td:last-child { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
+}
 table:not(:has(tr)) { display: none; }
+table + h2 { margin-top: 2.2rem; }
 td.decide { white-space: nowrap; position: relative; }
 button.yes { background: var(--feed); border-color: var(--feed); color: var(--on-space); }
 button.no { color: var(--later); border-color: var(--later); background: transparent; }

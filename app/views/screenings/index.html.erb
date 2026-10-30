@@ -14,16 +14,16 @@
 <table class="screener">
   <% @pending.each do |conversation| %>
     <tr id="<%= dom_id(conversation) %>" data-controller="stamp">
-      <td>
-        <strong><%= conversation.sender_display %></strong><br>
-        <span class="muted"><%= conversation.sender_address %></span>
-      </td>
-      <td>
-        <%= link_to conversation.title, conversation_path(conversation) %>
-        <span class="muted"><%= conversation.snippet&.truncate(90) %></span>
+      <td class="sender">
+        <strong><%= conversation.sender_display %></strong>
+        <span class="muted address"><%= conversation.sender_address %></span>
         <% if conversation.sender_conversations_count > 1 %>
           <span class="muted">· <%= conversation.sender_conversations_count %> fils</span>
         <% end %>
+      </td>
+      <td class="subject">
+        <%= link_to conversation.title, conversation_path(conversation) %>
+        <span class="muted"><%= conversation.snippet %></span>
       </td>
       <td class="decide"><%= render "screenings/buttons", address: conversation.sender_address %><span class="stamp" data-stamp-target="stamp" aria-hidden="true"></span></td>
     </tr>
@@ -32,10 +32,10 @@
 
 <% if @blocked.any? %>
   <h2>Bloqués</h2>
-  <table>
+  <table class="blocked-senders">
     <% @blocked.each do |screening| %>
       <tr>
-        <td><%= screening.address %></td>
+        <td class="address"><%= screening.address %></td>
         <td class="muted">depuis le <%= l(screening.updated_at.to_date, format: :long) %></td>
         <td class="nowrap"><%= button_to "Débloquer", screenings_path, params: { address: screening.address, decision: "accepted" }, class: "link" %></td>
       </tr>
