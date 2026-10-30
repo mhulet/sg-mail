@@ -129,6 +129,10 @@ class AgentTest < ActionDispatch::IntegrationTest
     chat = with_account(@semisto) { AgentChat.sole }
     assert_equal "failed", chat.status
 
+    error = Anthropic::Errors::BadRequestError.new(url: URI("https://api.anthropic.com/v1/messages"), status: 400, headers: {}, request: nil, response: nil,
+      body: { type: "error", error: { type: "invalid_request_error", message: "Your credit balance is too low." } })
+    assert_includes AgentRun.failure_message(error), "credit balance is too low"
+
     AgentRun.client = ->(**params) { @calls << params; text_reply("Me revoilà.") }
     perform_enqueued_jobs { post agent_chat_agent_messages_path(chat, account_id: @semisto.id), params: { text: "Tu es là ?" } }
     assert_equal "idle", chat.reload.status
