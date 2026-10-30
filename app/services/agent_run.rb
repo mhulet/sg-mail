@@ -17,6 +17,15 @@ class AgentRun
   def self.anthropic = @anthropic ||= Anthropic::Client.new(api_key: ENV.fetch("ANTHROPIC_API_KEY"))
   def self.configured? = ENV["ANTHROPIC_API_KEY"].present?
 
+  # Ce que la personne lit quand Claude refuse la requête : la raison donnée par l'API quand il y en a une
+  # (crédit épuisé, clé invalide…), pour savoir quoi corriger sans fouiller les logs.
+  def self.failure_message(error)
+    body = error.respond_to?(:body) ? error.body : nil
+    detail = body.is_a?(Hash) ? (body.dig(:error, :message) || body.dig("error", "message")) : nil
+    reason = [ error.class.name.demodulize, detail&.truncate(200) ].compact.join(" : ")
+    "L'agent n'a pas pu répondre (#{reason}). Réessaie dans un instant."
+  end
+
   def self.cost_micros(usage)
     (usage["input_tokens"].to_i * PRICES[:input] + usage["output_tokens"].to_i * PRICES[:output] +
       usage["cache_read_input_tokens"].to_i * PRICES[:cache_read] + usage["cache_creation_input_tokens"].to_i * PRICES[:cache_write]).round
@@ -49,7 +58,7 @@ class AgentRun
   rescue StandardError => error
     Rails.logger.error("Agent : discussion #{@chat.id} : #{error.class} #{error.message}")
     close_dangling_tools
-    @chat.update!(status: "failed", error: "L'agent n'a pas pu répondre (#{error.class.name.demodulize}). Réessaie dans un instant.")
+    @chat.update!(status: "failed", error: self.class.failure_message(error))
     @chat.broadcast_refresh
   end
 
