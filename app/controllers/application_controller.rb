@@ -8,6 +8,13 @@ class ApplicationController < ActionController::Base
 
   private
 
+  # Une petite scène animée sur la page suivante, à côté du bandeau : la boîte qui avale le fil archivé,
+  # le réveil de « Plus tard », l'avion en papier de l'envoi… (voir shared/_flourish).
+  def flourish(kind, count: 1)
+    flash[:flourish] = kind
+    flash[:flourish_count] = count
+  end
+
   # Les routes sous /:account_id reprennent le client courant.
   # Pour une route hors client, passer account_id: nil, sinon il s'ajoute en paramètre (?account_id=…).
   def default_url_options

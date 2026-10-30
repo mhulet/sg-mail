@@ -107,6 +107,9 @@
         <%= yield %>
       </main>
     </div>
+    <% if (kind = flash[:flourish].presence_in(%w[archive unarchive reply_later set_aside sent])) %>
+      <%= render "shared/flourish", kind: kind, count: flash[:flourish_count] %>
+    <% end %>
     <% if notice %>
       <div class="toast" role="status" data-controller="toast">
         <p class="flash notice"><%= notice %></p>

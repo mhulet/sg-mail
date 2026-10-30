@@ -29,6 +29,10 @@ class TasksAndNotesTest < ActionDispatch::IntegrationTest
 
     patch task_path(task, account_id: @semisto.id, status: "done")
     assert with_account(@semisto) { task.reload.done? }
+    get tasks_path(account_id: @semisto.id)
+    assert_select "li.done.just-done#task_#{task.id}" # barrée sous nos yeux, une fois
+    get tasks_path(account_id: @semisto.id)
+    assert_select "li.just-done", count: 0
   end
 
   test "a task cannot be given to someone outside the client" do

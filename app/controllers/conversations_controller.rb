@@ -55,6 +55,7 @@ class ConversationsController < ApplicationController
     stack = params.require(:stack)
     on = params[:on] == "1"
     @conversation.put_in_stack_for!(Current.user, stack, on: on)
+    flourish(stack) if on
     label = ConversationState::STACK_LABELS.fetch(stack)
     redirect_back_or_to conversation_path(@conversation), notice: on ? "Fil ajouté à « #{label} »." : "Fil retiré de « #{label} »."
   rescue ArgumentError
@@ -65,6 +66,7 @@ class ConversationsController < ApplicationController
   def archive
     on = params[:on] != "0"
     @conversation.archive_for!(Current.user, on: on)
+    flourish(on ? "archive" : "unarchive")
     if on
       flash[:undo] = [ @conversation.id ]
       bucket = @conversation.bucket_for(Current.user)
@@ -94,6 +96,7 @@ class ConversationsController < ApplicationController
     else conversations.each { |c| c.put_in_stack_for!(Current.user, operation) }
     end
     flash[:undo] = conversations.map(&:id) if operation == "archive"
+    flourish(operation, count: conversations.size) if operation.in?(%w[archive unarchive reply_later set_aside])
     redirect_back_or_to account_root_path, notice: "#{conversations.size} #{conversations.many? ? "fils" : "fil"} #{BULK_NOTICES.fetch(operation)[conversations.many? ? 1 : 0]}."
   end
 

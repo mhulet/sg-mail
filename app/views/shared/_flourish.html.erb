@@ -1,0 +1,55 @@
+<%# Une scène d'une seconde et demie, dessinée à l'encre comme la pousse des états vides, qui joue
+    une fois puis disparaît (flourish_controller). Rien à lire : aria-hidden, le bandeau dit déjà ce qui s'est passé. %>
+<% letters = count.to_i.clamp(1, 3) %>
+<div class="flourish" data-kind="<%= kind %>" data-controller="flourish" style="--n: <%= letters - 1 %>" aria-hidden="true">
+  <svg viewBox="0 0 120 110" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <% case kind %>
+    <% when "archive", "unarchive" %>
+      <ellipse class="ground" cx="60" cy="103" rx="36" ry="4"/>
+      <g class="crate">
+        <rect class="flap flap-left" x="31" y="45" width="29" height="15" rx="2"/>
+        <rect class="flap flap-right" x="60" y="45" width="29" height="15" rx="2"/>
+        <% letters.times do |i| %>
+          <g class="letter" style="--i: <%= i %>; --dx: <%= [ 0, -8, 8 ][i] %>px; --tilt: <%= [ -6, 7, -10 ][i] %>deg">
+            <rect class="paper" x="45" y="18" width="30" height="21" rx="2.5"/>
+            <path class="fold" d="M46.5 20 l13.5 10 l13.5 -10"/>
+          </g>
+        <% end %>
+        <rect class="crate-front" x="30" y="60" width="60" height="40" rx="3"/>
+        <path class="crate-rim" d="M28 60 h64"/>
+        <rect class="crate-label" x="47" y="73" width="26" height="14" rx="2"/>
+        <path class="crate-label-lines" d="M52 78 h16 M52 82.5 h10"/>
+      </g>
+    <% when "reply_later" %>
+      <ellipse class="ground" cx="58" cy="96" rx="34" ry="4"/>
+      <g class="letter">
+        <rect class="paper" x="20" y="46" width="62" height="42" rx="4"/>
+        <path class="fold" d="M22 49 l29 20 l29 -20"/>
+      </g>
+      <g class="clock">
+        <path class="clock-bell" d="M71 26 a6 6 0 0 1 7 -6 M97 26 a6 6 0 0 0 -7 -6"/>
+        <circle class="clock-face" cx="84" cy="42" r="17"/>
+        <path class="clock-ticks" d="M84 28 v2.5 M84 53.5 v2.5 M70 42 h2.5 M95.5 42 h2.5"/>
+        <path class="hand hand-hour" d="M84 42 h7"/>
+        <path class="hand hand-minute" d="M84 42 v-11"/>
+        <circle class="clock-pin" cx="84" cy="42" r="1.6"/>
+      </g>
+    <% when "set_aside" %>
+      <ellipse class="ground" cx="60" cy="99" rx="38" ry="4"/>
+      <g class="pile">
+        <rect class="sheet" x="25" y="82" width="70" height="13" rx="3" transform="rotate(-2 60 88)"/>
+        <rect class="sheet" x="28" y="71" width="65" height="12" rx="3" transform="rotate(3 60 77)"/>
+        <g class="letter">
+          <rect class="paper" x="31" y="45" width="56" height="26" rx="3"/>
+          <path class="fold" d="M33 47 l26 13 l26 -13"/>
+        </g>
+      </g>
+    <% when "sent" %>
+      <path class="trail" pathLength="1" d="M6 100 C 36 96, 72 70, 112 14"/>
+      <g class="plane">
+        <path class="paper" d="M-14 -9 L15 0 L-14 9 L-8 0 Z"/>
+        <path class="fold" d="M-8 0 H15"/>
+      </g>
+    <% end %>
+  </svg>
+</div>
