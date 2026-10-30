@@ -27,6 +27,8 @@ Rails.application.routes.draw do
 
   # Adresse de retour fixe, déclarée dans la console Google.
   get "auth/google_oauth2/callback" => "google_oauth#callback"
+  # Retour OAuth des outils connectés (adresse fixe, inscrite auprès de chaque outil).
+  get "integrations/callback" => "integration_connections#callback", as: :integration_callback
 
   # Tout ce qui appartient à un client vit sous /<id du client>/.
   scope "/:account_id", constraints: { account_id: /\d+/ } do
@@ -61,6 +63,9 @@ Rails.application.routes.draw do
     resources :oauth_connections, only: :destroy
     # L'agent intégré : réglages du client (admin), mon agent, mes discussions avec lui.
     resource :agent_settings, only: %i[show update], path: "agent"
+    resources :integrations, only: %i[index create destroy], path: "outils" do
+      resource :connection, controller: "integration_connections", only: %i[create destroy]
+    end
     resource :agent, only: %i[edit update], path: "mon-agent"
     resources :agent_chats, only: %i[index show create], path: "agent/discussions" do
       resources :agent_messages, only: :create, path: "messages"

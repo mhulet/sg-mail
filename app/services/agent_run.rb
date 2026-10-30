@@ -41,6 +41,7 @@ class AgentRun
   end
 
   def perform
+    @toolbox.refresh_remote_tools!
     MAX_STEPS.times do
       ensure_budget!
       reply = record_reply(call_claude)
@@ -138,6 +139,6 @@ class AgentRun
   end
 
   def system_prompt
-    [ { type: "text", text: AgentPrompt.persona(@agent) }, { type: "text", text: AgentPrompt.context(@chat) } ]
+    [ { type: "text", text: AgentPrompt.persona(@agent) }, { type: "text", text: AgentPrompt.context(@chat, connections: @toolbox.connections) } ]
   end
 end

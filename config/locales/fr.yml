@@ -8,6 +8,10 @@ fr:
     attributes:
       account:
         name: Nom
+      integration:
+        name: Nom
+        slug: Nom
+        mcp_url: L'adresse du serveur MCP
       mailbox:
         label: Libellé
       invitation:

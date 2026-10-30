@@ -212,6 +212,10 @@ table.sharing tr:last-child th { border-bottom: 0; }
 table.sharing td select { padding: .2rem .4rem; }
 table.sharing td[data-level=none] select { color: var(--faint); }
 table.sharing td[data-level=manage] { background: var(--space-soft); }
+table.integrations th { font-size: inherit; font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--text); }
+table.integrations th .muted { display: block; font-size: .8rem; font-weight: 400; }
+table.integrations td:last-child { text-align: right; white-space: nowrap; }
+table.integrations td form { display: inline-block; margin-left: .5rem; }
 
 /* ─── Un espace : titre, filtres, liste ─── */
 .space-head { margin-bottom: .5rem; }

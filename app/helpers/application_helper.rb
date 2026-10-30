@@ -119,11 +119,20 @@ module ApplicationHelper
     "title" => "Titre", "body" => "Texte", "subject" => "Objet", "to" => "À", "cc" => "Cc", "bcc" => "Cci", "kind" => "Type",
     "due_on" => "Échéance", "assignee_id" => "Pour", "conversation_id" => "Fil", "status" => "Statut", "address" => "Adresse",
     "decision" => "Décision", "box" => "Pile", "reply_later" => "Répondre plus tard", "set_aside" => "Mettre de côté",
-    "archived" => "Archiver", "external_ref" => "Lien externe"
+    "archived" => "Archiver"
   }.freeze
 
   # Ce que l'agent veut faire, en clair : libellés en français, une personne ou un fil plutôt qu'un numéro.
   def agent_action_fields(action)
+    # Un outil connecté : ses champs tels quels, l'outil seul sait ce qu'ils veulent dire.
+    if AgentToolbox.remote?(action.tool_name)
+      return action.input.filter_map do |key, value|
+        next if value.nil? || value == ""
+
+        [ key.to_s.humanize, value.is_a?(String) ? value : value.to_json ]
+      end
+    end
+
     action.input.filter_map do |key, value|
       next if value.nil? || value == "" || !AGENT_FIELD_LABELS.key?(key)
 
