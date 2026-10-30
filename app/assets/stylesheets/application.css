@@ -88,10 +88,11 @@ body.bare main { max-width: 26rem; padding-top: 12vh; }
 .sidebar .account-switcher nav a[aria-current] { background: var(--rule); }
 .sidebar .account-switcher nav a[aria-current]::after { content: "✓"; margin-left: auto; color: var(--muted); }
 .sidebar .account-switcher nav a.all { margin-top: .25rem; border-top: 1px solid var(--rule); border-radius: 0 0 9px 9px; color: var(--muted); }
-.compose-button { display: flex; justify-content: space-between; align-items: center; padding: .55rem .9rem; border-radius: 999px;
+.compose-button { display: flex; align-items: center; gap: .45rem; padding: .55rem .9rem; border-radius: 999px;
   background: var(--ink); color: var(--paper); font-weight: 600; text-decoration: none; transition: transform .2s var(--ease); }
 .compose-button:hover { transform: translateY(-1px); }
-.compose-button.hint::after { opacity: .6; }
+.compose-button.hint::after { opacity: .6; margin-left: auto; }
+.compose-button svg { width: 1rem; height: 1rem; flex-shrink: 0; }
 nav.spaces { display: flex; flex-direction: column; gap: 1px; }
 .nav-label { font-size: .7rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); padding: .8rem .65rem .25rem; }
 .sidebar nav a { display: flex; align-items: center; gap: .65rem; padding: .42rem .65rem; border-radius: 9px; color: var(--text);
@@ -217,6 +218,7 @@ table.sharing td[data-level=manage] { background: var(--space-soft); }
 .space-head { margin-bottom: .5rem; }
 .space-head h1 { font-size: clamp(2.3rem, 4vw, 3rem); }
 .space-head .tagline { margin: 0; font-family: var(--serif); font-style: italic; font-size: 1.2rem; color: var(--muted); }
+.filter-toggle { display: none; }
 .filters { font-size: .9rem; gap: .45rem; }
 .filters > a { padding: .25rem .75rem; border: 1px solid var(--rule-strong); border-radius: 999px; color: var(--text); text-decoration: none; }
 .filters > a:hover { border-color: var(--space); }
@@ -243,11 +245,12 @@ table.conversations tr { display: grid; grid-template-columns: 1.4rem 38px minma
 table.conversations tr:last-child { border-bottom: 0; }
 table.conversations td { border: 0; padding: 0; min-width: 0; }
 table.conversations td.select { grid-column: 1; grid-row: 1 / span 2; }
-table.conversations td.who { grid-column: 2; grid-row: 1 / span 2; }
+table.conversations td.who { grid-column: 2; grid-row: 1 / span 2; align-self: start; }
 table.conversations td.sender { grid-column: 3; grid-row: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 table.conversations td.subject { grid-column: 3; grid-row: 2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--muted); font-size: .94rem; }
 table.conversations td.date { grid-column: 4; grid-row: 1; justify-self: end; font-size: .8rem; color: var(--faint); font-variant-numeric: tabular-nums; white-space: nowrap; }
 table.conversations td.mailbox { grid-column: 4; grid-row: 2; justify-self: end; display: flex; gap: .8rem; }
+table.conversations td.files { grid-column: 3; grid-row: 3; display: flex; align-items: center; gap: .4rem; margin-top: .35rem; min-width: 0; }
 table.conversations tr:hover { background: var(--sheet-2); }
 table.conversations a { color: var(--text); text-decoration: none; }
 table.conversations td.subject a::after { content: ""; position: absolute; inset: 0; }
@@ -265,8 +268,18 @@ table.conversations td.subject:has(.excerpt) { white-space: normal; }
 .snippet.excerpt::before { content: none; }
 tr.unread td.sender { font-weight: 700; color: var(--ink); }
 tr.unread td.subject a { font-weight: 600; color: var(--ink); }
-tr.unread .avatar::after { content: ""; position: absolute; right: -2px; top: -2px; width: 11px; height: 11px; border-radius: 50%;
-  background: var(--space); border: 2px solid var(--sheet); }
+/* Non lu : l'heure prend la couleur de l'espace, suivie d'un point. */
+tr.unread td.date { color: var(--space); font-weight: 650; }
+tr.unread td.date::after { content: ""; display: inline-block; width: 8px; height: 8px; margin-left: .4rem; border-radius: 50%; background: var(--space); }
+/* Les pièces jointes d'un fil : deux puces au plus, puis « +N ». Elles passent au-dessus du lien de la ligne. */
+.file-chip { --c: var(--muted); position: relative; z-index: 1; display: inline-flex; align-items: center; gap: .4rem; min-width: 0; max-width: 13rem;
+  padding: .2rem .6rem .2rem .3rem; border: 1px solid var(--rule-strong); border-radius: 8px; background: var(--sheet);
+  font-size: .8rem; color: var(--text); text-decoration: none; transition: border-color .15s ease; }
+.file-chip:hover { border-color: var(--c); }
+.file-chip-type { flex-shrink: 0; padding: .1rem .3rem; border-radius: 4px; background: var(--c); color: var(--on-space);
+  font: 700 .6rem/1.2 var(--sans); letter-spacing: .05em; }
+.file-chip-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-more { font-size: .8rem; color: var(--muted); white-space: nowrap; }
 table.conversations tr.current { background: var(--space-soft); }
 table.conversations tr.current::before { content: ""; position: absolute; left: 0; top: .6rem; bottom: .6rem; width: 3px; border-radius: 0 3px 3px 0; background: var(--space); }
 table.conversations tr.leaving { opacity: 0; transform: translateX(2.5rem); pointer-events: none; }
@@ -306,13 +319,13 @@ pre.body { white-space: pre-wrap; font-family: inherit; font-size: 1rem; line-he
 .attachment-card { --c: var(--muted); position: relative; display: flex; flex-direction: column; border: 1px solid var(--rule); border-radius: 12px;
   background: var(--sheet-2); overflow: hidden; transition: border-color .15s, transform .2s var(--ease), box-shadow .2s var(--ease); }
 .attachment-card:hover { border-color: var(--c); transform: translateY(-1px); box-shadow: var(--shadow); }
-.attachment-card[data-family="pdf"] { --c: var(--later); }
-.attachment-card[data-family="image"] { --c: var(--aside); }
-.attachment-card[data-family="sheet"] { --c: var(--feed); }
-.attachment-card[data-family="doc"] { --c: var(--imbox); }
-.attachment-card[data-family="slides"] { --c: var(--trail); }
-.attachment-card[data-family="archive"], .attachment-card[data-family="calendar"] { --c: var(--screener); }
-.attachment-card[data-family="audio"], .attachment-card[data-family="video"] { --c: var(--aside); }
+:is(.attachment-card, .file-chip)[data-family="pdf"] { --c: var(--later); }
+:is(.attachment-card, .file-chip)[data-family="image"] { --c: var(--aside); }
+:is(.attachment-card, .file-chip)[data-family="sheet"] { --c: var(--feed); }
+:is(.attachment-card, .file-chip)[data-family="doc"] { --c: var(--imbox); }
+:is(.attachment-card, .file-chip)[data-family="slides"] { --c: var(--trail); }
+:is(.attachment-card, .file-chip):is([data-family="archive"], [data-family="calendar"]) { --c: var(--screener); }
+:is(.attachment-card, .file-chip)[data-family="audio"], :is(.attachment-card, .file-chip)[data-family="video"] { --c: var(--aside); }
 .attachment-preview { position: relative; display: grid; place-items: center; aspect-ratio: 4 / 3; background: color-mix(in srgb, var(--c) 9%, var(--sheet));
   border-bottom: 1px solid var(--rule); text-decoration: none; cursor: zoom-in; }
 .attachment-preview:not([data-viewer-kind]) { cursor: pointer; }
@@ -427,15 +440,36 @@ dialog.shortcuts dd { margin: 0; }
   .settings summary .avatar.small { --size: 30px; }
   .settings nav { position: absolute; right: 0; top: calc(100% + .4rem); min-width: 12rem; background: var(--sheet); border: 1px solid var(--rule);
     border-radius: var(--radius); padding: .4rem; box-shadow: var(--shadow); z-index: 20; }
-  main { padding: 1rem 1rem 4rem; }
+  main { padding: 1rem 1rem 6rem; }
   .page > .flash { width: calc(100% - 2rem); }
   h1, .space-head h1 { font-size: 2.1rem; }
-  table.conversations tr { grid-template-columns: 0 38px minmax(0, 1fr) auto; gap: .05rem .75rem; padding: .7rem .9rem .7rem .6rem; }
+  /* « Écrire » flotte en bas à droite des listes, à portée de pouce. */
+  .compose-button.floating { position: fixed; z-index: 15; right: 1rem; bottom: max(1rem, env(safe-area-inset-bottom)); padding: .85rem 1.3rem;
+    font-size: 1rem; background: var(--space); color: var(--on-space); box-shadow: 0 6px 20px rgb(0 0 0 / .18); }
+  .compose-button.floating svg { width: 1.15rem; height: 1.15rem; }
+  /* Une liste épurée : le titre seul, les filtres derrière « Filtrer », les fils d'un bord à l'autre. */
+  .space-head .tagline { display: none; }
+  .filter-bar { margin: -.2rem 0 .6rem; }
+  .filter-toggle { display: inline-flex; align-items: center; gap: .4rem; padding: .25rem .8rem; border: 1px solid var(--rule-strong); border-radius: 999px;
+    background: none; color: var(--text); font: inherit; font-size: .9rem; cursor: pointer; }
+  .filter-toggle::after { content: "⌄"; font-size: .8rem; line-height: 1; color: var(--faint); transform: translateY(-.15rem); }
+  .filter-bar.open .filter-toggle::after { transform: rotate(180deg) translateY(-.1rem); }
+  .filter-count { display: inline-grid; place-items: center; min-width: 1.2rem; height: 1.2rem; padding: 0 .3rem; border-radius: 999px;
+    background: var(--space); color: var(--on-space); font-size: .72rem; font-weight: 700; }
+  .filter-bar:not(.open) .filters { display: none; }
+  .filter-bar .filters { margin-top: .5rem; gap: .35rem; }
+  table.conversations { margin: 0 -1rem; width: auto; border-radius: 0; box-shadow: none; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+  table.conversations tr { grid-template-columns: 0 40px minmax(0, 1fr) auto; gap: .1rem .8rem; padding: .75rem 1rem .75rem .25rem; }
   table.conversations td.select input { display: none; }
   table.conversations td.mailbox { display: none; }
-  table.conversations td.subject { grid-column: 3 / -1; }
+  table.conversations td.who .avatar { --size: 40px; }
+  table.conversations td.subject { grid-column: 3 / -1; white-space: normal; }
+  table.conversations td.subject > a, table.conversations td.subject .snippet:not(.excerpt) { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  table.conversations td.subject .snippet:not(.excerpt) { margin-top: .05rem; font-size: .9rem; }
+  table.conversations td.subject .snippet::before { content: none; }
+  table.conversations td.files { grid-column: 3 / -1; }
+  table.conversations tr.current::before { display: none; }
   form.bulk { display: none; }
-  .filters { gap: .35rem; }
   table:not(.conversations) { display: block; overflow-x: auto; }
   td.decide { white-space: normal; }
   .message-head { flex-wrap: wrap; }

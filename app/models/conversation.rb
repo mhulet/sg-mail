@@ -154,6 +154,25 @@ class Conversation < ApplicationRecord
 
   attr_writer :twins
 
+  # Charge en une requête les pièces jointes des fils d'une liste, pour les puces sous l'aperçu : celles des
+  # messages, sans les images intégrées au corps (cid:…), comme Message#listed_attachments.
+  # Chaque pièce est un couple [identifiant du message, pièce].
+  def self.load_attachments(conversations)
+    rows = Message.where(conversation_id: conversations.map(&:id))
+      .joins("CROSS JOIN LATERAL jsonb_array_elements(messages.attachments) AS attachment")
+      .where("attachment->>'content_id' IS NULL OR strpos(lower(COALESCE(messages.body_html, '')), lower('cid:' || (attachment->>'content_id'))) = 0")
+      .order(:sent_at, :id)
+      .pluck(:conversation_id, :id, Arel.sql("attachment"))
+    by_conversation = rows.group_by(&:first)
+    conversations.each do |conversation|
+      conversation.listed_attachments = (by_conversation[conversation.id] || []).map { |_, message_id, attachment| [ message_id, attachment ] }
+    end
+  end
+
+  attr_writer :listed_attachments
+
+  def listed_attachments = @listed_attachments || []
+
   # Les autres fils du même email, dans les boîtes que cette personne voit.
   def twins_for(user)
     @twins ||= root_message_id ? Conversation.accessible_by(user).where(root_message_id: root_message_id).where.not(id: id).includes(:mailbox).order(:id).to_a : []

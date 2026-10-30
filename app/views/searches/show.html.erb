@@ -40,11 +40,14 @@
     <p class="muted">Aucun résultat.</p>
   <% else %>
     <p class="muted"><%= pluralize(@conversations.size, "fil", plural: "fils") %><%= " (les #{SearchesController::LIMIT} plus récents)" if @conversations.size == SearchesController::LIMIT %></p>
-    <table class="conversations">
-      <% @conversations.each do |conversation| %>
-        <%= render "conversations/conversation", conversation: conversation, show_mailbox: @mailboxes.many? && !@mailbox,
-              highlights: @search.highlights, match: @matches[conversation.id] %>
-      <% end %>
-    </table>
+    <div data-controller="viewer">
+      <table class="conversations">
+        <% @conversations.each do |conversation| %>
+          <%= render "conversations/conversation", conversation: conversation, show_mailbox: @mailboxes.many? && !@mailbox,
+                highlights: @search.highlights, match: @matches[conversation.id] %>
+        <% end %>
+      </table>
+      <%= render "attachments/viewer" %>
+    </div>
   <% end %>
 <% end %>

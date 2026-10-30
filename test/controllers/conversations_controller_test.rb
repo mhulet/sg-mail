@@ -105,4 +105,40 @@ class ConversationsControllerTest < ActionDispatch::IntegrationTest
     get path
     assert_select ".sub-spaces", count: 0
   end
+
+  test "a thread shows its attachments as chips, without the images of the body, two at most then +N" do
+    with_account(@semisto) do
+      @second.update!(body_html: %(<p><img src="cid:logo@sg"></p>), attachments: [
+        { "index" => 0, "filename" => "logo.png", "content_type" => "image/png", "content_id" => "logo@sg" },
+        { "index" => 1, "filename" => "programme.pdf", "content_type" => "application/pdf" },
+        { "index" => 2, "filename" => "photo.jpg", "content_type" => "image/jpeg", "content_id" => "photo@sg" },
+        { "index" => 3, "filename" => "budget.xlsx", "content_type" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }
+      ])
+    end
+    sign_in_as users(:mohammad)
+    with_restricted_database_role do
+      get path
+      assert_response :success
+      assert_select "td.files a.file-chip", 2
+      assert_select "td.files a.file-chip[data-family=pdf][data-viewer-kind=pdf][data-viewer-group=?]", @conversation.id.to_s, text: /programme\.pdf/
+      assert_select "td.files a.file-chip[data-viewer-kind=image]", text: /photo\.jpg/
+      assert_select "td.files .file-more", "+1"
+      assert_select "td.files", text: /logo\.png/, count: 0
+      assert_select "dialog.viewer", 1
+    end
+  end
+
+  test "the list shows short dates, filters behind a button and a floating compose button" do
+    sign_in_as users(:mohammad)
+    get path
+    assert_select "td.date time", "hier"
+    assert_select ".filter-bar:not(.open) button.filter-toggle[aria-expanded=false]", text: /Filtrer/
+    assert_select "a.compose-button.floating", text: /Écrire/
+
+    get path(unread: 1)
+    assert_select ".filter-bar.open .filter-count", "1"
+
+    get conversation_path(@conversation, account_id: @semisto.id)
+    assert_select "a.compose-button:not(.floating)"
+  end
 end

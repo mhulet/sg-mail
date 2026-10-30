@@ -49,6 +49,11 @@ module ApplicationHelper
       aria: { current: ("page" if imbox_mailbox_page?(mailbox)) }
   end
 
+  # Une page de liste (fils, Screener, recherche, tâches) : sur téléphone, « Écrire » y flotte en bas, à portée de pouce.
+  def list_page?
+    (controller_name.in?(%w[conversations screenings tasks]) && action_name == "index") || (controller_name == "searches" && action_name == "show")
+  end
+
   # L'espace de la page affichée, pour sa couleur : la pile ou la boîte de la liste, le Screener, sinon la réception.
   def current_space
     return "screener" if controller_name == "screenings"
@@ -83,6 +88,20 @@ module ApplicationHelper
 
   def tint_for(text)
     TINTS[text.to_s.downcase.sum % TINTS.size]
+  end
+
+  # La date d'un fil dans une liste, au plus court : l'heure aujourd'hui, « hier », le jour cette année, sinon la date.
+  def list_time(time)
+    return unless time
+
+    time = time.in_time_zone
+    today = Time.zone.today
+    label = if time.to_date == today then l(time, format: "%-Hh%M")
+    elsif time.to_date == today.yesterday then "hier"
+    elsif time.year == today.year then l(time, format: "%-d %b")
+    else l(time.to_date, format: "%d/%m/%Y")
+    end
+    tag.time(label, datetime: time.iso8601, title: l(time, format: :long))
   end
 
   # Un rond aux initiales, à la couleur du nom.

@@ -15,6 +15,7 @@ class ConversationsController < ApplicationController
     @mailbox = @mailboxes.find(params[:mailbox_id]) if params[:mailbox_id].present?
     @conversations = page(filtered_conversations)
     Conversation.load_twins(@conversations, Current.user) unless @mailbox
+    Conversation.load_attachments(@conversations)
     @stack_counts = ConversationState::STACKS.index_with { |stack| Conversation.accessible_by(Current.user).in_stack_for(Current.user, stack).one_per_email.count } unless @stack || @archived
   end
 
