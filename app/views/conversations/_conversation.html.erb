@@ -1,6 +1,9 @@
 <% selectable = local_assigns.fetch(:selectable, false) %>
 <% attachments = conversation.listed_attachments %>
-<tr class="<%= "unread" if conversation.unread_anywhere? %>" data-shortcuts-target="row">
+<% swipe = local_assigns.fetch(:swipe, false) %>
+<%= tag.tr class: ("unread" if conversation.unread_anywhere?), data: { shortcuts_target: "row" }.merge(swipe ? {
+      controller: "swipe", swipe_archive_url_value: archive_conversation_path(conversation),
+      swipe_later_url_value: (stack_conversation_path(conversation) if swipe == :both) } : {}) do %>
   <% if selectable %>
     <td class="select"><%= check_box_tag "ids[]", conversation.id, false, form: "bulk", id: nil, aria: { label: "Choisir « #{conversation.title} »" } %></td>
   <% end %>
@@ -31,4 +34,4 @@
   <% end %>
   <% if show_mailbox %><td class="mailbox"><% conversation.mailboxes_with_twins.each do |mailbox| %><%= mailbox_chip(mailbox) %><% end %></td><% end %>
   <td class="date"><%= list_time(conversation.last_message_at) %></td>
-</tr>
+<% end %>

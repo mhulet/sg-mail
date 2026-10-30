@@ -119,5 +119,6 @@
       </div>
     <% end %>
     <%= render "shared/shortcuts" if authenticated? %>
+    <%= render "shared/palette" if authenticated? && Current.account %>
   </body>
 </html>

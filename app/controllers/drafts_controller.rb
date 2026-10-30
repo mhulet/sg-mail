@@ -65,6 +65,11 @@ class DraftsController < ApplicationController
       if sending
         SendDraftJob.perform_later(@draft)
         flourish("sent")
+        # Depuis « Répondre à la suite » : le fil quitte la pile tout de suite, et on passe au suivant.
+        if params[:focus].present? && @draft.conversation
+          @draft.conversation.put_in_stack_for!(Current.user, "reply_later", on: false)
+          return redirect_to(focus_reply_path, notice: "Envoi en cours depuis #{@draft.mailbox.display_name}.")
+        end
         redirect_to(@draft.conversation ? conversation_path(@draft.conversation) : drafts_path, notice: "Envoi en cours depuis #{@draft.mailbox.display_name}.")
       else
         redirect_to edit_draft_path(@draft), notice: "Brouillon enregistré."

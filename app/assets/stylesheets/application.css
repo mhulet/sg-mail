@@ -285,6 +285,20 @@ tr.unread td.date::after { content: ""; display: inline-block; width: 8px; heigh
 table.conversations tr.current { background: var(--space-soft); }
 table.conversations tr.current::before { content: ""; position: absolute; left: 0; top: .6rem; bottom: .6rem; width: 3px; border-radius: 0 3px 3px 0; background: var(--space); }
 table.conversations tr.leaving { opacity: 0; transform: translateX(2.5rem); pointer-events: none; }
+/* Glisser du doigt (swipe_controller) : la ligne suit le doigt, la couleur de l'action apparaît dessous. */
+table.conversations tbody { position: relative; }
+table.conversations tr[data-controller~=swipe] { touch-action: pan-y; }
+table.conversations tr.swiping { z-index: 1; background: var(--sheet); transition: none; }
+table.conversations tr.swiping.settling, table.conversations tr.swiped { transition: transform .3s var(--ease); }
+.swipe-reveal { position: absolute; left: 0; right: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 1.4rem;
+  font-weight: 650; font-size: .9rem; color: var(--on-space); background: var(--rule); transition: background .2s ease; }
+.swipe-reveal span { opacity: .55; transform: scale(.9); transition: opacity .2s ease, transform .3s var(--ease); }
+.swipe-reveal[data-side=later] { background: color-mix(in srgb, var(--later) 55%, var(--rule)); }
+.swipe-reveal[data-side=archive] { background: color-mix(in srgb, var(--trail) 55%, var(--rule)); }
+.swipe-reveal[data-side=later].armed { background: var(--later); }
+.swipe-reveal[data-side=archive].armed { background: var(--trail); }
+.swipe-reveal[data-side=later] .archive, .swipe-reveal[data-side=archive] .later, .swipe-reveal:not([data-side]) span { visibility: hidden; }
+.swipe-reveal.armed span { opacity: 1; transform: scale(1.06); }
 .mailbox-chip { display: inline-flex; align-items: center; gap: .35rem; font-size: .76rem; color: var(--muted); white-space: nowrap; }
 .mailbox-chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--mb); flex-shrink: 0; }
 
@@ -693,3 +707,51 @@ button.chip:hover { border-color: var(--agent); color: var(--agent); }
   .agent-action { margin-left: 0; }
   .bubble { max-width: 100%; }
 }
+
+/* ─── Palette ⌘K : un champ, des propositions groupées, la ligne choisie prend la couleur de l'espace ─── */
+dialog.palette { width: min(38rem, calc(100vw - 2rem)); margin: 12vh auto auto; padding: 0; border: 1px solid var(--rule); border-radius: var(--radius);
+  background: var(--sheet); color: var(--text); box-shadow: 0 24px 60px -20px rgb(23 17 31 / .45); overflow: hidden; }
+dialog.palette[open] { display: flex; flex-direction: column; max-height: 70vh; animation: palette-in .22s var(--ease); }
+dialog.palette::backdrop { background: rgb(23 17 31 / .35); backdrop-filter: blur(2px); }
+@keyframes palette-in { from { opacity: 0; transform: translateY(-8px) scale(.98); } }
+.palette-input { width: 100%; padding: 1rem 1.2rem; border: 0; border-bottom: 1px solid var(--rule); border-radius: 0; background: transparent;
+  font: 1.15rem var(--sans); color: var(--ink); }
+.palette-input:focus { outline: none; border-color: var(--rule); }
+.palette-list { list-style: none; margin: 0; padding: .4rem; overflow-y: auto; flex: 1; }
+.palette-group { padding: .6rem .7rem .25rem; font: 600 .7rem var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
+.palette-list [role=option] { display: flex; align-items: center; gap: .6rem; padding: .5rem .7rem; border-radius: 9px; cursor: pointer; min-width: 0; }
+.palette-list [role=option][aria-selected=true] { background: var(--space-soft); color: var(--ink); }
+.palette-list [role=option][aria-selected=true]::before { content: ""; width: 3px; align-self: stretch; margin: -.2rem 0 -.2rem -.35rem; border-radius: 3px; background: var(--space); }
+.palette-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.palette-detail { margin-left: auto; font-size: .82rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 40%; }
+.palette-list kbd, .palette-foot kbd { font: .75rem var(--mono); padding: .05rem .4rem; border: 1px solid var(--rule-strong); border-radius: 5px; color: var(--muted); background: var(--sheet-2); }
+.palette-list [role=option] kbd { margin-left: auto; }
+.palette-detail + kbd { margin-left: .4rem; }
+.palette-empty { padding: 1.2rem .7rem; font-family: var(--serif); font-style: italic; font-size: 1.1rem; color: var(--muted); }
+.palette-foot { display: flex; align-items: center; gap: .35rem; margin: 0; padding: .55rem 1rem; border-top: 1px solid var(--rule); font-size: .78rem; color: var(--faint); }
+.palette-foot kbd + kbd { margin-left: -.15rem; }
+@media (prefers-reduced-motion: reduce) { dialog.palette[open] { animation: none; } }
+
+/* ─── Réception : « Nouveau pour toi », puis « Déjà vu », un ton plus calme ─── */
+h2.list-section { display: flex; align-items: center; gap: .8rem; margin: 1.6rem 0 .6rem; font: italic 500 1.25rem var(--serif); color: var(--ink); }
+h2.list-section::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
+h2.list-section:first-child { margin-top: .4rem; }
+h2.list-section.seen { color: var(--muted); }
+table.conversations.seen { box-shadow: none; background: var(--sheet-2); }
+.list-section-note { margin: .2rem 0 .8rem; font: italic 1.05rem var(--serif); color: var(--muted); }
+
+/* ─── Répondre à la suite : une carte par fil, la réponse juste dessous ─── */
+.focus-start { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .8rem; margin: 0 0 1rem; }
+.focus-start-link { display: inline-flex; align-items: center; padding: .45rem 1rem; border-radius: 999px; background: var(--space); color: var(--on-space);
+  font-weight: 600; text-decoration: none; transition: transform .2s var(--ease); }
+.focus-start-link:hover { transform: translateX(3px); }
+.focus-reply { scroll-margin-top: 1rem; }
+.focus-head h2 { margin: .1rem 0 .4rem; font-size: 1.45rem; }
+.focus-head h2 a { color: var(--ink); text-decoration: none; }
+.focus-head h2 a:hover { text-decoration: underline; }
+.focus-step { display: flex; align-items: center; gap: .6rem; margin: 0; font-size: .82rem; font-variant-numeric: tabular-nums; }
+.focus-from { margin: 0 0 .3rem; display: flex; flex-wrap: wrap; gap: .2rem .6rem; align-items: baseline; }
+.focus-body { max-height: 16rem; overflow-y: auto; padding: .2rem 1rem; border-left: 3px solid var(--space-soft); color: var(--text); font-size: .95rem; }
+.focus-form { margin-top: 1rem; }
+.focus-form textarea { width: 100%; }
+.focus-skip { margin: .4rem 0 0; display: flex; gap: 1.2rem; font-size: .88rem; }

@@ -47,6 +47,7 @@ Rails.application.routes.draw do
       post :bulk, on: :collection
     end
     resources :drafts, except: :show
+    resource :focus_reply, only: :show, path: "plus-tard/a-la-suite"
     resources :screenings, only: %i[index create], path: "screener"
     resource :search, only: :show
     resources :messages, only: :show do

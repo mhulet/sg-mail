@@ -68,6 +68,7 @@ class ConversationsController < ApplicationController
     flourish(on ? "archive" : "unarchive")
     if on
       flash[:undo] = [ @conversation.id ]
+      return redirect_to(focus_reply_path, notice: "Fil archivé : il reviendra au prochain message.") if params[:focus].present?
       bucket = @conversation.bucket_for(Current.user)
       redirect_to conversations_path(box: (bucket unless bucket.in?([ nil, "imbox" ]))), notice: "Fil archivé : il reviendra au prochain message."
     else

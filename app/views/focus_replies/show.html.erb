@@ -1,0 +1,50 @@
+<% content_for :title, "Répondre à la suite · #{current_account.name} · SG Mail" %>
+<header class="space-head">
+  <h1>Répondre à la suite</h1>
+  <p class="tagline">Un fil après l'autre : tu lis, tu réponds, tu passes au suivant.</p>
+</header>
+<p class="thread-top"><%= link_to "← Répondre plus tard", conversations_path(stack: "reply_later"), data: { shortcut: "u" } %></p>
+
+<% if @conversations.none? %>
+  <%= render "shared/empty", line: "Plus rien à répondre." do %>Tous les fils gardés pour plus tard ont reçu leur réponse.<% end %>
+<% end %>
+
+<% @conversations.each_with_index do |conversation, index| %>
+  <% message, draft = @replies.fetch(conversation) %>
+  <section class="card focus-reply" id="<%= dom_id(conversation, :focus) %>">
+    <header class="focus-head">
+      <p class="focus-step muted"><%= index + 1 %> / <%= @conversations.size %> · <%= mailbox_chip(conversation.mailbox) %></p>
+      <h2><%= link_to conversation.title, conversation_path(conversation) %></h2>
+    </header>
+    <% if message %>
+      <p class="focus-from"><strong><%= message.from_display %></strong>
+        <span class="muted"><%= message.sent_at && l(message.sent_at, format: :long) %></span></p>
+      <div class="focus-body"><%= simple_format(message.body_text.to_s.strip.truncate(2000, separator: " ")) %></div>
+    <% end %>
+
+    <% if draft %>
+      <%= form_with model: draft, url: drafts_path, class: "stacked compose focus-form" do |f| %>
+        <%= hidden_field_tag :focus, "1" %>
+        <%= f.hidden_field :kind %>
+        <%= hidden_field_tag "draft[source_message_id]", draft.source_message_id %>
+        <%= f.hidden_field :mailbox_id %>
+        <%= f.hidden_field :to_list %>
+        <%= f.hidden_field :cc_list %>
+        <%= f.hidden_field :subject %>
+        <%= f.label :body, "Ta réponse à #{draft.to_list}", for: dom_id(conversation, :focus_body) %>
+        <%= f.text_area :body, rows: 7, id: dom_id(conversation, :focus_body), autofocus: index.zero?,
+              data: { controller: "caret" } %>
+        <p class="actions">
+          <%= f.submit "Envoyer", name: "send", value: "Envoyer", class: "primary" %>
+          <%= f.button "Garder en brouillon", class: "link" %>
+        </p>
+      <% end %>
+    <% else %>
+      <p class="muted">Tu ne peux pas envoyer depuis <%= conversation.mailbox.display_name %>. <%= link_to "Ouvrir le fil", conversation_path(conversation) %></p>
+    <% end %>
+    <div class="actions focus-skip">
+      <%= button_to "C'est fait, sans réponse", stack_conversation_path(conversation), method: :patch, params: { stack: "reply_later", on: "0" }, class: "link" %>
+      <%= button_to "Archiver", archive_conversation_path(conversation), method: :patch, params: { on: "1", focus: "1" }, class: "link" %>
+    </div>
+  </section>
+<% end %>

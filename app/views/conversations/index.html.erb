@@ -38,6 +38,11 @@
   </div>
 </div>
 
+<% if @stack == "reply_later" && @conversations.any? %>
+  <p class="focus-start"><%= link_to "Répondre à la suite →", focus_reply_path, class: "focus-start-link", data: { shortcut: "R" } %>
+    <span class="muted">tous ces fils sur une page, une réponse après l'autre</span></p>
+<% end %>
+
 <% if @stack_counts&.values&.any?(&:positive?) %>
   <p class="stacks">
     <% @stack_counts.each do |name, count| %>
@@ -67,12 +72,26 @@
   <% end %>
 <% end %>
 
+<%# Dans la réception, comme chez Hey : ce qui est nouveau pour moi d'abord, puis ce que j'ai déjà vu. %>
+<% sections = if @box == "imbox" && !@stack && !@archived && params[:unread] != "1"
+     fresh, seen = @conversations.partition(&:unread_anywhere?)
+     [ [ ("Nouveau pour toi" if fresh.any?), fresh ], [ ("Déjà vu" if fresh.any?), seen ] ]
+   else
+     [ [ nil, @conversations ] ]
+   end %>
 <div data-controller="viewer">
-  <table class="conversations">
-    <% @conversations.each do |conversation| %>
-      <%= render conversation, show_mailbox: !(@mailbox || @mailboxes.one?), selectable: true %>
-    <% end %>
-  </table>
+  <% if sections.size > 1 && sections.first.last.none? && @conversations.any? && params[:before].blank? %>
+    <p class="list-section-note">Rien de nouveau depuis ta dernière visite.</p>
+  <% end %>
+  <% sections.each do |heading, conversations| %>
+    <% next if conversations.none? %>
+    <%= tag.h2(heading, class: [ "list-section", ("seen" if heading == "Déjà vu") ]) if heading %>
+    <table class="conversations<%= " seen" if heading == "Déjà vu" %>">
+      <% conversations.each do |conversation| %>
+        <%= render conversation, show_mailbox: !(@mailbox || @mailboxes.one?), selectable: true, swipe: (@stack ? :archive : :both unless @archived) %>
+      <% end %>
+    </table>
+  <% end %>
   <%= render "attachments/viewer" if @conversations.any? %>
 </div>
 
