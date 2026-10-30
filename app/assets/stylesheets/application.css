@@ -623,7 +623,18 @@ body.bare main > form, body.bare main > div { margin-top: 1rem; }
   border-left: 3px solid var(--agent); background: var(--sheet-2); }
 .agent-action.pending { background: color-mix(in srgb, var(--agent) 8%, var(--sheet)); }
 .agent-action.rejected, .agent-action.failed { border-left-color: var(--faint); opacity: .8; }
-.agent-action-title { margin: 0 0 .3rem; }
+.agent-action-title { margin: 0; cursor: pointer; list-style: none; }
+.agent-action-title::-webkit-details-marker { display: none; }
+.agent-action-title::after { content: "▸"; margin-left: .4rem; color: var(--faint); display: inline-block; transition: transform .15s var(--ease); }
+.agent-action[open] > .agent-action-title { margin-bottom: .3rem; }
+.agent-action[open] > .agent-action-title::after { transform: rotate(90deg); }
+.agent-action.pending > .agent-action-title { cursor: default; }
+.agent-action.pending > .agent-action-title::after { content: none; }
+.agent-text p { margin: 0 0 .5rem; }
+.agent-text p:last-child, .agent-text ul:last-child, .agent-text ol:last-child { margin-bottom: 0; }
+.agent-text ul, .agent-text ol { margin: 0 0 .5rem; padding-left: 1.2rem; }
+.agent-text li + li { margin-top: .2rem; }
+.agent-text code { font-size: .9em; padding: .05rem .3rem; border-radius: 4px; background: var(--sheet-2); }
 .agent-action-input { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: .15rem .8rem; margin: 0 0 .4rem; font-size: .9rem; }
 .agent-action-input dt { color: var(--muted); }
 .agent-action-input dd { margin: 0; overflow-wrap: anywhere; }

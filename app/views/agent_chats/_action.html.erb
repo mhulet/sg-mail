@@ -1,10 +1,11 @@
-<div class="agent-action <%= action.status %>" id="<%= dom_id(action) %>">
-  <p class="agent-action-title">
+<%# Une action à confirmer reste ouverte ; une fois traitée, elle se replie (un clic pour revoir le détail). %>
+<details class="agent-action <%= action.status %>" id="<%= dom_id(action) %>" <%= "open" if action.pending? %>>
+  <summary class="agent-action-title">
     <strong><%= action.label %></strong>
     <span class="muted">
       <%= { "pending" => "· attend ta confirmation", "confirmed" => "· confirmé", "done" => "· fait", "rejected" => "· refusé", "failed" => "· échec" }.fetch(action.status) %>
     </span>
-  </p>
+  </summary>
   <dl class="agent-action-input">
     <% agent_action_fields(action).each do |label, value| %>
       <dt><%= label %></dt>
@@ -22,4 +23,4 @@
             params: { decision: "reject", from_conversation: (from_conversation || nil) }, class: "link" %>
     </div>
   <% end %>
-</div>
+</details>

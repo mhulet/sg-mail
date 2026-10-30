@@ -57,7 +57,7 @@ class AgentTest < ActionDispatch::IntegrationTest
     enable_agent
     @replies << tool_reply("toolu_1", "get_conversation", { "id" => @conversation.id })
     @replies << tool_reply("toolu_2", "add_note", { "conversation_id" => @conversation.id, "body" => "Répondre à Anne" })
-    @replies << text_reply("C'est noté, la note est ajoutée.")
+    @replies << text_reply("C'est noté, **la note est ajoutée**.\n\n- <b>Anne</b> attend")
     sign_in_as users(:michael)
 
     perform_enqueued_jobs do
@@ -90,7 +90,9 @@ class AgentTest < ActionDispatch::IntegrationTest
 
     get agent_chat_path(chat, account_id: @semisto.id)
     assert_select ".bubble.agent", text: /la note est ajoutée/
-    assert_select ".agent-action.done", text: /Ajouter une note interne/
+    assert_select ".bubble.agent strong", "la note est ajoutée"
+    assert_select ".bubble.agent li", "<b>Anne</b> attend"
+    assert_select "details.agent-action.done:not([open])", text: /Ajouter une note interne/
     assert with_account(@semisto) { AccessLog.exists?(conversation: @conversation, via: "agent") }
   end
 
