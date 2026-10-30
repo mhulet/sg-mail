@@ -5,13 +5,15 @@ class RemoteMcp
   TOOLS_TTL = 1.hour
   TIMEOUT = 30
 
-  # La personne doit (re)connecter son compte : authorization_url l'y emmène.
+  # La personne doit (re)connecter son compte : authorization_url l'y emmène. Sans adresse, reason dit pourquoi
+  # l'outil a refusé (inscription de SG Mail refusée, jeton rejeté…).
   class AuthorizationRequired < StandardError
-    attr_reader :authorization_url
+    attr_reader :authorization_url, :reason
 
-    def initialize(authorization_url = nil)
+    def initialize(authorization_url = nil, reason: nil)
       super("Authorization required")
       @authorization_url = authorization_url
+      @reason = reason
     end
   end
 
@@ -87,9 +89,9 @@ class RemoteMcp
   rescue MCP::Client::OAuth::Flow::AuthorizationPendingError => error
     @connection.update!(connected_at: nil)
     raise AuthorizationRequired, error.authorization_url
-  rescue MCP::Client::OAuth::Flow::AuthorizationError
+  rescue MCP::Client::OAuth::Flow::AuthorizationError => error
     @connection.update!(connected_at: nil)
-    raise AuthorizationRequired
+    raise AuthorizationRequired.new(reason: [ error.message, error.error_description ].compact_blank.join(" "))
   ensure
     client&.transport&.close if client.respond_to?(:transport) && client.transport.respond_to?(:close)
   end
