@@ -82,7 +82,9 @@ CREATE TABLE public.accounts (
     id bigint NOT NULL,
     name character varying NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    agent_enabled boolean DEFAULT false NOT NULL,
+    agent_monthly_budget_cents integer DEFAULT 2000 NOT NULL
 );
 
 
@@ -202,6 +204,162 @@ CREATE SEQUENCE public.active_storage_variant_records_id_seq
 --
 
 ALTER SEQUENCE public.active_storage_variant_records_id_seq OWNED BY public.active_storage_variant_records.id;
+
+
+--
+-- Name: agent_actions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.agent_actions (
+    id bigint NOT NULL,
+    account_id bigint NOT NULL,
+    agent_chat_id bigint NOT NULL,
+    agent_message_id bigint NOT NULL,
+    tool_use_id character varying NOT NULL,
+    tool_name character varying NOT NULL,
+    input jsonb DEFAULT '{}'::jsonb NOT NULL,
+    writes boolean DEFAULT false NOT NULL,
+    status character varying DEFAULT 'pending'::character varying NOT NULL,
+    result jsonb,
+    decided_by_id bigint,
+    decided_at timestamp(6) without time zone,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+ALTER TABLE ONLY public.agent_actions FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: agent_actions_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.agent_actions_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: agent_actions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.agent_actions_id_seq OWNED BY public.agent_actions.id;
+
+
+--
+-- Name: agent_chats; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.agent_chats (
+    id bigint NOT NULL,
+    account_id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    conversation_id bigint,
+    title character varying,
+    status character varying DEFAULT 'idle'::character varying NOT NULL,
+    error text,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+ALTER TABLE ONLY public.agent_chats FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: agent_chats_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.agent_chats_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: agent_chats_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.agent_chats_id_seq OWNED BY public.agent_chats.id;
+
+
+--
+-- Name: agent_messages; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.agent_messages (
+    id bigint NOT NULL,
+    account_id bigint NOT NULL,
+    agent_chat_id bigint NOT NULL,
+    role character varying NOT NULL,
+    content jsonb DEFAULT '[]'::jsonb NOT NULL,
+    model character varying,
+    input_tokens integer DEFAULT 0 NOT NULL,
+    output_tokens integer DEFAULT 0 NOT NULL,
+    cost_micros integer DEFAULT 0 NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+ALTER TABLE ONLY public.agent_messages FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: agent_messages_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.agent_messages_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: agent_messages_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.agent_messages_id_seq OWNED BY public.agent_messages.id;
+
+
+--
+-- Name: agents; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.agents (
+    id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    name character varying NOT NULL,
+    color character varying NOT NULL,
+    style character varying NOT NULL,
+    instructions text,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: agents_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.agents_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: agents_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.agents_id_seq OWNED BY public.agents.id;
 
 
 --
@@ -1571,6 +1729,34 @@ ALTER TABLE ONLY public.active_storage_variant_records ALTER COLUMN id SET DEFAU
 
 
 --
+-- Name: agent_actions id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.agent_actions ALTER COLUMN id SET DEFAULT nextval('public.agent_actions_id_seq'::regclass);
+
+
+--
+-- Name: agent_chats id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.agent_chats ALTER COLUMN id SET DEFAULT nextval('public.agent_chats_id_seq'::regclass);
+
+
+--
+-- Name: agent_messages id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.agent_messages ALTER COLUMN id SET DEFAULT nextval('public.agent_messages_id_seq'::regclass);
+
+
+--
+-- Name: agents id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.agents ALTER COLUMN id SET DEFAULT nextval('public.agents_id_seq'::regclass);
+
+
+--
 -- Name: api_tokens id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -1860,6 +2046,38 @@ ALTER TABLE ONLY public.active_storage_blobs
 
 ALTER TABLE ONLY public.active_storage_variant_records
     ADD CONSTRAINT active_storage_variant_records_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: agent_actions agent_actions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.agent_actions
+    ADD CONSTRAINT agent_actions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: agent_chats agent_chats_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.agent_chats
+    ADD CONSTRAINT agent_chats_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: agent_messages agent_messages_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.agent_messages
+    ADD CONSTRAINT agent_messages_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: agents agents_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.agents
+    ADD CONSTRAINT agents_pkey PRIMARY KEY (id);
 
 
 --
@@ -2213,6 +2431,90 @@ CREATE UNIQUE INDEX index_active_storage_blobs_on_key ON public.active_storage_b
 --
 
 CREATE UNIQUE INDEX index_active_storage_variant_records_uniqueness ON public.active_storage_variant_records USING btree (blob_id, variation_digest);
+
+
+--
+-- Name: index_agent_actions_on_account_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_agent_actions_on_account_id ON public.agent_actions USING btree (account_id);
+
+
+--
+-- Name: index_agent_actions_on_agent_chat_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_agent_actions_on_agent_chat_id ON public.agent_actions USING btree (agent_chat_id);
+
+
+--
+-- Name: index_agent_actions_on_agent_message_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_agent_actions_on_agent_message_id ON public.agent_actions USING btree (agent_message_id);
+
+
+--
+-- Name: index_agent_actions_on_decided_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_agent_actions_on_decided_by_id ON public.agent_actions USING btree (decided_by_id);
+
+
+--
+-- Name: index_agent_chats_on_account_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_agent_chats_on_account_id ON public.agent_chats USING btree (account_id);
+
+
+--
+-- Name: index_agent_chats_on_conversation_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_agent_chats_on_conversation_id ON public.agent_chats USING btree (conversation_id);
+
+
+--
+-- Name: index_agent_chats_on_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_agent_chats_on_user_id ON public.agent_chats USING btree (user_id);
+
+
+--
+-- Name: index_agent_chats_on_user_id_and_updated_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_agent_chats_on_user_id_and_updated_at ON public.agent_chats USING btree (user_id, updated_at);
+
+
+--
+-- Name: index_agent_messages_on_account_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_agent_messages_on_account_id ON public.agent_messages USING btree (account_id);
+
+
+--
+-- Name: index_agent_messages_on_account_id_and_created_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_agent_messages_on_account_id_and_created_at ON public.agent_messages USING btree (account_id, created_at);
+
+
+--
+-- Name: index_agent_messages_on_agent_chat_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_agent_messages_on_agent_chat_id ON public.agent_messages USING btree (agent_chat_id);
+
+
+--
+-- Name: index_agents_on_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_agents_on_user_id ON public.agents USING btree (user_id);
 
 
 --
@@ -3033,6 +3335,14 @@ ALTER TABLE ONLY public.conversations
 
 
 --
+-- Name: agent_messages fk_rails_196cac6033; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.agent_messages
+    ADD CONSTRAINT fk_rails_196cac6033 FOREIGN KEY (agent_chat_id) REFERENCES public.agent_chats(id) ON DELETE CASCADE;
+
+
+--
 -- Name: drafts fk_rails_1b49dc20e4; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3062,6 +3372,14 @@ ALTER TABLE ONLY public.access_logs
 
 ALTER TABLE ONLY public.conversation_states
     ADD CONSTRAINT fk_rails_2674c34b79 FOREIGN KEY (account_id) REFERENCES public.accounts(id);
+
+
+--
+-- Name: agent_chats fk_rails_27e4b7cdff; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.agent_chats
+    ADD CONSTRAINT fk_rails_27e4b7cdff FOREIGN KEY (account_id) REFERENCES public.accounts(id);
 
 
 --
@@ -3158,6 +3476,14 @@ ALTER TABLE ONLY public.solid_queue_blocked_executions
 
 ALTER TABLE ONLY public.messages
     ADD CONSTRAINT fk_rails_51faa60c81 FOREIGN KEY (mailbox_id) REFERENCES public.mailboxes(id);
+
+
+--
+-- Name: agent_chats fk_rails_562185eab8; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.agent_chats
+    ADD CONSTRAINT fk_rails_562185eab8 FOREIGN KEY (user_id) REFERENCES public.users(id);
 
 
 --
@@ -3313,6 +3639,14 @@ ALTER TABLE ONLY public.notes
 
 
 --
+-- Name: agent_actions fk_rails_95da5b8d36; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.agent_actions
+    ADD CONSTRAINT fk_rails_95da5b8d36 FOREIGN KEY (agent_message_id) REFERENCES public.agent_messages(id) ON DELETE CASCADE;
+
+
+--
 -- Name: drafts fk_rails_976b64226f; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3377,6 +3711,14 @@ ALTER TABLE ONLY public.conversations
 
 
 --
+-- Name: agent_actions fk_rails_b57dcd447e; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.agent_actions
+    ADD CONSTRAINT fk_rails_b57dcd447e FOREIGN KEY (decided_by_id) REFERENCES public.users(id);
+
+
+--
 -- Name: mailboxes fk_rails_b75b98abc9; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3422,6 +3764,14 @@ ALTER TABLE ONLY public.readings
 
 ALTER TABLE ONLY public.oauth_authorization_codes
     ADD CONSTRAINT fk_rails_c65da3b550 FOREIGN KEY (account_id) REFERENCES public.accounts(id) ON DELETE CASCADE;
+
+
+--
+-- Name: agent_chats fk_rails_ca2df76a1b; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.agent_chats
+    ADD CONSTRAINT fk_rails_ca2df76a1b FOREIGN KEY (conversation_id) REFERENCES public.conversations(id) ON DELETE SET NULL;
 
 
 --
@@ -3473,6 +3823,14 @@ ALTER TABLE ONLY public.mail_folders
 
 
 --
+-- Name: agent_actions fk_rails_ea74f5eb2b; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.agent_actions
+    ADD CONSTRAINT fk_rails_ea74f5eb2b FOREIGN KEY (agent_chat_id) REFERENCES public.agent_chats(id) ON DELETE CASCADE;
+
+
+--
 -- Name: notes fk_rails_ed57cedfc1; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3486,6 +3844,14 @@ ALTER TABLE ONLY public.notes
 
 ALTER TABLE ONLY public.memberships
     ADD CONSTRAINT fk_rails_edbc202c67 FOREIGN KEY (account_id) REFERENCES public.accounts(id);
+
+
+--
+-- Name: agents fk_rails_ef89880eea; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.agents
+    ADD CONSTRAINT fk_rails_ef89880eea FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
 
 
 --
@@ -3505,6 +3871,22 @@ ALTER TABLE ONLY public.api_tokens
 
 
 --
+-- Name: agent_actions fk_rails_f2309f5207; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.agent_actions
+    ADD CONSTRAINT fk_rails_f2309f5207 FOREIGN KEY (account_id) REFERENCES public.accounts(id);
+
+
+--
+-- Name: agent_messages fk_rails_f425e64a5e; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.agent_messages
+    ADD CONSTRAINT fk_rails_f425e64a5e FOREIGN KEY (account_id) REFERENCES public.accounts(id);
+
+
+--
 -- Name: access_logs; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -3515,6 +3897,27 @@ ALTER TABLE public.access_logs ENABLE ROW LEVEL SECURITY;
 --
 
 CREATE POLICY account_isolation ON public.access_logs USING (((current_setting('sg_mail.bypass_rls'::text, true) = 'on'::text) OR (account_id = (NULLIF(current_setting('sg_mail.account_id'::text, true), ''::text))::bigint))) WITH CHECK (((current_setting('sg_mail.bypass_rls'::text, true) = 'on'::text) OR (account_id = (NULLIF(current_setting('sg_mail.account_id'::text, true), ''::text))::bigint)));
+
+
+--
+-- Name: agent_actions account_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY account_isolation ON public.agent_actions USING (((current_setting('sg_mail.bypass_rls'::text, true) = 'on'::text) OR (account_id = (NULLIF(current_setting('sg_mail.account_id'::text, true), ''::text))::bigint))) WITH CHECK (((current_setting('sg_mail.bypass_rls'::text, true) = 'on'::text) OR (account_id = (NULLIF(current_setting('sg_mail.account_id'::text, true), ''::text))::bigint)));
+
+
+--
+-- Name: agent_chats account_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY account_isolation ON public.agent_chats USING (((current_setting('sg_mail.bypass_rls'::text, true) = 'on'::text) OR (account_id = (NULLIF(current_setting('sg_mail.account_id'::text, true), ''::text))::bigint))) WITH CHECK (((current_setting('sg_mail.bypass_rls'::text, true) = 'on'::text) OR (account_id = (NULLIF(current_setting('sg_mail.account_id'::text, true), ''::text))::bigint)));
+
+
+--
+-- Name: agent_messages account_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY account_isolation ON public.agent_messages USING (((current_setting('sg_mail.bypass_rls'::text, true) = 'on'::text) OR (account_id = (NULLIF(current_setting('sg_mail.account_id'::text, true), ''::text))::bigint))) WITH CHECK (((current_setting('sg_mail.bypass_rls'::text, true) = 'on'::text) OR (account_id = (NULLIF(current_setting('sg_mail.account_id'::text, true), ''::text))::bigint)));
 
 
 --
@@ -3595,6 +3998,24 @@ CREATE POLICY account_isolation ON public.tasks USING (((current_setting('sg_mai
 
 
 --
+-- Name: agent_actions; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.agent_actions ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: agent_chats; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.agent_chats ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: agent_messages; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.agent_messages ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: conversation_states; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -3667,6 +4088,7 @@ ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261030080000'),
 ('20261029230000'),
 ('20261029220247'),
 ('20261029220000'),

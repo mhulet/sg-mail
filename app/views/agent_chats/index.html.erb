@@ -1,0 +1,24 @@
+<% content_for :title, "Mes discussions avec #{@agent.name} · SG Mail" %>
+<h1>Mes discussions <span class="muted">· avec <%= @agent.name %></span></h1>
+
+<section class="card agent-page" style="--agent: var(--<%= @agent.color %>)">
+  <%= render "agent_chats/composer", chat: nil, conversation: nil, agent: @agent %>
+</section>
+
+<% if @chats.any? %>
+  <ul class="agent-chats">
+    <% @chats.each do |chat| %>
+      <li>
+        <%= link_to chat.title.presence || "Discussion", agent_chat_path(chat) %>
+        <span class="muted">
+          <%= "· #{chat.conversation.title}" if chat.conversation %>
+          · <%= l(chat.updated_at, format: :short) %>
+          <%= "· attend ta confirmation" if chat.waiting? %>
+        </span>
+      </li>
+    <% end %>
+  </ul>
+<% else %>
+  <%= render "shared/empty", line: "Aucune discussion pour l'instant." %>
+<% end %>
+<p class="muted">Effacées après 90 jours sans activité.</p>

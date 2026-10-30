@@ -29,6 +29,10 @@ class ConversationsController < ApplicationController
     @stacks = @conversation.stacks_for(Current.user)
     @archived = @conversation.archived_for?(Current.user)
     @twins = @conversation.twins_for(Current.user)
+    if current_account.agent_enabled?
+      @agent = Agent.for(Current.user)
+      @agent_chat = AgentChat.where(user: Current.user, conversation: @conversation).recent.first
+    end
     @conversation.mark_read_by!(Current.user)
     AccessLog.record!(Current.user, @conversation, via: "web")
   end

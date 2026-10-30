@@ -110,6 +110,33 @@ module ApplicationHelper
     tag.span(initials.presence || "?", class: [ "avatar", size ], style: "--av: #{tint_for(name)}", aria: { hidden: true })
   end
 
+  # L'agent de la personne : son initiale dans sa couleur.
+  def agent_avatar(agent, size: nil)
+    tag.span(agent.initial, class: [ "agent-avatar", size ], style: "--agent: var(--#{agent.color})", aria: { hidden: true })
+  end
+
+  AGENT_FIELD_LABELS = {
+    "title" => "Titre", "body" => "Texte", "subject" => "Objet", "to" => "À", "cc" => "Cc", "bcc" => "Cci", "kind" => "Type",
+    "due_on" => "Échéance", "assignee_id" => "Pour", "conversation_id" => "Fil", "status" => "Statut", "address" => "Adresse",
+    "decision" => "Décision", "box" => "Pile", "reply_later" => "Répondre plus tard", "set_aside" => "Mettre de côté",
+    "archived" => "Archiver", "external_ref" => "Lien externe"
+  }.freeze
+
+  # Ce que l'agent veut faire, en clair : libellés en français, une personne ou un fil plutôt qu'un numéro.
+  def agent_action_fields(action)
+    action.input.filter_map do |key, value|
+      next if value.nil? || value == "" || !AGENT_FIELD_LABELS.key?(key)
+
+      shown = case key
+      when "assignee_id" then Current.account.users.find_by(id: value)&.display_name || value
+      when "conversation_id" then Conversation.accessible_by(Current.user).find_by(id: value)&.title || "##{value}"
+      when "reply_later", "set_aside", "archived" then value ? "oui" : "non"
+      else Array(value).join(", ")
+      end
+      [ AGENT_FIELD_LABELS.fetch(key), shown.to_s ]
+    end
+  end
+
   # La boîte d'un fil, avec une pastille de sa couleur (tirée de l'adresse : elle ne change pas avec le libellé).
   def mailbox_chip(mailbox)
     tag.span(mailbox.display_name, class: "mailbox-chip", style: "--mb: #{tint_for(mailbox.address)}",

@@ -89,3 +89,5 @@ gem "webauthn", "~> 3.5"
 
 # Notifications sur téléphone et ordinateur (Web Push, clés VAPID)
 gem "web-push", "~> 3.1"
+
+gem "anthropic", "~> 2.3"

@@ -1,0 +1,20 @@
+<%# La discussion : messages de la personne, réponses de l'agent, et cartes des actions à confirmer. %>
+<%# Locales : chat, agent, from_conversation (le panneau d'un fil). %>
+<div class="agent-transcript">
+  <% chat.transcript.each do |kind, item| %>
+    <% case kind %>
+    <% when :user %>
+      <div class="bubble mine"><%= simple_format(item) %></div>
+    <% when :agent %>
+      <div class="bubble agent"><%= agent_avatar(agent, size: "small") %><div><%= simple_format(item) %></div></div>
+    <% when :action %>
+      <%= render "agent_chats/action", chat: chat, action: item, agent: agent, from_conversation: from_conversation %>
+    <% end %>
+  <% end %>
+
+  <% if chat.running? %>
+    <p class="agent-thinking muted"><%= agent_avatar(agent, size: "small") %><%= agent.name %> réfléchit<span class="dots" aria-hidden="true">…</span></p>
+  <% elsif chat.status == "failed" %>
+    <p class="flash alert"><%= chat.error %></p>
+  <% end %>
+</div>

@@ -1,0 +1,25 @@
+<div class="agent-action <%= action.status %>" id="<%= dom_id(action) %>">
+  <p class="agent-action-title">
+    <strong><%= action.label %></strong>
+    <span class="muted">
+      <%= { "pending" => "· attend ta confirmation", "confirmed" => "· confirmé", "done" => "· fait", "rejected" => "· refusé", "failed" => "· échec" }.fetch(action.status) %>
+    </span>
+  </p>
+  <dl class="agent-action-input">
+    <% agent_action_fields(action).each do |label, value| %>
+      <dt><%= label %></dt>
+      <dd><%= value.include?("\n") ? simple_format(value) : value %></dd>
+    <% end %>
+  </dl>
+  <% if action.status == "failed" && action.result_text.present? %>
+    <p class="muted"><%= action.result_text.truncate(300) %></p>
+  <% end %>
+  <% if action.pending? %>
+    <div class="actions">
+      <%= button_to "Confirmer", agent_chat_agent_action_path(chat, action), method: :patch,
+            params: { decision: "confirm", from_conversation: (from_conversation || nil) }, class: "primary" %>
+      <%= button_to "Refuser", agent_chat_agent_action_path(chat, action), method: :patch,
+            params: { decision: "reject", from_conversation: (from_conversation || nil) }, class: "link" %>
+    </div>
+  <% end %>
+</div>

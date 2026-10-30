@@ -1,4 +1,5 @@
 <% content_for :title, "#{@conversation.title} · SG Mail" %>
+<% content_for :head do %><%= turbo_refreshes_with method: :morph, scroll: :preserve if @agent %><% end %>
 <p class="thread-top">
   <%= link_to "← #{Screening::BUCKET_LABELS.fetch(@bucket || "imbox")}", conversations_path(box: (@bucket unless @bucket.in?([ nil, "imbox" ]))), data: { shortcut: "u" } %>
   <%= link_to mailbox_chip(@conversation.mailbox), conversations_path(mailbox_id: @conversation.mailbox_id) %>
@@ -44,6 +45,8 @@
           { selected: @conversation.assignee_id }, onchange: "this.form.requestSubmit()" %>
   <% end %>
 </div>
+
+<%= render "agent_chats/panel", chat: @agent_chat, agent: @agent, conversation: @conversation if @agent %>
 
 <section class="card internal">
   <h2>Tâches <span class="muted">· visibles de l'équipe</span></h2>

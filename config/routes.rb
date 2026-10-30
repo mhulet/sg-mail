@@ -60,6 +60,13 @@ Rails.application.routes.draw do
     resources :api_tokens, only: %i[index create destroy]
     resources :access_logs, only: :index, path: "journal"
     resources :oauth_connections, only: :destroy
+    # L'agent intégré : réglages du client (admin), mon agent, mes discussions avec lui.
+    resource :agent_settings, only: %i[show update], path: "agent"
+    resource :agent, only: %i[edit update], path: "mon-agent"
+    resources :agent_chats, only: %i[index show create], path: "agent/discussions" do
+      resources :agent_messages, only: :create, path: "messages"
+      resources :agent_actions, only: :update, path: "actions"
+    end
     get "auth/google_oauth2" => "google_oauth#new", as: :google_oauth
     get "/" => "conversations#index", as: :account_root
   end

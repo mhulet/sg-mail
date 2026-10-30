@@ -8,7 +8,7 @@ class SgMailMcp::GetConversation < SgMailMcp::Tool
 
   def self.perform(actions, serializer, id:, mark_read: false)
     conversation = actions.conversation(id, mark_read: mark_read)
-    AccessLog.record!(actions.user, conversation, via: "mcp")
+    AccessLog.record!(actions.user, conversation, via: actions.via)
     { conversation: serializer.conversation_detail(conversation, people: actions.people(conversation)) }
   end
 end
