@@ -45,19 +45,12 @@ class Api::V1Test < ActionDispatch::IntegrationTest
     assert_not ApiToken.find_by(name: "CLI").last_used_at.nil?
   end
 
-  test "assign, note, task, then draft a reply and send it" do
+  test "assign, note, then draft a reply and send it" do
     patch api_v1_conversation_path(@conversation_id), params: { assignee_id: users(:mohammad).id }, headers: auth
     assert_equal "Mohammad", json["conversation"]["assignee"]["name"]
 
     post api_v1_conversation_notes_path(@conversation_id), params: { body: "Déjà payé" }, headers: auth
     assert_response :created
-
-    post api_v1_tasks_path, params: { title: "Envoyer le programme", message_id: @message.id, due_on: "2026-11-02" }, headers: auth
-    assert_response :created
-    task_id = json["task"]["id"]
-    assert_equal [ @conversation_id, "Mohammad" ], [ json["task"]["conversation_id"], json["task"]["assignee"]["name"] ]
-    patch api_v1_task_path(task_id), params: { status: "done" }, headers: auth
-    assert_equal "done", json["task"]["status"]
 
     post api_v1_drafts_path, params: { message_id: @message.id, body: "Bien reçu !" }, headers: auth
     assert_response :created

@@ -6,7 +6,6 @@ class Conversation < ApplicationRecord
   belongs_to :assignee, class_name: "User", optional: true
   has_many :messages, -> { order(:sent_at, :id) }, dependent: :nullify
   has_many :notes, -> { order(:created_at) }, dependent: :delete_all
-  has_many :tasks, dependent: :nullify
   has_many :states, class_name: "ConversationState", dependent: :delete_all
 
   scope :recent, -> { order(last_message_at: :desc, id: :desc) }

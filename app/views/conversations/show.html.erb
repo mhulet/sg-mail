@@ -48,14 +48,6 @@
 
 <%= render "agent_chats/panel", chat: @agent_chat, agent: @agent, conversation: @conversation if @agent %>
 
-<section class="card internal">
-  <h2>Tâches <span class="muted">· visibles de l'équipe</span></h2>
-  <ul class="tasks">
-    <%= render partial: "tasks/task", collection: @tasks %>
-  </ul>
-  <%= render "tasks/form", people: @people, conversation: @conversation %>
-</section>
-
 <div data-controller="viewer" class="viewer-scope">
 <% @messages.each do |message| %>
   <article id="<%= dom_id(message) %>" class="card">
@@ -82,7 +74,6 @@
       <%= link_to "Répondre", new_draft_path(message_id: message.id, kind: "reply"), data: { shortcut: ("r" if last) } %>
       <%= link_to "Répondre à tous", new_draft_path(message_id: message.id, kind: "reply_all"), data: { shortcut: ("a" if last) } %>
       <%= link_to "Transférer", new_draft_path(message_id: message.id, kind: "forward"), data: { shortcut: ("f" if last) } %>
-      <%= button_to "Créer une tâche", tasks_path(task: { message_id: message.id, title: "Traiter : #{@conversation.title}", assignee_id: Current.user.id }), class: "link" %>
     </p>
 
     <% readers, others = @people.partition { |person| message.read_by?(person) } %>

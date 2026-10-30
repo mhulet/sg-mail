@@ -49,9 +49,9 @@ module ApplicationHelper
       aria: { current: ("page" if imbox_mailbox_page?(mailbox)) }
   end
 
-  # Une page de liste (fils, Screener, recherche, tâches) : sur téléphone, « Écrire » y flotte en bas, à portée de pouce.
+  # Une page de liste (fils, Screener, recherche) : sur téléphone, « Écrire » y flotte en bas, à portée de pouce.
   def list_page?
-    (controller_name.in?(%w[conversations screenings tasks]) && action_name == "index") || (controller_name == "searches" && action_name == "show")
+    (controller_name.in?(%w[conversations screenings]) && action_name == "index") || (controller_name == "searches" && action_name == "show")
   end
 
   # L'espace de la page affichée, pour sa couleur : la pile ou la boîte de la liste, le Screener, sinon la réception.

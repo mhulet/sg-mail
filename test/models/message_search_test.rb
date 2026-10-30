@@ -71,17 +71,16 @@ class MessageSearchTest < ActiveSupport::TestCase
     assert_equal [ @ete ], with_account(@semisto) { search.messages.to_a }
   end
 
-  test "words find threads by their internal notes and tasks" do
+  test "words find threads by their internal notes" do
     with_account(@semisto) do
       Note.create!(conversation: @facture.reload.conversation, user: users(:mohammad), body: "Payée par virement")
-      Task.create!(conversation: @ete.reload.conversation, creator: users(:mohammad), title: "Rappeler Anne pour l'acompte")
+      Note.create!(conversation: @ete.reload.conversation, user: users(:mohammad), body: "Rappeler Anne pour l'acompte")
     end
     assert_equal [ @facture.conversation ], conversations(users(:mohammad), "virement")
     assert_equal [ @ete.conversation ], conversations(users(:mohammad), "acompte rappeler")
     assert_equal [ @ete.conversation ], conversations(users(:mohammad), "acompte from:anne")
     assert_empty conversations(users(:mohammad), "acompte from:compta")
-    assert_equal [ @facture.conversation ], conversations(users(:mohammad), "has:note")
-    assert_equal [ @ete.conversation ], conversations(users(:mohammad), "has:task")
+    assert_equal [ @ete.conversation, @facture.conversation ].sort_by(&:id), conversations(users(:mohammad), "has:note")
     assert_empty conversations(users(:michael), "virement"), "une note ne sort pas des boîtes accessibles"
   end
 

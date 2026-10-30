@@ -5,7 +5,7 @@
 # notes internes et leurs tâches. "bon de commande" cherche l'expression exacte ; -mot exclut.
 #
 # Opérateurs (une valeur avec espaces se met entre guillemets, -from:anne exclut) :
-#   from:anne  to:formations  cc:marc  subject:devis  filename:pdf  has:attachment  has:note  has:task
+#   from:anne  to:formations  cc:marc  subject:devis  filename:pdf  has:attachment  has:note
 #   before:2026/10/01  after:2026-09-15  older_than:2w  newer_than:3d   (jours d, semaines w, mois m, années y)
 #   in:inbox in:feed in:paper_trail in:screener in:reply_later in:set_aside in:archive in:sent in:formations
 #   is:unread  is:read  is:assigned  is:unassigned  assignee:me  assignee:anne  mailbox:formations
@@ -99,7 +99,7 @@ class MessageSearch
 
   def valid?(term)
     case term.operator
-    when "has" then term.value.in?(%w[attachment attachments pj note notes task tasks])
+    when "has" then term.value.in?(%w[attachment attachments pj note notes])
     when "before", "after" then date(term.value).present?
     when "older_than", "newer_than" then term.value.match?(/\A\d+[dwmy]\z/)
     when "in" then in_value(term.value).present?
@@ -108,7 +108,7 @@ class MessageSearch
     end
   end
 
-  # in:, is:, assignee:, has:note et has:task portent sur le fil, le reste sur ses messages.
+  # in:, is:, assignee: et has:note portent sur le fil, le reste sur ses messages.
   def conversation_term?(term)
     term.operator.in?(%w[in is assignee]) || (term.operator == "has" && !term.value.in?(%w[attachment attachments pj]))
   end
@@ -148,7 +148,7 @@ class MessageSearch
   def conversation_condition(term)
     conversations = Conversation.all
     case term.operator
-    when "has" then conversations.where(id: (term.value.start_with?("note") ? Note : Task).select(:conversation_id))
+    when "has" then conversations.where(id: Note.select(:conversation_id))
     when "is"
       case term.value
       when "unread" then conversations.unread_for(@user)
@@ -187,14 +187,11 @@ class MessageSearch
     end
   end
 
-  # Les fils dont les notes internes et les titres de tâches, mis bout à bout, contiennent les mots.
+  # Les fils dont les notes internes, mises bout à bout, contiennent les mots.
   def annotated_ids
     Conversation.where(<<~SQL.squish, tsquery)
-      conversations.id IN (SELECT annotations.conversation_id FROM (
-        SELECT notes.conversation_id, notes.body AS text FROM notes
-        UNION ALL SELECT tasks.conversation_id, tasks.title FROM tasks WHERE tasks.conversation_id IS NOT NULL
-      ) annotations GROUP BY annotations.conversation_id
-      HAVING to_tsvector('simple', public.sg_mail_unaccent(string_agg(annotations.text, ' '))) @@ to_tsquery('simple', public.sg_mail_unaccent(?)))
+      conversations.id IN (SELECT notes.conversation_id FROM notes GROUP BY notes.conversation_id
+      HAVING to_tsvector('simple', public.sg_mail_unaccent(string_agg(notes.body, ' '))) @@ to_tsquery('simple', public.sg_mail_unaccent(?)))
     SQL
   end
 

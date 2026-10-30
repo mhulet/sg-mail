@@ -99,9 +99,6 @@ obligatoire (`force_ssl`), ce qui convient au certificat géré par Hatchbox.
 
 - **Assignation** : chaque fil peut être confié à une personne qui a accès à la boîte
   (« Qui s'en occupe ? »). Filtre « Assignés à moi » dans la réception.
-- **Tâches** (`Task`) : créées depuis un message (« Créer une tâche »), depuis un fil ou librement,
-  avec une personne et une échéance. « Mes tâches » liste celles qu'on m'a confiées et celles que j'ai
-  créées sans les confier. Une tâche liée à un fil n'est visible que de ceux qui ont accès à la boîte.
 - **Notes internes** (`Note`) : sous le fil, visibles de l'équipe seulement, jamais envoyées.
   Seule l'autrice ou l'auteur peut supprimer sa note.
 
@@ -142,7 +139,7 @@ obligatoire (`force_ssl`), ce qui convient au certificat géré par Hatchbox.
 Champ « Rechercher » en haut de chaque page (`/`) : les résultats s'affichent pendant la frappe (flèches pour
 les parcourir, Entrée pour la page complète, qui se met aussi à jour en direct). Les mots cherchent dans
 l'objet, l'expéditeur, les destinataires, le corps et les noms des pièces jointes des boîtes accessibles,
-ainsi que dans les notes internes et les tâches des fils. Sans accents et en début de mot (« inscri ete »
+ainsi que dans les notes internes des fils. Sans accents et en début de mot (« inscri ete »
 trouve « Inscription formation d'été ») ; `"bon de commande"` cherche l'expression exacte, `-mot` exclut.
 
 Opérateurs, en anglais comme sur Gmail (`-` devant exclut, guillemets pour une valeur avec espaces) :
@@ -150,7 +147,7 @@ Opérateurs, en anglais comme sur Gmail (`-` devant exclut, guillemets pour une 
 | Opérateur | Exemple |
 | --- | --- |
 | `from:` `to:` `cc:` `subject:` | `from:anne`, `subject:"devis jardin"` |
-| `has:` `filename:` | `has:attachment`, `has:note`, `has:task`, `filename:pdf` |
+| `has:` `filename:` | `has:attachment`, `has:note`, `filename:pdf` |
 | `before:` `after:` `older_than:` `newer_than:` | `after:2026/09/01`, `before:01/10/2026`, `newer_than:7d` (d, w, m, y) |
 | `is:` `assignee:` | `is:unread`, `is:read`, `is:assigned`, `is:unassigned`, `assignee:me` |
 | `in:` `mailbox:` | `in:inbox`, `in:feed`, `in:paper_trail`, `in:screener`, `in:reply_later`, `in:set_aside`, `in:archive`, `in:sent`, `in:formations` |
@@ -172,9 +169,9 @@ sans action explicite.
   `conversations?box=feed|paper_trail` pour les autres piles, `?stack=reply_later|set_aside` pour les piles
   personnelles (PATCH `conversations/:id` avec `reply_later`, `set_aside`, `archived` true|false ;
   `?archived=1` liste mes fils archivés),
-  `tasks`, `drafts` (+ `deliver` pour envoyer).
+  `drafts` (+ `deliver` pour envoyer).
 - **MCP** `/mcp` (HTTP « streamable », sans état) : `whoami`, `search_conversations`, `get_conversation`,
-  `mark_read`, `mark_unread`, `assign`, `add_note`, `list_screener`, `screen_sender`, `update_stacks`, `list_tasks`, `create_task`, `update_task`,
+  `mark_read`, `mark_unread`, `assign`, `add_note`, `list_screener`, `screen_sender`, `update_stacks`,
   `list_drafts`, `create_draft`, `update_draft`, `send_draft`.
   - **claude.ai** (connecteur personnalisé, adresse `https://<hôte>/mcp`) : serveur OAuth 2.1 intégré
     (`app/controllers/oauth/`) avec découverte (RFC 9728 et 8414), enregistrement dynamique (RFC 7591),
@@ -194,7 +191,7 @@ sans action explicite.
   ```sh
   cd cli && gem build sg-mail.gemspec && gem install sg-mail-*.gem
   sg-mail login https://<hôte> sgm_…
-  sg-mail inbox --unread          # ou : search, show 12 --read, tasks, task-add, note, assign
+  sg-mail inbox --unread          # ou : search, show 12 --read, note, assign
   sg-mail screener                # puis : accept zoe@example.org [--to feed|paper_trail], block spam@example.com
   sg-mail feed                    # ou : paper-trail, inbox --box feed
   sg-mail later 12                # ou : later (la pile), later 12 --off, aside 12, aside
@@ -208,7 +205,7 @@ sans action explicite.
 ## Agent
 
 Chaque personne a son agent (prénom, couleur, style, consignes : Réglages → Agent → Personnaliser), le même dans
-tous ses clients. Dans un fil, il résume, propose des actions et prépare brouillons, tâches et notes ; on lui parle
+tous ses clients. Dans un fil, il résume, propose des actions et prépare brouillons et notes ; on lui parle
 aussi en plein écran (« g a »). Note de conception : `cadrage/sg-mail-agent.md` dans les fichiers du projet.
 
 - **Éteint par défaut** : un admin l'active client par client (Réglages → Agent), avec un plafond mensuel en dollars.

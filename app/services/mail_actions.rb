@@ -85,39 +85,6 @@ class MailActions
     conversation(conversation_id).notes.create!(user: @user, body: body)
   end
 
-  # Mes tâches (par défaut) ou toutes celles que je peux voir ; status open, done ou all.
-  def tasks(scope: "mine", status: "open", conversation_id: nil, limit: 100)
-    tasks = Task.visible_to(@user).includes(:assignee)
-    tasks = tasks.for_user(@user) unless scope == "all"
-    tasks = tasks.where(conversation_id: conversation_id) if conversation_id.present?
-    tasks = tasks.where(status: status) unless status == "all"
-    tasks.by_due_date.limit(limit.to_i.clamp(1, 500))
-  end
-
-  def task(id) = Task.visible_to(@user).find(id)
-
-  # Depuis un message ou un fil, ou libre. Confiée à soi-même si assignee_id n'est pas donné.
-  def create_task(title:, message_id: nil, conversation_id: nil, assignee_id: :me, due_on: nil, external_ref: nil)
-    task = Task.new(title: title, creator: @user, due_on: due_on, external_ref: external_ref,
-      assignee_id: assignee_id == :me ? @user.id : assignee_id.presence)
-    task.message = accessible_messages.find(message_id) if message_id.present?
-    task.conversation = accessible_conversations.find(conversation_id) if conversation_id.present?
-    task.save!
-    task
-  end
-
-  def update_task(id, status: nil, **attributes)
-    task = task(id)
-    case status
-    when "done" then task.complete!
-    when "open" then task.reopen!
-    when nil then nil
-    else raise ArgumentError, "status : open ou done"
-    end
-    task.update!(attributes.slice(:title, :due_on, :assignee_id, :external_ref)) if attributes.any?
-    task
-  end
-
   def drafts(limit: 50) = Draft.where(user: @user).editable.includes(:mailbox).order(updated_at: :desc).limit(limit.to_i.clamp(1, 100))
   def draft(id) = Draft.where(user: @user).editable.find(id)
 

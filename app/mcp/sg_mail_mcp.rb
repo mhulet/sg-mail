@@ -1,4 +1,4 @@
-# Serveur MCP de SG Mail (/mcp) : Claude lit les fils, rédige des brouillons, crée des tâches et des notes
+# Serveur MCP de SG Mail (/mcp) : Claude lit les fils, rédige des brouillons et des notes
 # au nom de la personne connectée, dans son client ou dans tous ses clients (SgMailMcp::Accounts).
 # Tout passe par MailActions, comme l'API.
 module SgMailMcp
@@ -7,7 +7,7 @@ module SgMailMcp
   INSTRUCTIONS = <<~TEXT
     SG Mail is a shared email client: several people of the same organisation read personal and shared
     mailboxes (Gmail or IMAP). Read status is per person ("read by…"), threads can be assigned to someone,
-    and emails become tasks and internal notes that the correspondent never sees.
+    and internal notes stay inside the team: the correspondent never sees them.
     Like Hey, a Screener keeps first-time senders out of each person's inbox until that person accepts them
     (list_screener, screen_sender), and each accepted sender lands in one of that person's boxes: imbox,
     feed (newsletters) or paper_trail (receipts, notifications). Each person can also keep a thread to
@@ -23,7 +23,7 @@ module SgMailMcp
 
   TOOLS = [
     Whoami, SearchConversations, GetConversation, MarkRead, MarkUnread, Assign, AddNote, ListScreener, ScreenSender, UpdateStacks,
-    ListTasks, CreateTask, UpdateTask, ListDrafts, CreateDraft, UpdateDraft, SendDraft
+    ListDrafts, CreateDraft, UpdateDraft, SendDraft
   ].freeze
 
   # memberships : les clients que couvre le connecteur, quand il y en a plusieurs.

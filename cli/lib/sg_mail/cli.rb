@@ -69,7 +69,6 @@ module SgMail
           say m["body"].to_s.strip
         end
         c["notes"].each { |n| say "\n📝 #{n["author"]} : #{n["body"]}" }
-        c["tasks"].each { |t| say "☐ #{task_line(t)}" }
       end
     end
 
@@ -127,29 +126,6 @@ module SgMail
 
     desc "note ID TEXTE", "Ajoute une note interne à un fil"
     def note(id, *text) = done(client.post("conversations/#{int(id)}/notes", body: text.join(" ")), "Note ajoutée.")
-
-    desc "tasks", "Mes tâches à faire (--all : toutes, --done : terminées)"
-    option :all, type: :boolean
-    option :done, type: :boolean
-    def tasks
-      data = client.get("tasks", scope: options[:all] ? "all" : "mine", status: options[:done] ? "done" : "open")
-      output(data) { |d| d["tasks"].empty? ? say("Rien à faire.") : d["tasks"].each { |t| say task_line(t) } }
-    end
-
-    desc "task-add TITRE", "Crée une tâche (--message ID pour la lier à un email)"
-    option :message, type: :numeric
-    option :conversation, type: :numeric
-    option :due, desc: "AAAA-MM-JJ"
-    option :to, desc: "id du membre, ou none"
-    def task_add(*title)
-      body = { title: title.join(" "), message_id: options[:message], conversation_id: options[:conversation], due_on: options[:due] }
-      body[:assignee_id] = options[:to] == "none" ? "" : options[:to] if options[:to]
-      data = client.post("tasks", body)
-      done(data, "Tâche créée : #{task_line(data["task"])}")
-    end
-
-    desc "task-done ID", "Termine une tâche"
-    def task_done(id) = done(client.patch("tasks/#{int(id)}", status: "done"), "Tâche #{id} terminée.")
 
     desc "reply MESSAGE_ID [TEXTE]", "Prépare une réponse (brouillon, jamais envoyée). Sans texte : lu sur l'entrée standard"
     option :all, type: :boolean, desc: "Répondre à tous"
@@ -214,12 +190,6 @@ module SgMail
       data = client.post("drafts", message_id: int(message_id), kind: kind, body: body && "#{body.rstrip}\n", to: to)
       done(data, "Brouillon #{data.dig("draft", "id")} prêt (pas envoyé) : #{data.dig("draft", "url")}\n" \
         "Pour l'envoyer : sg-mail send #{data.dig("draft", "id")}")
-    end
-
-    def task_line(task)
-      [ "#{task["id"]}.", task["title"], task["assignee"] && "· #{task.dig("assignee", "name")}",
-        task["due_on"] && "· pour le #{task["due_on"]}#{" (en retard)" if task["overdue"]}",
-        task["conversation_id"] && "· fil #{task["conversation_id"]}" ].compact.join(" ")
     end
 
     def output(data)

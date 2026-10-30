@@ -47,7 +47,6 @@ Rails.application.routes.draw do
     resources :drafts, except: :show
     resources :screenings, only: %i[index create], path: "screener"
     resource :search, only: :show
-    resources :tasks, only: %i[index create update destroy]
     resources :messages, only: :show do
       resources :attachments, only: %i[show create] do
         get :thumbnail, on: :member
@@ -81,7 +80,6 @@ Rails.application.routes.draw do
         resources :notes, only: :create
       end
       resources :screenings, only: %i[index create], path: "screener"
-      resources :tasks, only: %i[index show create update]
       resources :drafts, only: %i[index show create update] do
         post :deliver, on: :member
       end

@@ -1,5 +1,5 @@
 class SgMailMcp::GetConversation < SgMailMcp::Tool
-  description "A full thread: every message with its text and attachments, who read it, internal notes and tasks."
+  description "A full thread: every message with its text and attachments, who read it and internal notes."
   read_only!
   locates id: Conversation
   input_schema(properties: {
