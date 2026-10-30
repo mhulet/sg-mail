@@ -1,0 +1,49 @@
+<% content_for :title, "Agent · SG Mail" %>
+<h1>Agent <span class="muted">· <%= current_account.name %></span></h1>
+
+<section class="card agent-intro">
+  <%= agent_avatar(@agent) %>
+  <div>
+    <p>
+      <strong><%= @agent.name %></strong> lit tes fils, résume, propose des actions et prépare des brouillons, des tâches et des notes.
+      Il lit librement, mais tout ce qui change quelque chose attend ta confirmation, et il n'envoie jamais d'email lui-même.
+    </p>
+    <p><%= link_to "Personnaliser mon agent", edit_agent_path %>
+      <% if current_account.agent_enabled? %> · <%= link_to "Mes discussions", agent_chats_path %><% end %></p>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Dans ce client</h2>
+  <p>
+    <% if current_account.agent_enabled? %>
+      L'agent est <strong>activé</strong> pour <%= current_account.name %>.
+    <% else %>
+      L'agent est <strong>désactivé</strong> pour <%= current_account.name %>.
+    <% end %>
+    Ce mois-ci : <%= number_to_currency(@spend_cents / 100.0, unit: "$", format: "%n %u") %>
+    sur <%= number_to_currency(current_account.agent_monthly_budget_cents / 100.0, unit: "$", format: "%n %u") %>.
+  </p>
+  <% unless @configured %>
+    <p class="flash alert">La clé de l'API Claude (ANTHROPIC_API_KEY) n'est pas configurée sur le serveur : l'agent ne peut pas répondre.</p>
+  <% end %>
+
+  <% if current_membership.admin? %>
+    <%= form_with model: current_account, url: agent_settings_path, method: :patch, class: "stacked" do |f| %>
+      <label><%= f.check_box :agent_enabled, {}, "1", "0" %> Activer l'agent pour les membres de <%= current_account.name %></label>
+      <%= label_tag "account[agent_monthly_budget]", "Plafond mensuel (en dollars)" %>
+      <%= number_field_tag "account[agent_monthly_budget]", current_account.agent_monthly_budget_cents / 100, min: 0, step: 1 %>
+      <p class="muted">Au plafond, l'agent s'arrête jusqu'au mois suivant. Ordre de grandeur : quelques centimes par question.</p>
+      <p><%= f.submit "Enregistrer" %></p>
+    <% end %>
+  <% end %>
+</section>
+
+<section class="card">
+  <h2>Vie privée</h2>
+  <p class="muted">
+    Pour répondre, l'agent envoie à Claude (Anthropic, sous-traitant de Super Génial) les emails et les informations
+    qu'il lit. Anthropic ne s'en sert pas pour entraîner ses modèles. Tes discussions avec l'agent ne sont visibles que
+    de toi et sont effacées après 90 jours sans activité.
+  </p>
+</section>

@@ -1,0 +1,37 @@
+<% content_for :title, "Mon agent · SG Mail" %>
+<p><%= link_to "← Agent", agent_settings_path %></p>
+<h1>Mon agent</h1>
+<p class="muted">Le même dans tous tes clients. Lui seul lit tes discussions avec lui ; il ne fait rien sans ta confirmation.</p>
+
+<%= render "shared/errors", record: @agent %>
+
+<%= form_with model: @agent, url: agent_path, method: :patch, class: "stacked agent-form" do |f| %>
+  <%= f.label :name, "Prénom" %>
+  <%= f.text_field :name, maxlength: 30, required: true %>
+
+  <fieldset class="swatches">
+    <legend>Couleur</legend>
+    <% Agent::COLORS.each do |key, label| %>
+      <label class="swatch" style="--agent: var(--<%= key %>)">
+        <%= f.radio_button :color, key %><span class="dot" aria-hidden="true"></span><%= label %>
+      </label>
+    <% end %>
+  </fieldset>
+
+  <fieldset class="styles">
+    <legend>Style</legend>
+    <% Agent::STYLES.each do |key, style| %>
+      <label class="style-choice">
+        <%= f.radio_button :style, key %>
+        <span><strong><%= style[:label] %></strong> <span class="muted"><%= style[:hint] %></span></span>
+      </label>
+    <% end %>
+  </fieldset>
+
+  <%= f.label :instructions, "Consignes (facultatif)" %>
+  <%= f.text_area :instructions, rows: 4, maxlength: Agent::INSTRUCTIONS_LIMIT,
+        placeholder: "Ex. : Signe mes brouillons « Michael ». Les inscriptions aux formations se gèrent dans le projet Academy." %>
+  <p class="muted"><%= Agent::INSTRUCTIONS_LIMIT %> caractères au plus.</p>
+
+  <p><%= f.submit "Enregistrer" %></p>
+<% end %>

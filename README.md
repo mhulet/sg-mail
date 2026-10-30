@@ -37,7 +37,8 @@ Une seule base Postgres : Solid Queue, Solid Cache et Solid Cable ont leurs tabl
    - `APP_HOST` (ex. `mail.supergenial.be`) ;
    - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` ;
    - `MAILER_FROM`, `SMTP_ADDRESS`, `SMTP_PORT` (587), `SMTP_USERNAME`, `SMTP_PASSWORD` pour les invitations ;
-   - facultatif : `GMAIL_PUBSUB_TOPIC`, `GMAIL_PUBSUB_TOKEN` (Gmail en temps réel, voir Synchros).
+   - facultatif : `GMAIL_PUBSUB_TOPIC`, `GMAIL_PUBSUB_TOKEN` (Gmail en temps réel, voir Synchros) ;
+   - facultatif : `ANTHROPIC_API_KEY` (l'agent intégré, voir Agent).
 4. **Google Cloud** : ajouter `https://<APP_HOST>/auth/google_oauth2/callback` aux URI de redirection
    autorisées du client OAuth.
 5. **Premier compte**, une fois déployé : `bin/rails sg_mail:staff EMAIL=… NAME=…` dans la console Hatchbox.
@@ -200,6 +201,19 @@ sans action explicite.
   ```
 
   `--json` donne la réponse brute de l'API, pratique pour Claude Code.
+
+## Agent
+
+Chaque personne a son agent (prénom, couleur, style, consignes : Réglages → Agent → Personnaliser), le même dans
+tous ses clients. Dans un fil, il résume, propose des actions et prépare brouillons, tâches et notes ; on lui parle
+aussi en plein écran (« g a »). Note de conception : `cadrage/sg-mail-agent.md` dans les fichiers du projet.
+
+- **Éteint par défaut** : un admin l'active client par client (Réglages → Agent), avec un plafond mensuel en dollars.
+- **Lectures libres, écritures confirmées** : il appelle les mêmes outils que le MCP (`AgentToolbox`) ; tout ce qui
+  change quelque chose s'affiche en carte « Confirmer / Refuser ». Il n'envoie jamais d'email (pas de `send_draft`).
+- **Claude** : Sonnet 5.5 par l'API Anthropic (`ANTHROPIC_API_KEY`), boucle d'outils dans `AgentRun`, en tâche de
+  fond (`AgentRunJob`) ; la page se rafraîchit à chaque étape (Turbo, Action Cable).
+- Discussions privées, effacées après 90 jours sans activité ; les fils lus par l'agent vont au journal d'accès.
 
 ## Synchros
 

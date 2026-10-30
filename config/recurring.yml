@@ -8,6 +8,10 @@ shared: &shared
   purge_access_logs:
     class: PurgeAccessLogsJob
     schedule: every day at 3am
+  # Discussions avec l'agent : effacées après 90 jours sans activité (décision A8).
+  purge_agent_chats:
+    class: PurgeAgentChatsJob
+    schedule: every day at 3:30am
 
 development:
   <<: *shared

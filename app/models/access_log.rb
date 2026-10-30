@@ -2,7 +2,7 @@
 # Visible des admins du client (« Membres » → « Journal d'accès »), effacé après un an.
 class AccessLog < ApplicationRecord
   ACTIONS = { "open" => "a ouvert", "attachment" => "a téléchargé une pièce jointe de" }.freeze
-  VIAS = { "web" => "SG Mail", "api" => "API ou CLI", "mcp" => "Claude (MCP)" }.freeze
+  VIAS = { "web" => "SG Mail", "api" => "API ou CLI", "mcp" => "Claude (MCP)", "agent" => "Agent SG Mail" }.freeze
   RETENTION = 1.year
 
   acts_as_tenant :account

@@ -1,0 +1,19 @@
+<%# L'agent dans un fil : la dernière discussion née de ce fil, ou de quoi en commencer une. %>
+<section class="card agent-panel" id="agent" style="--agent: var(--<%= agent.color %>)">
+  <% if chat %>
+    <%= turbo_stream_from chat %>
+  <% end %>
+  <header class="agent-panel-head">
+    <%= agent_avatar(agent) %>
+    <h2><%= agent.name %></h2>
+    <% if chat %>
+      <span class="muted"><%= link_to "Plein écran", agent_chat_path(chat) %> · <%= button_to "Nouvelle discussion", agent_chats_path, params: { conversation_id: conversation.id, prompt: "Que suggères-tu ?" }, class: "link", form: { class: "inline" } %></span>
+    <% end %>
+  </header>
+  <% if chat %>
+    <%= render "agent_chats/transcript", chat: chat, agent: agent, from_conversation: true %>
+  <% else %>
+    <p class="muted">Demande-lui de résumer ce fil, de proposer des actions ou de préparer une réponse.</p>
+  <% end %>
+  <%= render "agent_chats/composer", chat: chat, conversation: conversation, agent: agent %>
+</section>

@@ -65,6 +65,9 @@
             <span class="nav-label">À faire</span>
             <%= nav_link "Mes tâches", tasks_path, shortcut: "g t", space: "note-ink" %>
             <%= nav_link "Brouillons", drafts_path, shortcut: "g d", space: "muted" %>
+            <% if Current.account.agent_enabled? %>
+              <% sidebar_agent = Agent.for(Current.user) %><%= nav_link sidebar_agent.name, agent_chats_path, shortcut: "g a", space: sidebar_agent.color %>
+            <% end %>
           </nav>
           <% unless controller_name == "searches" %>
             <%= form_with url: search_path, method: :get, class: "search",
@@ -83,6 +86,7 @@
               <%= nav_link "Boîtes", mailboxes_path %>
               <%= nav_link "Partage", sharing_path %>
               <%= nav_link "Membres", memberships_path %>
+              <%= nav_link "Agent", agent_settings_path %>
               <%= nav_link "Jetons d'API", api_tokens_path %>
             <% end %>
             <% if !Current.account && (Current.user.accounts.many? || Current.user.staff?) %><%= link_to "Clients", accounts_path(account_id: nil) %><% end %>

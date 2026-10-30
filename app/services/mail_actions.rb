@@ -2,11 +2,13 @@
 # Mêmes règles que l'interface : on ne voit et ne touche que les boîtes auxquelles on a accès,
 # et l'envoi d'un brouillon est toujours une action séparée.
 class MailActions
-  def initialize(user)
+  # via : par où passe la personne, pour le journal d'accès (mcp, agent).
+  def initialize(user, via: "mcp")
     @user = user
+    @via = via
   end
 
-  attr_reader :user
+  attr_reader :user, :via
 
   def mailboxes = Mailbox.accessible_by(@user).order(:address)
   def members = ActsAsTenant.current_tenant.users.order(:name)

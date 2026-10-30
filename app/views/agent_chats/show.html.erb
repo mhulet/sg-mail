@@ -1,0 +1,15 @@
+<% content_for :title, "#{@chat.title.presence || @agent.name} · SG Mail" %>
+<% content_for :head do %><%= turbo_refreshes_with method: :morph, scroll: :preserve %><% end %>
+<%= turbo_stream_from @chat %>
+<p class="thread-top">
+  <%= link_to "← Mes discussions", agent_chats_path %>
+  <% if @chat.conversation %><%= link_to "Fil : #{@chat.conversation.title}", conversation_path(@chat.conversation) %><% end %>
+</p>
+<section class="agent-page" style="--agent: var(--<%= @agent.color %>)">
+  <header class="agent-panel-head">
+    <%= agent_avatar(@agent) %>
+    <h1><%= @chat.title.presence || @agent.name %></h1>
+  </header>
+  <%= render "agent_chats/transcript", chat: @chat, agent: @agent, from_conversation: nil %>
+  <%= render "agent_chats/composer", chat: @chat, conversation: nil, agent: @agent %>
+</section>
