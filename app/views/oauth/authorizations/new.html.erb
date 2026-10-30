@@ -1,7 +1,7 @@
 <% content_for :title, "Autoriser #{@client.name} · SG Mail" %>
 <h1>Autoriser l'accès à SG Mail</h1>
 <p><strong><%= @client.name %></strong> demande à lire tes emails et à agir en ton nom : marquer comme lu, assigner,
-  ajouter des notes et des tâches, préparer des brouillons. Il ne verra que les boîtes auxquelles tu as accès,
+  ajouter des notes, préparer des brouillons. Il ne verra que les boîtes auxquelles tu as accès,
   et n'enverra un email que si tu le lui demandes.</p>
 <p class="muted">Connecté en tant que <%= Current.user.email_address %>. Retour vers <strong><%= URI.parse(@params[:redirect_uri]).host %></strong>.</p>
 

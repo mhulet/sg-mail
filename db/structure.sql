@@ -1617,48 +1617,6 @@ ALTER SEQUENCE public.solid_queue_semaphores_id_seq OWNED BY public.solid_queue_
 
 
 --
--- Name: tasks; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.tasks (
-    id bigint NOT NULL,
-    account_id bigint NOT NULL,
-    creator_id bigint NOT NULL,
-    assignee_id bigint,
-    conversation_id bigint,
-    message_id bigint,
-    title character varying NOT NULL,
-    status character varying DEFAULT 'open'::character varying NOT NULL,
-    due_on date,
-    completed_at timestamp(6) without time zone,
-    external_ref character varying,
-    created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
-);
-
-ALTER TABLE ONLY public.tasks FORCE ROW LEVEL SECURITY;
-
-
---
--- Name: tasks_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.tasks_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: tasks_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.tasks_id_seq OWNED BY public.tasks.id;
-
-
---
 -- Name: users; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1992,13 +1950,6 @@ ALTER TABLE ONLY public.solid_queue_scheduled_executions ALTER COLUMN id SET DEF
 --
 
 ALTER TABLE ONLY public.solid_queue_semaphores ALTER COLUMN id SET DEFAULT nextval('public.solid_queue_semaphores_id_seq'::regclass);
-
-
---
--- Name: tasks id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.tasks ALTER COLUMN id SET DEFAULT nextval('public.tasks_id_seq'::regclass);
 
 
 --
@@ -2366,14 +2317,6 @@ ALTER TABLE ONLY public.solid_queue_scheduled_executions
 
 ALTER TABLE ONLY public.solid_queue_semaphores
     ADD CONSTRAINT solid_queue_semaphores_pkey PRIMARY KEY (id);
-
-
---
--- Name: tasks tasks_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.tasks
-    ADD CONSTRAINT tasks_pkey PRIMARY KEY (id);
 
 
 --
@@ -3239,48 +3182,6 @@ CREATE INDEX index_solid_queue_semaphores_on_key_and_value ON public.solid_queue
 
 
 --
--- Name: index_tasks_on_account_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_tasks_on_account_id ON public.tasks USING btree (account_id);
-
-
---
--- Name: index_tasks_on_assignee_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_tasks_on_assignee_id ON public.tasks USING btree (assignee_id);
-
-
---
--- Name: index_tasks_on_assignee_id_and_status; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_tasks_on_assignee_id_and_status ON public.tasks USING btree (assignee_id, status);
-
-
---
--- Name: index_tasks_on_conversation_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_tasks_on_conversation_id ON public.tasks USING btree (conversation_id);
-
-
---
--- Name: index_tasks_on_creator_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_tasks_on_creator_id ON public.tasks USING btree (creator_id);
-
-
---
--- Name: index_tasks_on_message_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_tasks_on_message_id ON public.tasks USING btree (message_id);
-
-
---
 -- Name: index_users_on_email_address; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -3295,35 +3196,11 @@ CREATE UNIQUE INDEX index_users_on_webauthn_id ON public.users USING btree (weba
 
 
 --
--- Name: tasks fk_rails_0016c50613; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.tasks
-    ADD CONSTRAINT fk_rails_0016c50613 FOREIGN KEY (assignee_id) REFERENCES public.users(id);
-
-
---
 -- Name: conversations fk_rails_00afd02cba; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.conversations
     ADD CONSTRAINT fk_rails_00afd02cba FOREIGN KEY (account_id) REFERENCES public.accounts(id);
-
-
---
--- Name: tasks fk_rails_00f6e5b7b4; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.tasks
-    ADD CONSTRAINT fk_rails_00f6e5b7b4 FOREIGN KEY (creator_id) REFERENCES public.users(id);
-
-
---
--- Name: tasks fk_rails_1439344ea6; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.tasks
-    ADD CONSTRAINT fk_rails_1439344ea6 FOREIGN KEY (conversation_id) REFERENCES public.conversations(id) ON DELETE SET NULL;
 
 
 --
@@ -3428,14 +3305,6 @@ ALTER TABLE ONLY public.oauth_tokens
 
 ALTER TABLE ONLY public.push_subscriptions
     ADD CONSTRAINT fk_rails_43d43720fc FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
-
-
---
--- Name: tasks fk_rails_43dfabfaca; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.tasks
-    ADD CONSTRAINT fk_rails_43dfabfaca FOREIGN KEY (account_id) REFERENCES public.accounts(id);
 
 
 --
@@ -3548,14 +3417,6 @@ ALTER TABLE ONLY public.mailbox_accesses
 
 ALTER TABLE ONLY public.sessions
     ADD CONSTRAINT fk_rails_758836b4f0 FOREIGN KEY (user_id) REFERENCES public.users(id);
-
-
---
--- Name: tasks fk_rails_7609921947; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.tasks
-    ADD CONSTRAINT fk_rails_7609921947 FOREIGN KEY (message_id) REFERENCES public.messages(id) ON DELETE SET NULL;
 
 
 --
@@ -3991,13 +3852,6 @@ CREATE POLICY account_isolation ON public.screenings USING (((current_setting('s
 
 
 --
--- Name: tasks account_isolation; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY account_isolation ON public.tasks USING (((current_setting('sg_mail.bypass_rls'::text, true) = 'on'::text) OR (account_id = (NULLIF(current_setting('sg_mail.account_id'::text, true), ''::text))::bigint))) WITH CHECK (((current_setting('sg_mail.bypass_rls'::text, true) = 'on'::text) OR (account_id = (NULLIF(current_setting('sg_mail.account_id'::text, true), ''::text))::bigint)));
-
-
---
 -- Name: agent_actions; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -4076,18 +3930,13 @@ ALTER TABLE public.readings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.screenings ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: tasks; Type: ROW SECURITY; Schema: public; Owner: -
---
-
-ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
-
---
 -- PostgreSQL database dump complete
 --
 
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261030170000'),
 ('20261030160000'),
 ('20261030080000'),
 ('20261029230000'),

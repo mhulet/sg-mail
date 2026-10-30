@@ -1,7 +1,0 @@
-<%= form_with model: Task.new, url: tasks_path, class: "inline task-form" do |f| %>
-  <%= f.hidden_field :conversation_id, value: local_assigns[:conversation]&.id if local_assigns[:conversation] %>
-  <%= f.text_field :title, placeholder: "Nouvelle tâche", required: true, aria: { label: "Tâche" } %>
-  <%= f.select :assignee_id, [ [ "Personne", "" ] ] + people.map { |p| [ p.display_name, p.id ] }, { selected: Current.user.id }, aria: { label: "Confiée à" } %>
-  <%= f.date_field :due_on, aria: { label: "Échéance" } %>
-  <%= f.submit "Ajouter" %>
-<% end %>

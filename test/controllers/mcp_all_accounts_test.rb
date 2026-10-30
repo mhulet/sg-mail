@@ -45,16 +45,6 @@ class McpAllAccountsTest < ActionDispatch::IntegrationTest
 
     call_tool("list_drafts")
     assert_equal [ "Silvéa" ], structured["drafts"].map { |d| d.dig("account", "name") }
-
-    call_tool("create_task", title: "Rappeler")
-    assert result["isError"]
-    assert_match "account_id", result["content"].first["text"]
-    call_tool("create_task", title: "Rappeler", account_id: @silvea.id)
-    assert_equal "Silvéa", structured.dig("account", "name")
-    assert with_account(@silvea) { Task.exists?(title: "Rappeler") }
-
-    call_tool("list_tasks")
-    assert_equal [ [ "Rappeler", "Silvéa" ] ], structured["tasks"].map { |t| [ t["title"], t.dig("account", "name") ] }
   end
 
   test "isolation still holds: other people's clients stay out of reach" do

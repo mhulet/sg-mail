@@ -38,11 +38,10 @@ class SgMailCliTest < ActionDispatch::IntegrationTest
 
   teardown { SgMail::Cli.client = nil }
 
-  test "inbox, reply as a draft, tasks" do
+  test "inbox, reply as a draft, search" do
     assert_match(/● \d+ +anne@example.org +Inscription/, run_cli("inbox"))
     assert_match(/Brouillon \d+ prêt \(pas envoyé\)/, run_cli("reply", @message.id.to_s, "Merci"))
     assert_empty enqueued_jobs
-    assert_match(/Tâche créée : \d+\. Relancer · Mohammad/, run_cli("task-add", "Relancer", "--message", @message.id.to_s))
     assert_equal "Inscription", JSON.parse(run_cli("search", "inscri", "--json"))["conversations"].sole["subject"]
   end
 

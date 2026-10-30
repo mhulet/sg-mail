@@ -192,7 +192,6 @@ form.compose textarea { line-height: 1.6; }
 code { font-family: var(--mono); font-size: .88em; }
 code.link { user-select: all; word-break: break-all; }
 .nowrap { white-space: nowrap; }
-.overdue { color: var(--danger); }
 
 /* Tableaux (boîtes, membres, jetons…) */
 table { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--sheet); border: 1px solid var(--rule);
@@ -385,14 +384,6 @@ p.read-by { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; fon
 .internal input:not([type=submit]):not([type=checkbox]), .internal select, .internal textarea { background: var(--sheet); }
 .internal .note { border-top: 1px dashed var(--note-rule); padding-top: .5rem; }
 .internal textarea { width: 100%; }
-.tasks { list-style: none; padding: 0; margin: 0 0 .5rem; }
-.tasks li { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; padding: .3rem 0; }
-.tasks li > form button.link { width: 1.4rem; height: 1.4rem; border: 1.5px solid var(--feed); border-radius: 6px; text-decoration: none;
-  display: inline-grid; place-items: center; font-size: .8rem; color: var(--feed); }
-.tasks li.done span:first-of-type { text-decoration: line-through; color: var(--muted); }
-.tasks li form:last-child { margin-left: auto; }
-form.task-form { display: flex; flex-wrap: wrap; gap: .5rem; }
-form.task-form input[type=text] { flex: 1 1 14rem; }
 
 /* ─── Screener : oui, non, et le coup de tampon ─── */
 .screening { background: var(--screener-soft); border-color: transparent; display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; position: relative; overflow: hidden; }
@@ -511,15 +502,6 @@ button.no { color: var(--later); border-color: var(--later); background: transpa
 @keyframes unfold { from { opacity: 0; transform: scale(0) rotate(-20deg); } }
 @keyframes fade-in { from { opacity: 0; } }
 
-/* Une tâche terminée : la case saute, un éclat l'entoure, le trait barre le titre de gauche à droite. */
-.tasks li.just-done > form:first-child button { position: relative; animation: check-pop .45s var(--ease); }
-.tasks li.just-done > form:first-child button::after { content: ""; position: absolute; inset: -3px; border-radius: 9px;
-  border: 2px solid var(--feed); animation: burst .55s var(--ease) forwards; pointer-events: none; }
-.tasks li.just-done > span:first-of-type { text-decoration: none; background: linear-gradient(currentColor, currentColor) no-repeat 0 58% / 100% 1.5px;
-  animation: strike .4s var(--ease) .1s both; }
-@keyframes check-pop { 40% { transform: scale(1.3) rotate(-8deg); } }
-@keyframes burst { from { opacity: .9; transform: scale(.8); } to { opacity: 0; transform: scale(1.9); } }
-@keyframes strike { from { background-size: 0 1.5px; } }
 
 /* « Écrire » : le crayon griffonne au survol. */
 @media (hover: hover) { .compose-button:hover svg { animation: scribble .5s var(--ease); } }

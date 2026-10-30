@@ -65,7 +65,6 @@
             <%= nav_link "Plus tard", conversations_path(stack: "reply_later"), space: "later" %>
             <%= nav_link "De côté", conversations_path(stack: "set_aside"), space: "aside" %>
             <span class="nav-label">À faire</span>
-            <%= nav_link "Mes tâches", tasks_path, shortcut: "g t", space: "note-ink" %>
             <%= nav_link "Brouillons", drafts_path, shortcut: "g d", space: "muted" %>
             <% if Current.account.agent_enabled? %>
               <% sidebar_agent = Agent.for(Current.user) %><%= nav_link sidebar_agent.name, agent_chats_path, shortcut: "g a", space: sidebar_agent.color %>

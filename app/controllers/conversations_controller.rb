@@ -23,7 +23,6 @@ class ConversationsController < ApplicationController
     @messages = @conversation.messages.includes(:readings)
     @people = @conversation.mailbox.users_with_access.order(:name).to_a
     @notes = @conversation.notes.includes(:user)
-    @tasks = @conversation.tasks.includes(:assignee).by_due_date
     @screening = @conversation.screening_for(Current.user)
     @bucket = @conversation.bucket_for(Current.user)
     @stacks = @conversation.stacks_for(Current.user)

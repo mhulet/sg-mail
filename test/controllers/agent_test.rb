@@ -56,8 +56,8 @@ class AgentTest < ActionDispatch::IntegrationTest
   test "reads run at once, writes wait for confirmation, then the agent carries on" do
     enable_agent
     @replies << tool_reply("toolu_1", "get_conversation", { "id" => @conversation.id })
-    @replies << tool_reply("toolu_2", "create_task", { "title" => "Répondre à Anne", "conversation_id" => @conversation.id })
-    @replies << text_reply("C'est noté, la tâche est créée.")
+    @replies << tool_reply("toolu_2", "add_note", { "conversation_id" => @conversation.id, "body" => "Répondre à Anne" })
+    @replies << text_reply("C'est noté, la note est ajoutée.")
     sign_in_as users(:michael)
 
     perform_enqueued_jobs do
@@ -70,17 +70,17 @@ class AgentTest < ActionDispatch::IntegrationTest
     assert_equal [ "done", false ], [ read.status, read.writes ]
     assert_includes read.result_text, "reste-t-il une place"
     assert_equal [ "pending", true ], [ write.status, write.writes ]
-    assert_equal 0, with_account(@semisto) { Task.count }
+    assert_equal 0, with_account(@semisto) { Note.count }
     assert_includes @calls.first[:system_].last[:text], "##{@conversation.id}"
     assert_not_includes @calls.first[:tools].map { |tool| tool[:name] }, "send_draft"
 
     get conversation_path(@conversation, account_id: @semisto.id)
-    assert_select "#agent .agent-action.pending", text: /Créer une tâche/
+    assert_select "#agent .agent-action.pending", text: /Ajouter une note interne/
 
     perform_enqueued_jobs do
       patch agent_chat_agent_action_path(chat, write, account_id: @semisto.id), params: { decision: "confirm", from_conversation: "1" }
     end
-    assert_equal "Répondre à Anne", with_account(@semisto) { Task.sole.title }
+    assert_equal "Répondre à Anne", with_account(@semisto) { Note.sole.body }
     assert_equal "idle", chat.reload.status
     results = @calls.last[:messages].select { |message| message[:role] == "user" }.drop(1).map { |message| message[:content].sole }
     assert_equal [ "toolu_1", "toolu_2" ], results.map { |block| block["tool_use_id"] }
@@ -89,8 +89,8 @@ class AgentTest < ActionDispatch::IntegrationTest
     assert_equal [ %w[text type], %w[id input name type] ], replayed.map(&:keys).map(&:sort).uniq
 
     get agent_chat_path(chat, account_id: @semisto.id)
-    assert_select ".bubble.agent", text: /la tâche est créée/
-    assert_select ".agent-action.done", text: /Créer une tâche/
+    assert_select ".bubble.agent", text: /la note est ajoutée/
+    assert_select ".agent-action.done", text: /Ajouter une note interne/
     assert with_account(@semisto) { AccessLog.exists?(conversation: @conversation, via: "agent") }
   end
 

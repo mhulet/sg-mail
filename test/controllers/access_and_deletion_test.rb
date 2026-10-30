@@ -52,7 +52,6 @@ class AccessAndDeletionTest < ActionDispatch::IntegrationTest
       AccessLog.record!(users(:michael), @inscription, via: "web")
       Reading.mark!(users(:michael), @shared.messages)
       @inscription.notes.create!(user: users(:michael), body: "Rappeler")
-      Task.create!(title: "Répondre", creator: users(:michael), conversation: @inscription)
       ConversationState.archive!(@inscription, users(:michael))
       Screening.decide!(users(:michael), "anne@example.org", "accepted")
     end

@@ -29,12 +29,11 @@ class ApiSerializer
     }
   end
 
-  # Le fil complet : messages avec leur texte, qui les a lus, notes internes et tâches.
+  # Le fil complet : messages avec leur texte, qui les a lus, et notes internes.
   def conversation_detail(conversation, people:)
     conversation(conversation).merge(
       messages: conversation.messages.includes(:readings).map { |message| message(message, people: people) },
-      notes: conversation.notes.includes(:user).map { |note| note(note) },
-      tasks: conversation.tasks.includes(:assignee).by_due_date.map { |task| task(task) }
+      notes: conversation.notes.includes(:user).map { |note| note(note) }
     )
   end
 
@@ -61,14 +60,6 @@ class ApiSerializer
   end
 
   def note(note) = { id: note.id, author: note.user.display_name, body: note.body, created_at: note.created_at.iso8601 }
-
-  def task(task)
-    {
-      id: task.id, title: task.title, status: task.status, due_on: task.due_on&.iso8601, overdue: task.overdue?,
-      assignee: user(task.assignee), conversation_id: task.conversation_id, message_id: task.message_id,
-      external_ref: task.external_ref, completed_at: task.completed_at&.iso8601
-    }
-  end
 
   def draft(draft)
     {

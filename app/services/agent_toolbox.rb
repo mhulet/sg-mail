@@ -8,7 +8,6 @@ class AgentToolbox
   LABELS = {
     "mark_read" => "Marquer le fil comme lu", "mark_unread" => "Marquer le fil comme non lu", "assign" => "Assigner le fil",
     "add_note" => "Ajouter une note interne", "screen_sender" => "Trier un expéditeur", "update_stacks" => "Ranger le fil",
-    "create_task" => "Créer une tâche", "update_task" => "Modifier une tâche",
     "create_draft" => "Préparer un brouillon", "update_draft" => "Modifier un brouillon"
   }.freeze
 
