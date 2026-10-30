@@ -82,6 +82,7 @@ class OauthTest < ActionDispatch::IntegrationTest
     get oauth_authorization_path(authorization_params(client, "verifier"))
     assert_response :success
     assert_select "button", "Autoriser"
+    assert_select "form[data-turbo=false]", 1, "la redirection vers Claude doit être une vraie navigation"
 
     post oauth_authorization_path, params: authorization_params(client, "verifier").merge(decision: "deny")
     assert_match "error=access_denied", response.location
