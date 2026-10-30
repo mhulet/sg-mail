@@ -1,6 +1,12 @@
 # Un tour de la discussion, tel qu'il part chez Claude ou en revient (blocs de contenu), avec son coût.
 class AgentMessage < ApplicationRecord
   ROLES = %w[user assistant].freeze
+  # Ce que l'API accepte en retour, bloc par bloc. Une réponse contient aussi des champs en lecture seule
+  # (caller, citations vides…) que l'API refuse si on les lui renvoie.
+  BLOCK_KEYS = {
+    "text" => %w[type text], "thinking" => %w[type thinking signature], "redacted_thinking" => %w[type data],
+    "tool_use" => %w[type id name input], "tool_result" => %w[type tool_use_id content is_error]
+  }.freeze
 
   acts_as_tenant :account
   belongs_to :agent_chat, touch: true
@@ -15,5 +21,7 @@ class AgentMessage < ApplicationRecord
 
   def tool_uses = content.select { |block| block["type"] == "tool_use" }
 
-  def to_claude = { role: role, content: content }
+  def to_claude
+    { role: role, content: content.map { |block| BLOCK_KEYS[block["type"]]&.then { |keys| block.slice(*keys) } || block } }
+  end
 end
