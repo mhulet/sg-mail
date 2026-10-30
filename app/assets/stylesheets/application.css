@@ -627,6 +627,9 @@ body.bare main > form, body.bare main > div { margin-top: 1rem; }
 .agent-avatar { --size: 38px; width: var(--size); height: var(--size); flex-shrink: 0; display: inline-grid; place-items: center;
   border-radius: 32% 50% 50% 50%; background: var(--agent); color: var(--on-space); font: 600 calc(var(--size) * .5)/1 var(--serif); }
 .agent-avatar.small { --size: 24px; }
+.agent-avatar.photo { object-fit: cover; background: var(--paper, transparent); box-shadow: 0 0 0 2px var(--agent); }
+.agent-avatar-field { display: flex; gap: 1rem; align-items: flex-start; }
+.agent-avatar-field .muted { margin: .3rem 0; font-size: .88rem; }
 .agent-intro { display: flex; gap: 1rem; align-items: flex-start; }
 .agent-intro p:first-child { margin-top: 0; }
 .agent-panel { border-color: color-mix(in srgb, var(--agent) 35%, var(--rule)); }

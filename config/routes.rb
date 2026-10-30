@@ -66,7 +66,9 @@ Rails.application.routes.draw do
     resources :integrations, only: %i[index create destroy], path: "outils" do
       resource :connection, controller: "integration_connections", only: %i[create destroy]
     end
-    resource :agent, only: %i[edit update], path: "mon-agent"
+    resource :agent, only: %i[edit update], path: "mon-agent" do
+      get :avatar, path: "image"
+    end
     resources :agent_chats, only: %i[index show create], path: "agent/discussions" do
       resources :agent_messages, only: :create, path: "messages"
       resources :agent_actions, only: :update, path: "actions"

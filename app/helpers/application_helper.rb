@@ -110,8 +110,13 @@ module ApplicationHelper
     tag.span(initials.presence || "?", class: [ "avatar", size ], style: "--av: #{tint_for(name)}", aria: { hidden: true })
   end
 
-  # L'agent de la personne : son initiale dans sa couleur.
+  # L'agent de la personne : son image si elle en a choisi une, sinon son initiale dans sa couleur.
   def agent_avatar(agent, size: nil)
+    if agent.persisted? && agent.avatar.attached? && agent.avatar.blob.persisted?
+      return image_tag(avatar_agent_path(v: agent.avatar.blob.checksum), alt: "", class: [ "agent-avatar", "photo", size ],
+        style: "--agent: var(--#{agent.color})", aria: { hidden: true })
+    end
+
     tag.span(agent.initial, class: [ "agent-avatar", size ], style: "--agent: var(--#{agent.color})", aria: { hidden: true })
   end
 
