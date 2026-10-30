@@ -40,6 +40,16 @@ class DraftsController < ApplicationController
     redirect_to drafts_path, notice: "Brouillon supprimé."
   end
 
+  # « Annuler » juste après l'envoi, ou un envoi prévu qu'on reprend : le message redevient un brouillon.
+  def cancel
+    draft = Draft.where(user: Current.user).find(params[:id])
+    if draft.cancel_sending!
+      redirect_to edit_draft_path(draft), notice: "Envoi annulé : le message est redevenu un brouillon."
+    else
+      redirect_back_or_to drafts_path, alert: "Trop tard : le message est déjà parti."
+    end
+  end
+
   private
 
   def set_sendable_mailboxes
@@ -58,19 +68,39 @@ class DraftsController < ApplicationController
     end
   end
 
+  # « Envoyer plus tard » : un des choix proposés (une heure ISO 8601), ou l'heure saisie (« custom »).
+  def scheduled_time
+    value = params[:send_later].to_s
+    value = params[:send_at].to_s if value == "custom"
+    Time.zone.parse(value) if value.present?
+  rescue ArgumentError
+    nil
+  end
+
   def save_and_maybe_send
-    sending = params[:send].present?
-    @draft.status = "sending" if sending
+    sending = params[:send].present? || params[:send_later].present?
+    send_at = scheduled_time
+    if params[:send_later].present? && (send_at.nil? || send_at.past?)
+      @draft.errors.add(:base, "Choisis une heure d'envoi à venir.")
+      return render(@draft.new_record? ? :new : :edit, status: :unprocessable_entity)
+    end
     if @draft.save
       if sending
-        SendDraftJob.perform_later(@draft)
+        @draft.schedule!(send_at)
+        return redirect_to(drafts_path, notice: "Envoi prévu #{helpers.send_time_label(send_at)}.") if send_at
+
+        flash[:cancel_send] = @draft.id
         flourish("sent")
-        redirect_to(@draft.conversation ? conversation_path(@draft.conversation) : drafts_path, notice: "Envoi en cours depuis #{@draft.mailbox.display_name}.")
+        # Depuis « Répondre à la suite » : le fil quitte la pile tout de suite, et on passe au suivant.
+        if params[:focus].present? && @draft.conversation
+          @draft.conversation.put_in_stack_for!(Current.user, "reply_later", on: false)
+          return redirect_to(focus_reply_path, notice: "Envoi depuis #{@draft.mailbox.display_name} dans #{Draft::UNDO_DELAY.to_i} s.")
+        end
+        redirect_to(@draft.conversation ? conversation_path(@draft.conversation) : drafts_path, notice: "Envoi depuis #{@draft.mailbox.display_name} dans #{Draft::UNDO_DELAY.to_i} s.")
       else
         redirect_to edit_draft_path(@draft), notice: "Brouillon enregistré."
       end
     else
-      @draft.status = "draft"
       render(@draft.new_record? ? :new : :edit, status: :unprocessable_entity)
     end
   end

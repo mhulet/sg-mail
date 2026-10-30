@@ -111,13 +111,17 @@
       <%= render "shared/flourish", kind: kind, count: flash[:flourish_count] %>
     <% end %>
     <% if notice %>
-      <div class="toast" role="status" data-controller="toast">
+      <div class="toast" role="status" data-controller="toast" <%= tag.attributes(data: { toast_delay_value: (Draft::UNDO_DELAY.in_milliseconds - 500).to_i }) if flash[:cancel_send] %>>
         <p class="flash notice"><%= notice %></p>
+        <% if flash[:cancel_send].present? %>
+          <%= button_to "Annuler", cancel_draft_path(flash[:cancel_send]), class: "undo hint", data: { shortcut: "z" } %>
+        <% end %>
         <% if flash[:undo].present? %>
           <%= button_to "Annuler", bulk_conversations_path, params: { operation: "unarchive", ids: flash[:undo] }, class: "undo hint", data: { shortcut: "z" } %>
         <% end %>
       </div>
     <% end %>
     <%= render "shared/shortcuts" if authenticated? %>
+    <%= render "shared/palette" if authenticated? && Current.account %>
   </body>
 </html>

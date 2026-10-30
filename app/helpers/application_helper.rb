@@ -57,6 +57,7 @@ module ApplicationHelper
   # L'espace de la page affichée, pour sa couleur : la pile ou la boîte de la liste, le Screener, sinon la réception.
   def current_space
     return "screener" if controller_name == "screenings"
+    return "later" if controller_name == "focus_replies"
     return "imbox" unless controller_name == "conversations"
 
     key = @stack || (action_name == "show" ? @bucket : @box)

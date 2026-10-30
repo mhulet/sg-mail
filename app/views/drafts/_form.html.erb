@@ -21,8 +21,20 @@
     <p class="muted">Les pièces jointes du message d'origine seront jointes à l'envoi.</p>
   <% end %>
 
-  <p class="actions">
+  <div class="actions">
     <%= f.submit "Envoyer", name: "send", value: "Envoyer" %>
+    <details class="send-later">
+      <summary>Envoyer plus tard</summary>
+      <div class="send-later-menu">
+        <% send_later_choices.each do |label, time| %>
+          <%= f.button name: "send_later", value: time.iso8601 do %><%= label %><span class="muted"><%= l(time, format: "%a %-d %b") %></span><% end %>
+        <% end %>
+        <span class="send-later-custom">
+          <%= datetime_local_field_tag :send_at, nil, min: Time.zone.now.strftime("%Y-%m-%dT%H:%M"), aria: { label: "Autre moment" } %>
+          <%= f.button "Programmer", name: "send_later", value: "custom", class: "link" %>
+        </span>
+      </div>
+    </details>
     <%= f.submit "Enregistrer le brouillon" %>
-  </p>
+  </div>
 <% end %>

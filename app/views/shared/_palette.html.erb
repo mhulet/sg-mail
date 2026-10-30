@@ -1,0 +1,17 @@
+<%# La palette ⌘K (palette_controller) : les entrées ci-dessous s'ajoutent à ce que la page propose déjà. %>
+<div data-controller="palette" data-palette-search-url-value="<%= search_path %>">
+  <dialog class="palette" data-palette-target="dialog" data-action="click->palette#backdrop" aria-label="Palette de commandes">
+    <input type="text" class="palette-input" placeholder="Que veux-tu faire ? Un fil, une action, un endroit…" autocomplete="off" spellcheck="false"
+      role="combobox" aria-expanded="true" aria-controls="palette-list" aria-autocomplete="list"
+      data-palette-target="input" data-action="input->palette#type keydown->palette#navigate">
+    <ul class="palette-list" id="palette-list" role="listbox" data-palette-target="list" data-action="click->palette#run mousemove->palette#hover"></ul>
+    <p class="palette-foot"><kbd>↑</kbd><kbd>↓</kbd> choisir <kbd>↵</kbd> lancer <kbd>esc</kbd> fermer</p>
+    <div hidden>
+      <%= link_to "Répondre à la suite", focus_reply_path, data: { palette_target: "extra" } %>
+      <%= link_to "Mes fils archivés", conversations_path(archived: 1), data: { palette_target: "extra" } %>
+      <%= link_to "Assignés à moi", conversations_path(mine: 1), data: { palette_target: "extra" } %>
+      <%= link_to "Non lus seulement", conversations_path(unread: 1), data: { palette_target: "extra" } %>
+      <%= link_to "Connecter une boîte", new_mailbox_path, data: { palette_target: "extra" } %>
+    </div>
+  </dialog>
+</div>

@@ -2,7 +2,13 @@ class SendDraftJob < ApplicationJob
   queue_as :default
 
   def perform(draft)
-    return unless draft.status == "sending"
+    # Un envoi programmé ne part qu'à son heure, et une seule fois : il a pu être annulé, ou reprogrammé
+    # (un autre job attend alors la nouvelle heure).
+    draft.with_lock do
+      return unless draft.status == "sending" || (draft.scheduled? && draft.send_at <= 1.second.from_now)
+
+      draft.update!(status: "sending")
+    end
 
     MailSender.new(draft).deliver
     draft.update!(status: "sent", sent_at: Time.current, error: nil)
