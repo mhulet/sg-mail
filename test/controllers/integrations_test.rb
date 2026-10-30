@@ -133,6 +133,16 @@ class IntegrationsTest < ActionDispatch::IntegrationTest
     assert_includes @calls.last[:system_].last[:text], "My Semisto: not connected"
   end
 
+  test "a tool that refuses SG Mail says why" do
+    integration = create_integration
+    https!
+    sign_in_as users(:michael)
+    @server.expired = true
+    post integration_connection_path(integration, account_id: @semisto.id)
+    assert_redirected_to integrations_path(account_id: @semisto.id)
+    assert_equal "My Semisto n'a pas accepté la connexion (invalid_grant).", flash[:alert]
+  end
+
   test "a connection belongs to one person: others do not get its tools" do
     connect(users(:michael))
     names = with_account(@semisto) { AgentToolbox.new(users(:mohammad)).definitions.map { |tool| tool[:name] } }

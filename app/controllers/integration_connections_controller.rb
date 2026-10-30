@@ -7,7 +7,8 @@ class IntegrationConnectionsController < ApplicationController
     if error.authorization_url
       redirect_to error.authorization_url.to_s, allow_other_host: true
     else
-      redirect_to integrations_path, alert: "#{@integration&.name || "L'outil"} n'a pas accepté la connexion. Réessaie dans un instant."
+      Rails.logger.warn("Outil #{@integration&.id} : #{error.reason}")
+      redirect_to integrations_path, alert: "#{@integration&.name || "L'outil"} n'a pas accepté la connexion#{" (#{error.reason.truncate(200)})" if error.reason.present?}."
     end
   end
 
