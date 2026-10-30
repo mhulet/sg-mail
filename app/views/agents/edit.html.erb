@@ -5,9 +5,21 @@
 
 <%= render "shared/errors", record: @agent %>
 
-<%= form_with model: @agent, url: agent_path, method: :patch, class: "stacked agent-form" do |f| %>
+<%= form_with model: @agent, url: agent_path, method: :patch, class: "stacked agent-form", multipart: true do |f| %>
   <%= f.label :name, "Prénom" %>
   <%= f.text_field :name, maxlength: 30, required: true %>
+
+  <%= f.label :avatar, "Image (facultatif)" %>
+  <div class="agent-avatar-field">
+    <%= agent_avatar(@agent) %>
+    <div>
+      <%= f.file_field :avatar, accept: Agent::AVATAR_TYPES.join(",") %>
+      <p class="muted">PNG, JPEG, GIF ou WebP, 2 Mo au plus. Sans image, ton agent garde son initiale dans sa couleur.</p>
+      <% if @agent.persisted? && @agent.avatar.attached? %>
+        <label><%= f.check_box :remove_avatar, {}, "1", nil %> Retirer l'image</label>
+      <% end %>
+    </div>
+  </div>
 
   <fieldset class="swatches">
     <legend>Couleur</legend>

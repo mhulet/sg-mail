@@ -53,6 +53,34 @@ class AgentTest < ActionDispatch::IntegrationTest
     assert_equal "Plume", Agent.for(users(:mohammad)).name
   end
 
+  test "each person can give their agent an image, only served to them" do
+    enable_agent
+    sign_in_as users(:michael)
+    svg = Rack::Test::UploadedFile.new(StringIO.new(+'<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>'), "image/svg+xml", original_filename: "a.svg")
+    patch agent_path(account_id: @semisto.id), params: { agent: { name: "Plume", avatar: svg } }
+    assert_response :unprocessable_entity
+
+    patch agent_path(account_id: @semisto.id), params: { agent: { name: "Plume", avatar: fixture_file_upload("pixel.png", "image/png") } }
+    agent = Agent.find_by!(user: users(:michael))
+    assert agent.avatar.attached?
+    get agent_settings_path(account_id: @semisto.id)
+    assert_select "img.agent-avatar.photo[src^=?]", avatar_agent_path(account_id: @semisto.id)
+    get conversation_path(@conversation, account_id: @semisto.id)
+    assert_select "#agent img.agent-avatar.photo"
+
+    get avatar_agent_path(account_id: @semisto.id)
+    assert_equal [ "image/png", "nosniff" ], [ response.media_type, response.headers["X-Content-Type-Options"] ]
+    sign_in_as users(:mohammad)
+    get avatar_agent_path(account_id: @semisto.id)
+    assert_response :not_found
+
+    sign_in_as users(:michael)
+    patch agent_path(account_id: @semisto.id), params: { agent: { name: "Plume", remove_avatar: "1" } }
+    assert_not agent.reload.avatar.attached?
+    get agent_settings_path(account_id: @semisto.id)
+    assert_select "span.agent-avatar", "P"
+  end
+
   test "reads run at once, writes wait for confirmation, then the agent carries on" do
     enable_agent
     @replies << tool_reply("toolu_1", "get_conversation", { "id" => @conversation.id })
