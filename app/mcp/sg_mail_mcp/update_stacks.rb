@@ -7,6 +7,7 @@ class SgMailMcp::UpdateStacks < SgMailMcp::Tool
     arrives; once everyone with access archived it, it also leaves the Gmail inbox); false brings it back.
   TEXT
   writes!(idempotent: true)
+  locates conversation_id: Conversation
   input_schema(properties: {
     conversation_id: { type: "integer" },
     reply_later: { type: "boolean" },

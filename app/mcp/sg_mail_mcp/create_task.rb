@@ -4,6 +4,7 @@ class SgMailMcp::CreateTask < SgMailMcp::Tool
     is given (null: nobody). external_ref keeps a link to the same task in another tool (e.g. a MySemisto URL).
   TEXT
   writes!
+  locates message_id: Message, conversation_id: Conversation
   input_schema(properties: {
     title: { type: "string" },
     message_id: { type: "integer" },

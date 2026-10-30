@@ -1,6 +1,7 @@
 class SgMailMcp::UpdateDraft < SgMailMcp::Tool
   description "Edit one of my drafts. body replaces the whole text, quotation included."
   writes!(idempotent: true)
+  locates id: Draft
   input_schema(properties: {
     id: { type: "integer" },
     to: { type: "array", items: { type: "string" } },

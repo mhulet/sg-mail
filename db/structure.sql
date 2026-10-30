@@ -820,7 +820,7 @@ CREATE TABLE public.oauth_authorization_codes (
     id bigint NOT NULL,
     oauth_client_id bigint NOT NULL,
     user_id bigint NOT NULL,
-    account_id bigint NOT NULL,
+    account_id bigint,
     code_digest character varying NOT NULL,
     redirect_uri character varying NOT NULL,
     code_challenge character varying NOT NULL,
@@ -892,7 +892,7 @@ CREATE TABLE public.oauth_tokens (
     id bigint NOT NULL,
     oauth_client_id bigint NOT NULL,
     user_id bigint NOT NULL,
-    account_id bigint NOT NULL,
+    account_id bigint,
     access_token_digest character varying NOT NULL,
     refresh_token_digest character varying NOT NULL,
     access_expires_at timestamp(6) without time zone NOT NULL,
@@ -4088,6 +4088,7 @@ ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261030160000'),
 ('20261030080000'),
 ('20261029230000'),
 ('20261029220247'),

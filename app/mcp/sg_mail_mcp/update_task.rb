@@ -1,6 +1,7 @@
 class SgMailMcp::UpdateTask < SgMailMcp::Tool
   description "Complete (status done), reopen (status open) or edit a task."
   writes!(idempotent: true)
+  locates id: Task
   input_schema(properties: {
     id: { type: "integer" },
     status: { type: "string", enum: %w[open done] },

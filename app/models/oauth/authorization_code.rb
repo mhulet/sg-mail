@@ -4,7 +4,7 @@ class Oauth::AuthorizationCode < ApplicationRecord
 
   belongs_to :client, class_name: "Oauth::Client", foreign_key: :oauth_client_id, inverse_of: :authorization_codes
   belongs_to :user
-  belongs_to :account
+  belongs_to :account, optional: true # vide : tous les clients de la personne
 
   attr_reader :code
 

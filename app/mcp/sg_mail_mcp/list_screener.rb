@@ -5,6 +5,7 @@ class SgMailMcp::ListScreener < SgMailMcp::Tool
     Decisions are mine only: colleagues screen for themselves.
   TEXT
   read_only!
+  aggregates!
   input_schema(properties: { limit: { type: "integer", minimum: 1, maximum: 200 } })
 
   def self.perform(actions, serializer, limit: 100)

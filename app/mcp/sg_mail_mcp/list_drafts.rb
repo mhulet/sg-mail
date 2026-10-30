@@ -1,6 +1,7 @@
 class SgMailMcp::ListDrafts < SgMailMcp::Tool
   description "My unsent drafts (and failed sends, with the error)."
   read_only!
+  aggregates!
   input_schema(properties: {})
 
   def self.perform(actions, serializer)

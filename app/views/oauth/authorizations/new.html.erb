@@ -12,7 +12,8 @@
   <% if @memberships.many? %>
     <p>
       <%= label_tag :sg_account_id, "Client" %>
-      <%= select_tag :sg_account_id, options_for_select(@memberships.map { |m| [ m.account.name, m.account_id ] }) %>
+      <%= select_tag :sg_account_id, options_for_select(@memberships.map { |m| [ m.account.name, m.account_id ] }),
+            include_blank: "Tous mes clients (#{@memberships.map { |m| m.account.name }.to_sentence})" %>
     </p>
   <% end %>
   <div class="actions">
