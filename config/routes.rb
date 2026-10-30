@@ -46,7 +46,9 @@ Rails.application.routes.draw do
       post :mark_all_read, on: :collection
       post :bulk, on: :collection
     end
-    resources :drafts, except: :show
+    resources :drafts, except: :show do
+      post :cancel, on: :member
+    end
     resource :focus_reply, only: :show, path: "plus-tard/a-la-suite"
     resources :screenings, only: %i[index create], path: "screener"
     resource :search, only: :show

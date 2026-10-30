@@ -6,7 +6,11 @@
 <table>
   <% @drafts.each do |draft| %>
     <tr>
-      <td><%= { "draft" => "Brouillon", "sending" => "Envoi en cours", "sent" => "Envoyé", "failed" => "Échec" }.fetch(draft.status) %></td>
+      <td><%= Draft::STATUS_LABELS.fetch(draft.status) %>
+        <% if draft.scheduled? %>
+          <br><span class="muted nowrap"><%= send_time_label(draft.send_at) %></span>
+          <%= button_to "Annuler l'envoi", cancel_draft_path(draft), class: "link", form: { class: "inline" } %>
+        <% end %></td>
       <td><%= draft.editable? ? link_to(draft.subject.presence || "(sans objet)", edit_draft_path(draft)) : (draft.subject.presence || "(sans objet)") %>
         <span class="muted">à <%= draft.to_addresses.join(", ").presence || "personne" %></span>
         <% if draft.status == "failed" %><br><span class="field-errors"><%= draft.error&.truncate(120) %></span><% end %></td>

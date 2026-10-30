@@ -755,3 +755,16 @@ table.conversations.seen { box-shadow: none; background: var(--sheet-2); }
 .focus-form { margin-top: 1rem; }
 .focus-form textarea { width: 100%; }
 .focus-skip { margin: .4rem 0 0; display: flex; gap: 1.2rem; font-size: .88rem; }
+
+/* ─── Envoyer plus tard : un petit menu sous le bouton d'envoi ─── */
+.send-later { position: relative; display: inline-block; }
+.send-later summary { list-style: none; cursor: pointer; padding: .45rem .9rem; border: 1px solid var(--rule-strong); border-radius: 999px; font-weight: 550; color: var(--ink); }
+.send-later summary::-webkit-details-marker { display: none; }
+.send-later summary::after { content: " ▾"; color: var(--muted); }
+.send-later[open] summary { border-color: var(--space); }
+.send-later-menu { position: absolute; z-index: 5; bottom: calc(100% + .4rem); left: 0; display: flex; flex-direction: column; gap: .2rem; min-width: 15rem;
+  padding: .4rem; border: 1px solid var(--rule); border-radius: 12px; background: var(--sheet); box-shadow: var(--shadow); animation: palette-in .18s var(--ease); }
+.send-later-menu > button { display: flex; justify-content: space-between; gap: 1rem; border: 0; border-radius: 8px; background: none; text-align: left; padding: .45rem .6rem; }
+.send-later-menu > button:hover { background: var(--space-soft); }
+.send-later-custom { display: flex; align-items: center; gap: .5rem; padding: .4rem .6rem 0; border-top: 1px solid var(--rule); margin-top: .2rem; }
+.send-later-custom input { flex: 1; min-width: 0; }

@@ -28,7 +28,7 @@ class DraftsControllerTest < ActionDispatch::IntegrationTest
     assert_enqueued_with(job: SendDraftJob) do
       patch draft_path(draft, account_id: @semisto.id), params: { send: "Envoyer", draft: { body: "C'est noté, merci." } }
     end
-    assert_equal "sending", with_account(@semisto) { draft.reload.status }
+    assert_equal "scheduled", with_account(@semisto) { draft.reload.status }
     follow_redirect!
     assert_select ".flourish[data-kind=sent] .plane" # l'avion en papier décolle
   end

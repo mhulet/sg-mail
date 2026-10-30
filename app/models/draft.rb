@@ -2,7 +2,10 @@
 # Seule son autrice le voit ; l'envoi passe par SendDraftJob (MailSender).
 class Draft < ApplicationRecord
   KINDS = %w[new reply reply_all forward].freeze
-  STATUSES = %w[draft sending sent failed].freeze
+  STATUSES = %w[draft scheduled sending sent failed].freeze
+  # Le temps d'annuler un envoi, comme chez Superhuman.
+  UNDO_DELAY = 10.seconds
+  STATUS_LABELS = { "draft" => "Brouillon", "scheduled" => "Prévu", "sending" => "Envoi en cours", "sent" => "Envoyé", "failed" => "Échec" }.freeze
 
   acts_as_tenant :account
   belongs_to :mailbox
@@ -71,6 +74,25 @@ class Draft < ApplicationRecord
   end
 
   def editable? = status.in?(%w[draft failed])
+  def scheduled? = status == "scheduled"
+
+  # Programme l'envoi : dans UNDO_DELAY (le temps d'annuler) ou à l'heure choisie. SendDraftJob part à cette heure-là.
+  def schedule!(at = nil)
+    update!(status: "scheduled", send_at: at || UNDO_DELAY.from_now, error: nil)
+    SendDraftJob.set(wait_until: send_at).perform_later(self)
+  end
+
+  # Annule un envoi programmé : le message redevient un brouillon.
+  def cancel_sending!
+    with_lock do
+      return false unless scheduled?
+
+      update!(status: "draft", send_at: nil)
+    end
+  end
+
+  # Un envoi programmé plus loin que le délai d'annulation (« Envoyer plus tard »).
+  def send_later? = scheduled? && send_at.present? && send_at > UNDO_DELAY.from_now
   def reply? = kind.in?(%w[reply reply_all])
   def forward? = kind == "forward"
 
