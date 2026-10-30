@@ -8,7 +8,7 @@ class Account < ApplicationRecord
 
   # Tables qui appartiennent au client, dans un ordre qui respecte leurs clés étrangères.
   OWNED_TABLES = %w[
-    agent_actions agent_messages agent_chats readings access_logs notes drafts conversation_states screenings messages conversations mail_folders
+    integration_connections integrations agent_actions agent_messages agent_chats readings access_logs notes drafts conversation_states screenings messages conversations mail_folders
     mailbox_accesses mailboxes oauth_tokens oauth_authorization_codes api_tokens invitations memberships
   ].freeze
 

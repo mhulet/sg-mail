@@ -214,6 +214,11 @@ aussi en plein écran (« g a »). Note de conception : `cadrage/sg-mail-agent.m
 - **Claude** : Sonnet 5.5 par l'API Anthropic (`ANTHROPIC_API_KEY`), boucle d'outils dans `AgentRun`, en tâche de
   fond (`AgentRunJob`) ; la page se rafraîchit à chaque étape (Turbo, Action Cable).
 - Discussions privées, effacées après 90 jours sans activité ; les fils lus par l'agent vont au journal d'accès.
+- **Outils connectés** (Réglages → Outils) : un admin déclare un outil du client par l'adresse de son serveur MCP
+  (My Semisto, Claudy, l'admin d'un site…) ; chaque membre y connecte son propre compte (OAuth 2.1 avec inscription
+  dynamique et PKCE, gérés par le client du gem `mcp`, retour sur `/integrations/callback`). Les jetons sont chiffrés
+  dans `IntegrationConnection` et ne sortent jamais de SG Mail. L'agent voit leurs outils préfixés
+  (`mysemisto__search`), en lecture libre si l'outil est marqué `readOnlyHint`, sinon avec confirmation (`RemoteMcp`).
 
 ## Synchros
 

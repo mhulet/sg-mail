@@ -1,0 +1,59 @@
+<% content_for :title, "Outils · SG Mail" %>
+<h1>Outils <span class="muted">· <%= current_account.name %></span></h1>
+<p class="muted">Les outils de <%= current_account.name %> que ton agent peut utiliser en ton nom : chercher un projet,
+  créer une tâche, consulter une réservation… Tu y connectes ton propre compte, qui peut être différent de ton adresse SG Mail.
+  L'agent n'y a jamais plus de droits que toi, et tout ce qui change quelque chose attend ta confirmation.</p>
+
+<% if @integrations.any? %>
+  <table class="integrations">
+    <% @integrations.each do |integration| %>
+      <% connection = @connections[integration.id] %>
+      <tr>
+        <th><%= integration.name %><span class="muted"><%= URI.parse(integration.mcp_url).host rescue integration.mcp_url %></span></th>
+        <td class="muted">
+          <% if connection&.connected? %>
+            Connecté<%= " en tant que #{connection.remote_identity}" if connection.remote_identity %> · <%= pluralize(connection.tools_list.size, "outil") %>
+          <% elsif connection %>
+            Déconnecté : reconnecte ton compte
+          <% else %>
+            Pas encore connecté
+          <% end %>
+        </td>
+        <td>
+          <%= button_to connection&.connected? ? "Reconnecter" : "Connecter mon compte", integration_connection_path(integration),
+                class: connection&.connected? ? "link" : nil, data: { turbo: false } %>
+        </td>
+        <td>
+          <% if connection %>
+            <%= button_to "Déconnecter", integration_connection_path(integration), method: :delete, class: "link muted",
+                  form: { data: { turbo_confirm: "Déconnecter ton compte #{integration.name} ? L'agent ne l'utilisera plus pour toi." } } %>
+          <% end %>
+          <% if current_membership.admin? %>
+            <%= button_to "Retirer", integration_path(integration), method: :delete, class: "link muted",
+                  form: { data: { turbo_confirm: "Retirer #{integration.name} pour tout #{current_account.name} ? Les comptes connectés seront oubliés." } } %>
+          <% end %>
+        </td>
+      </tr>
+    <% end %>
+  </table>
+<% else %>
+  <p class="muted">Aucun outil pour l'instant.<%= " Un admin de #{current_account.name} peut en ajouter." unless current_membership.admin? %></p>
+<% end %>
+
+<% if current_membership.admin? %>
+  <section class="card">
+    <h2>Ajouter un outil</h2>
+    <p class="muted">L'adresse de son serveur MCP, celle qu'on donne à Claude comme connecteur personnalisé
+      (par exemple <code>https://my.semisto.org/mcp</code>). Il doit accepter la connexion OAuth avec inscription automatique.</p>
+    <%= form_with model: @integration, url: integrations_path, class: "stacked" do |f| %>
+      <% if @integration.errors.any? %>
+        <p class="flash alert"><%= @integration.errors.full_messages.to_sentence %></p>
+      <% end %>
+      <%= f.label :name, "Nom" %>
+      <%= f.text_field :name, placeholder: "My Semisto", required: true, maxlength: 40 %>
+      <%= f.label :mcp_url, "Adresse du serveur MCP" %>
+      <%= f.url_field :mcp_url, placeholder: "https://…/mcp", required: true %>
+      <p><%= f.submit "Ajouter" %></p>
+    <% end %>
+  </section>
+<% end %>

@@ -539,6 +539,83 @@ ALTER SEQUENCE public.drafts_id_seq OWNED BY public.drafts.id;
 
 
 --
+-- Name: integration_connections; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.integration_connections (
+    id bigint NOT NULL,
+    account_id bigint NOT NULL,
+    integration_id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    remote_identity character varying,
+    oauth text,
+    instructions text,
+    tools jsonb DEFAULT '[]'::jsonb NOT NULL,
+    tools_fetched_at timestamp(6) without time zone,
+    connected_at timestamp(6) without time zone,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+ALTER TABLE ONLY public.integration_connections FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: integration_connections_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.integration_connections_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: integration_connections_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.integration_connections_id_seq OWNED BY public.integration_connections.id;
+
+
+--
+-- Name: integrations; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.integrations (
+    id bigint NOT NULL,
+    account_id bigint NOT NULL,
+    name character varying NOT NULL,
+    slug character varying NOT NULL,
+    mcp_url character varying NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+ALTER TABLE ONLY public.integrations FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: integrations_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.integrations_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: integrations_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.integrations_id_seq OWNED BY public.integrations.id;
+
+
+--
 -- Name: invitations; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1743,6 +1820,20 @@ ALTER TABLE ONLY public.drafts ALTER COLUMN id SET DEFAULT nextval('public.draft
 
 
 --
+-- Name: integration_connections id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.integration_connections ALTER COLUMN id SET DEFAULT nextval('public.integration_connections_id_seq'::regclass);
+
+
+--
+-- Name: integrations id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.integrations ALTER COLUMN id SET DEFAULT nextval('public.integrations_id_seq'::regclass);
+
+
+--
 -- Name: invitations id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -2069,6 +2160,22 @@ ALTER TABLE ONLY public.conversations
 
 ALTER TABLE ONLY public.drafts
     ADD CONSTRAINT drafts_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: integration_connections integration_connections_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.integration_connections
+    ADD CONSTRAINT integration_connections_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: integrations integrations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.integrations
+    ADD CONSTRAINT integrations_pkey PRIMARY KEY (id);
 
 
 --
@@ -2584,6 +2691,48 @@ CREATE INDEX index_drafts_on_source_message_id ON public.drafts USING btree (sou
 --
 
 CREATE INDEX index_drafts_on_user_id ON public.drafts USING btree (user_id);
+
+
+--
+-- Name: index_integration_connections_on_account_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_integration_connections_on_account_id ON public.integration_connections USING btree (account_id);
+
+
+--
+-- Name: index_integration_connections_on_integration_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_integration_connections_on_integration_id ON public.integration_connections USING btree (integration_id);
+
+
+--
+-- Name: index_integration_connections_on_integration_id_and_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_integration_connections_on_integration_id_and_user_id ON public.integration_connections USING btree (integration_id, user_id);
+
+
+--
+-- Name: index_integration_connections_on_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_integration_connections_on_user_id ON public.integration_connections USING btree (user_id);
+
+
+--
+-- Name: index_integrations_on_account_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_integrations_on_account_id ON public.integrations USING btree (account_id);
+
+
+--
+-- Name: index_integrations_on_account_id_and_slug; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_integrations_on_account_id_and_slug ON public.integrations USING btree (account_id, slug);
 
 
 --
@@ -3316,6 +3465,14 @@ ALTER TABLE ONLY public.access_logs
 
 
 --
+-- Name: integration_connections fk_rails_45a391073d; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.integration_connections
+    ADD CONSTRAINT fk_rails_45a391073d FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
 -- Name: oauth_authorization_codes fk_rails_46f7342106; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3369,6 +3526,14 @@ ALTER TABLE ONLY public.drafts
 
 ALTER TABLE ONLY public.readings
     ADD CONSTRAINT fk_rails_5ed0692eb7 FOREIGN KEY (message_id) REFERENCES public.messages(id) ON DELETE CASCADE;
+
+
+--
+-- Name: integrations fk_rails_63f87b241e; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.integrations
+    ADD CONSTRAINT fk_rails_63f87b241e FOREIGN KEY (account_id) REFERENCES public.accounts(id);
 
 
 --
@@ -3492,6 +3657,14 @@ ALTER TABLE ONLY public.passkeys
 
 
 --
+-- Name: integration_connections fk_rails_916b4c71ba; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.integration_connections
+    ADD CONSTRAINT fk_rails_916b4c71ba FOREIGN KEY (integration_id) REFERENCES public.integrations(id) ON DELETE CASCADE;
+
+
+--
 -- Name: notes fk_rails_9259470eb1; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3561,6 +3734,14 @@ ALTER TABLE ONLY public.access_logs
 
 ALTER TABLE ONLY public.messages
     ADD CONSTRAINT fk_rails_a231e55201 FOREIGN KEY (account_id) REFERENCES public.accounts(id);
+
+
+--
+-- Name: integration_connections fk_rails_ace6b2880f; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.integration_connections
+    ADD CONSTRAINT fk_rails_ace6b2880f FOREIGN KEY (account_id) REFERENCES public.accounts(id);
 
 
 --
@@ -3803,6 +3984,20 @@ CREATE POLICY account_isolation ON public.drafts USING (((current_setting('sg_ma
 
 
 --
+-- Name: integration_connections account_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY account_isolation ON public.integration_connections USING (((current_setting('sg_mail.bypass_rls'::text, true) = 'on'::text) OR (account_id = (NULLIF(current_setting('sg_mail.account_id'::text, true), ''::text))::bigint))) WITH CHECK (((current_setting('sg_mail.bypass_rls'::text, true) = 'on'::text) OR (account_id = (NULLIF(current_setting('sg_mail.account_id'::text, true), ''::text))::bigint)));
+
+
+--
+-- Name: integrations account_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY account_isolation ON public.integrations USING (((current_setting('sg_mail.bypass_rls'::text, true) = 'on'::text) OR (account_id = (NULLIF(current_setting('sg_mail.account_id'::text, true), ''::text))::bigint))) WITH CHECK (((current_setting('sg_mail.bypass_rls'::text, true) = 'on'::text) OR (account_id = (NULLIF(current_setting('sg_mail.account_id'::text, true), ''::text))::bigint)));
+
+
+--
 -- Name: mail_folders account_isolation; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -3888,6 +4083,18 @@ ALTER TABLE public.conversations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.drafts ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: integration_connections; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.integration_connections ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: integrations; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.integrations ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: mail_folders; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -3936,6 +4143,7 @@ ALTER TABLE public.screenings ENABLE ROW LEVEL SECURITY;
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261030180000'),
 ('20261030170000'),
 ('20261030160000'),
 ('20261030080000'),

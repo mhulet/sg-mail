@@ -77,7 +77,7 @@ class McpAllAccountsTest < ActionDispatch::IntegrationTest
   end
 
   test "the agent works in one client and never sees account_id" do
-    definitions = AgentToolbox.new(@michael).definitions
+    definitions = with_account(accounts(:semisto)) { AgentToolbox.new(@michael).definitions }
     assert definitions.none? { |definition| definition[:input_schema][:properties].key?(:account_id) }
   end
 

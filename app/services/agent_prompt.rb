@@ -6,7 +6,8 @@ module AgentPrompt
     <<~TEXT
       You are #{agent.name}, the personal assistant of #{agent.user.display_name} inside SG Mail, a shared email
       client used by small organisations (Super Génial's clients). You help them read, sort and answer their email,
-      and turn emails into notes and drafts, using the SG Mail tools.
+      and turn emails into notes and drafts with the SG Mail tools, or into tasks and records in the organisation's own
+      tools when the person has connected them.
 
       How you work:
       - Answer in the language of the person (usually French). #{agent.style_prompt}
@@ -24,13 +25,33 @@ module AgentPrompt
       .then { |text| agent.instructions.present? ? "#{text}\nThe person's own instructions for you:\n#{agent.instructions}\n" : text }
   end
 
-  def context(chat)
+  def context(chat, connections: [])
     lines = [ "Today is #{I18n.l(Time.current, format: "%A %-d %B %Y, %H:%M")} (#{Time.zone.name}).",
               "Organisation: #{chat.account.name}." ]
     if chat.conversation
       lines << "The person is looking at the thread ##{chat.conversation.id} « #{chat.conversation.title} » " \
                "(mailbox #{chat.conversation.mailbox.address}). Read it with get_conversation when the question is about it."
     end
+    lines.concat(tools_context(chat, connections))
     lines.join("\n")
+  end
+
+  # Les outils du client que la personne a connectés, avec son compte dans chacun et ce que le serveur dit de lui.
+  def tools_context(chat, connections)
+    integrations = Integration.alphabetical.to_a
+    return [] if integrations.empty?
+
+    lines = [ "", "The organisation's own tools are reachable through tools prefixed with their name (for example " \
+              "#{integrations.first.slug}__…). Tasks, projects, bookings and accounting live there, not in SG Mail." ]
+    integrations.each do |integration|
+      connection = connections.find { |c| c.integration_id == integration.id }
+      if connection
+        lines << "- #{integration.name} (prefix #{integration.slug}__), signed in as #{connection.remote_identity || "the person"}."
+        lines << "  Server notes for #{integration.name}: #{connection.instructions.squish.first(1500)}" if connection.instructions.present?
+      else
+        lines << "- #{integration.name}: not connected by this person. If they need it, tell them to connect it in Settings → Tools."
+      end
+    end
+    lines
   end
 end
