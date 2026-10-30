@@ -48,7 +48,9 @@
           <% end %>
         </div>
         <% if Current.account %>
-          <%= link_to "Écrire", new_draft_path, class: "compose-button hint", data: { shortcut: "c" } %>
+          <%= link_to new_draft_path, class: [ "compose-button", "hint", ("floating" if list_page?) ], data: { shortcut: "c" } do %>
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M13.5 3.5l3 3L7 16l-4 1 1-4 9.5-9.5z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>Écrire
+          <% end %>
           <nav class="spaces" aria-label="Espaces">
             <%= nav_link "Réception", account_root_path, shortcut: "g i", space: "imbox", current: imbox_mailbox_page? %>
             <% if sidebar_mailboxes.many? %>

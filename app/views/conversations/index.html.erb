@@ -7,29 +7,35 @@
   <p class="tagline"><%= space_tagline(@archived ? "archived" : @stack || @box) %></p>
 </header>
 
-<div class="actions filters">
-  <% if @mailboxes.many? || @mailbox %>
-    <%= form_with url: conversations_path, method: :get, class: "inline" do |f| %>
-      <%= f.hidden_field :box, value: box if box %>
-      <%= f.hidden_field :stack, value: stack if stack %>
-      <%= f.hidden_field :archived, value: "1" if @archived %>
-      <%= f.select :mailbox_id, [ [ "Toutes les boîtes", "" ] ] + mailbox_options(@mailboxes),
-            { selected: @mailbox&.id }, onchange: "this.form.requestSubmit()", aria: { label: "Boîte" } %>
-      <%= f.hidden_field :unread, value: params[:unread] if params[:unread].present? %>
+<% active_filters = [ @mailbox, params[:mine] == "1", params[:unread] == "1" ].count(&:itself) %>
+<div class="filter-bar<%= " open" if active_filters.positive? %>" data-controller="toggle">
+  <button type="button" class="filter-toggle" data-toggle-target="button" data-action="toggle#toggle" aria-expanded="<%= active_filters.positive? %>" aria-controls="filters">
+    Filtrer<%= tag.span(active_filters, class: "filter-count") if active_filters.positive? %>
+  </button>
+  <div class="actions filters" id="filters">
+    <% if @mailboxes.many? || @mailbox %>
+      <%= form_with url: conversations_path, method: :get, class: "inline" do |f| %>
+        <%= f.hidden_field :box, value: box if box %>
+        <%= f.hidden_field :stack, value: stack if stack %>
+        <%= f.hidden_field :archived, value: "1" if @archived %>
+        <%= f.select :mailbox_id, [ [ "Toutes les boîtes", "" ] ] + mailbox_options(@mailboxes),
+              { selected: @mailbox&.id }, onchange: "this.form.requestSubmit()", aria: { label: "Boîte" } %>
+        <%= f.hidden_field :unread, value: params[:unread] if params[:unread].present? %>
+      <% end %>
     <% end %>
-  <% end %>
-  <% if params[:mine] == "1" %>
-    <%= link_to "Tous les fils", conversations_path(box: box, stack: stack, mailbox_id: @mailbox&.id) %>
-  <% else %>
-    <%= link_to "Assignés à moi", conversations_path(box: box, stack: stack, mailbox_id: @mailbox&.id, mine: 1) %>
-  <% end %>
-  <% if params[:unread] == "1" %>
-    <%= link_to "Tous les fils", conversations_path(box: box, stack: stack, mailbox_id: @mailbox&.id) %>
-  <% else %>
-    <%= link_to "Non lus seulement", conversations_path(box: box, stack: stack, mailbox_id: @mailbox&.id, unread: 1) %>
-  <% end %>
-  <%= button_to "Tout marquer comme lu", mark_all_read_conversations_path(box: box, stack: stack, mailbox_id: @mailbox&.id), class: "link",
-        form: { data: { turbo_confirm: "Marquer comme lus tous les messages#{" de #{@mailbox.display_name}" if @mailbox} ?" } } %>
+    <% if params[:mine] == "1" %>
+      <%= link_to "Tous les fils", conversations_path(box: box, stack: stack, mailbox_id: @mailbox&.id) %>
+    <% else %>
+      <%= link_to "Assignés à moi", conversations_path(box: box, stack: stack, mailbox_id: @mailbox&.id, mine: 1) %>
+    <% end %>
+    <% if params[:unread] == "1" %>
+      <%= link_to "Tous les fils", conversations_path(box: box, stack: stack, mailbox_id: @mailbox&.id) %>
+    <% else %>
+      <%= link_to "Non lus seulement", conversations_path(box: box, stack: stack, mailbox_id: @mailbox&.id, unread: 1) %>
+    <% end %>
+    <%= button_to "Tout marquer comme lu", mark_all_read_conversations_path(box: box, stack: stack, mailbox_id: @mailbox&.id), class: "link",
+          form: { data: { turbo_confirm: "Marquer comme lus tous les messages#{" de #{@mailbox.display_name}" if @mailbox} ?" } } %>
+  </div>
 </div>
 
 <% if @stack_counts&.values&.any?(&:positive?) %>
@@ -61,11 +67,14 @@
   <% end %>
 <% end %>
 
-<table class="conversations">
-  <% @conversations.each do |conversation| %>
-    <%= render conversation, show_mailbox: !(@mailbox || @mailboxes.one?), selectable: true %>
-  <% end %>
-</table>
+<div data-controller="viewer">
+  <table class="conversations">
+    <% @conversations.each do |conversation| %>
+      <%= render conversation, show_mailbox: !(@mailbox || @mailboxes.one?), selectable: true %>
+    <% end %>
+  </table>
+  <%= render "attachments/viewer" if @conversations.any? %>
+</div>
 
 <% if @conversations.size == ConversationsController::PER_PAGE && @conversations.last.last_message_at %>
   <p><%= link_to "Plus anciens →", conversations_path(box: box, stack: stack, archived: ("1" if @archived), mailbox_id: @mailbox&.id, unread: params[:unread].presence, before: @conversations.last.last_message_at.iso8601(6)) %></p>

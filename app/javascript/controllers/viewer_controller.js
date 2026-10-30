@@ -9,6 +9,7 @@ export default class extends Controller {
   open(event) {
     if (event.metaKey || event.ctrlKey || event.shiftKey) return
     event.preventDefault()
+    this.group = event.currentTarget.dataset.viewerGroup
     this.#show(this.#items.indexOf(event.currentTarget))
     if (!this.dialogTarget.open) this.dialogTarget.showModal()
   }
@@ -51,8 +52,9 @@ export default class extends Controller {
     event.target.remove()
   }
 
+  // Dans une liste de fils, on ne passe que d'une pièce jointe à l'autre du même fil (data-viewer-group).
   get #items() {
-    return this.itemTargets.filter((item) => item.dataset.viewerKind)
+    return this.itemTargets.filter((item) => item.dataset.viewerKind && item.dataset.viewerGroup === this.group)
   }
 
   #step(offset) {

@@ -17,5 +17,6 @@ class SearchesController < ApplicationController
     return render :preview if preview
 
     @matches = @search.matching_messages(@conversations.map(&:id))
+    Conversation.load_attachments(@conversations)
   end
 end
