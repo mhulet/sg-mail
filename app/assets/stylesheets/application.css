@@ -411,6 +411,120 @@ button.no { color: var(--later); border-color: var(--later); background: transpa
 .stamped form { opacity: .35; }
 @keyframes stamp { 60% { opacity: .95; transform: translateY(-50%) rotate(-9deg) scale(.94); } 100% { opacity: .95; transform: translateY(-50%) rotate(-9deg) scale(1); } }
 
+/* ─── Petites scènes : ce qu'on vient de faire, joué une fois en une seconde et demie (shared/_flourish) ─── */
+.flourish { --accent: var(--space); position: fixed; z-index: 21; left: 50%; width: 104px; margin-left: -52px; pointer-events: none;
+  bottom: calc(max(1.25rem, env(safe-area-inset-bottom)) + 2.9rem); animation: flourish-life 1.9s var(--ease) both; }
+.flourish svg { display: block; width: 100%; height: auto; overflow: visible; fill: none; }
+.flourish[data-kind$="archive"] { --accent: var(--trail); --accent-soft: var(--trail-soft); }
+.flourish[data-kind="reply_later"] { --accent: var(--later); --accent-soft: var(--later-soft); }
+.flourish[data-kind="set_aside"] { --accent: var(--aside); --accent-soft: var(--aside-soft); }
+.flourish[data-kind="sent"] { --accent: var(--imbox); }
+.flourish g, .flourish .flap { transform-box: fill-box; transform-origin: center; }
+.flourish .ground { fill: var(--ink); opacity: .08; stroke: none; }
+.flourish .paper { fill: var(--sheet); stroke: var(--ink); }
+.flourish .fold { stroke: var(--ink); opacity: .55; }
+@keyframes flourish-life {
+  0% { opacity: 0; transform: translateY(10px) scale(.7); }
+  14% { opacity: 1; transform: none; }
+  82% { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: translateY(8px) scale(.92); }
+}
+
+/* Archiver : une boîte en carton s'ouvre, le fil y tombe (jusqu'à trois enveloppes), les rabats se ferment, la boîte sautille.
+   Annuler : la boîte se rouvre et l'enveloppe en ressort. */
+.flourish .flap, .flourish .crate-front { fill: var(--accent-soft); stroke: var(--accent); }
+.flourish .flap { fill: color-mix(in srgb, var(--accent) 22%, var(--accent-soft)); }
+.flourish .crate-rim { stroke: var(--accent); stroke-width: 3; }
+.flourish .crate-label { fill: var(--sheet); stroke: var(--accent); stroke-width: 1.5; }
+.flourish .crate-label-lines { stroke: var(--accent); stroke-width: 1.5; opacity: .7; }
+.flourish .flap-left { transform-origin: left bottom; }
+.flourish .flap-right { transform-origin: right bottom; }
+.flourish[data-kind="archive"] .letter { animation: letter-drop .5s cubic-bezier(.55, 0, .8, .3) calc(.22s + var(--i) * .14s) both; }
+.flourish[data-kind="archive"] .flap-left { animation: flap-close-left .26s var(--ease) calc(.78s + var(--n) * .14s) both; }
+.flourish[data-kind="archive"] .flap-right { animation: flap-close-right .26s var(--ease) calc(.86s + var(--n) * .14s) both; }
+.flourish[data-kind="archive"] .crate { transform-origin: center bottom; animation: crate-hop .34s var(--ease) calc(1.08s + var(--n) * .14s) both; }
+.flourish[data-kind="unarchive"] .flap-left { animation: flap-close-left .26s var(--ease) .15s reverse both; }
+.flourish[data-kind="unarchive"] .flap-right { animation: flap-close-right .26s var(--ease) .2s reverse both; }
+.flourish[data-kind="unarchive"] .letter { animation: letter-pop .7s var(--ease) calc(.4s + var(--i) * .12s) both; }
+.flourish[data-kind="unarchive"] .crate { transform-origin: center bottom; animation: crate-hop .34s var(--ease) .32s both; }
+@keyframes letter-drop {
+  0% { opacity: 0; transform: translate(var(--dx), -62px) rotate(var(--tilt)); }
+  25% { opacity: 1; }
+  100% { opacity: 1; transform: translate(var(--dx), 56px) rotate(0); }
+}
+@keyframes letter-pop {
+  0% { transform: translate(var(--dx), 56px); }
+  60% { opacity: 1; transform: translate(calc(var(--dx) * 2), -26px) rotate(var(--tilt)); }
+  100% { opacity: 0; transform: translate(calc(var(--dx) * 3), -40px) rotate(calc(var(--tilt) * 2)); }
+}
+@keyframes flap-close-left { from { transform: rotate(-34deg); } to { transform: scaleY(.16); } }
+@keyframes flap-close-right { from { transform: rotate(34deg); } to { transform: scaleY(.16); } }
+@keyframes crate-hop { 40% { transform: translateY(-7px) scale(1.04, .97); } 70% { transform: translateY(0) scale(.97, 1.03); } }
+
+/* Plus tard : un réveil se pose sur l'enveloppe, ses aiguilles filent, il sonne. */
+.flourish .clock-face { fill: var(--sheet); stroke: var(--accent); stroke-width: 2.5; }
+.flourish .clock-bell, .flourish .clock-ticks { stroke: var(--accent); }
+.flourish .hand { stroke: var(--ink); transform-box: view-box; transform-origin: 84px 42px; }
+.flourish .clock-pin { fill: var(--accent); stroke: none; }
+.flourish[data-kind="reply_later"] .letter { animation: settle .4s var(--ease) .05s both; }
+.flourish[data-kind="reply_later"] .clock { animation: clock-in .4s var(--ease) .25s both, clock-ring .45s linear 1.05s; }
+.flourish[data-kind="reply_later"] .hand-minute { animation: spin .8s cubic-bezier(.45, 0, .2, 1) .45s both; }
+.flourish[data-kind="reply_later"] .hand-hour { animation: spin-hour .8s cubic-bezier(.45, 0, .2, 1) .45s both; }
+@keyframes settle { from { opacity: 0; transform: translateY(-14px) rotate(-4deg); } }
+@keyframes clock-in { 0% { opacity: 0; transform: scale(.2) rotate(-40deg); } 70% { transform: scale(1.12); } 100% { opacity: 1; transform: none; } }
+@keyframes clock-ring { 20%, 60% { transform: rotate(9deg); } 40%, 80% { transform: rotate(-9deg); } }
+@keyframes spin { to { transform: rotate(720deg); } }
+@keyframes spin-hour { to { transform: rotate(60deg); } }
+
+/* De côté : l'enveloppe glisse sur la pile, qui s'écrase un peu sous son poids. */
+.flourish .sheet { fill: var(--accent-soft); stroke: var(--accent); }
+.flourish[data-kind="set_aside"] .letter { animation: slide-on .55s var(--ease) .2s both; }
+.flourish[data-kind="set_aside"] .pile { transform-origin: center bottom; animation: squash .3s var(--ease) .62s both; }
+@keyframes slide-on { from { opacity: 0; transform: translate(-70px, -26px) rotate(-22deg); } 60% { opacity: 1; } }
+@keyframes squash { 45% { transform: scale(1.04, .94); } }
+
+/* Envoyé : un avion en papier décolle et laisse son sillage. */
+.flourish[data-kind="sent"] { width: 132px; margin-left: -66px; }
+.flourish .trail { stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 1; stroke-dashoffset: 1; opacity: .5;
+  animation: trail 1.15s cubic-bezier(.4, 0, .7, 1) .1s forwards; }
+.flourish .plane { transform-box: view-box; transform-origin: 0 0; animation: plane-fly 1.15s linear .1s both; }
+.flourish .plane .paper { stroke: var(--accent); }
+.flourish .plane .fold { stroke: var(--accent); }
+@keyframes trail { to { stroke-dashoffset: 0; } }
+@keyframes plane-fly {
+  0% { opacity: 0; transform: translate(6px, 100px) rotate(-8deg) scale(.6); }
+  12% { opacity: 1; }
+  34% { transform: translate(30px, 93px) rotate(-25deg) scale(.85); }
+  60% { transform: translate(55px, 77px) rotate(-38deg) scale(1); }
+  82% { opacity: 1; transform: translate(83px, 50px) rotate(-48deg) scale(1); }
+  100% { opacity: 0; transform: translate(118px, 6px) rotate(-55deg) scale(.75); }
+}
+
+/* Un espace vide : la pousse sort de terre. */
+.empty .soil, .empty .stem { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw .5s var(--ease) forwards; }
+.empty .stem { animation-delay: .3s; }
+.empty .leaf, .empty .tufts { transform-box: fill-box; animation: unfold .6s var(--ease) both; }
+.empty .leaf-left { transform-origin: right bottom; animation-delay: .6s; }
+.empty .leaf-right { transform-origin: left bottom; animation-delay: .72s; }
+.empty .tufts { animation-name: fade-in; animation-delay: .9s; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes unfold { from { opacity: 0; transform: scale(0) rotate(-20deg); } }
+@keyframes fade-in { from { opacity: 0; } }
+
+/* Une tâche terminée : la case saute, un éclat l'entoure, le trait barre le titre de gauche à droite. */
+.tasks li.just-done > form:first-child button { position: relative; animation: check-pop .45s var(--ease); }
+.tasks li.just-done > form:first-child button::after { content: ""; position: absolute; inset: -3px; border-radius: 9px;
+  border: 2px solid var(--feed); animation: burst .55s var(--ease) forwards; pointer-events: none; }
+.tasks li.just-done > span:first-of-type { text-decoration: none; background: linear-gradient(currentColor, currentColor) no-repeat 0 58% / 100% 1.5px;
+  animation: strike .4s var(--ease) .1s both; }
+@keyframes check-pop { 40% { transform: scale(1.3) rotate(-8deg); } }
+@keyframes burst { from { opacity: .9; transform: scale(.8); } to { opacity: 0; transform: scale(1.9); } }
+@keyframes strike { from { background-size: 0 1.5px; } }
+
+/* « Écrire » : le crayon griffonne au survol. */
+@media (hover: hover) { .compose-button:hover svg { animation: scribble .5s var(--ease); } }
+@keyframes scribble { 25% { transform: rotate(-12deg) translateX(-1px); } 50% { transform: rotate(8deg) translateX(1px); } 75% { transform: rotate(-5deg); } }
+
 /* Aide des raccourcis */
 dialog.shortcuts { border: 1px solid var(--rule); border-radius: var(--radius); background: var(--sheet); color: var(--text); max-width: 46rem;
   width: calc(100% - 2rem); box-shadow: var(--shadow); padding: 1.5rem; }
@@ -483,6 +597,8 @@ dialog.shortcuts dd { margin: 0; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
   .stamped .stamp { opacity: .95; transform: translateY(-50%) rotate(-9deg); }
+  .flourish { display: none; }
+  .empty .soil, .empty .stem { stroke-dashoffset: 0; }
 }
 
 /* Connexion, mot de passe, invitation : une feuille seule, sans barre latérale. */

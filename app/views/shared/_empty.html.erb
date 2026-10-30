@@ -1,9 +1,9 @@
 <%# Un espace vide : une pousse dessinée à l'encre, une phrase, et parfois une suite. %>
 <div class="empty">
   <svg viewBox="0 0 160 90" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <path d="M30 70 Q80 76 130 70"/><path d="M80 70 V40"/>
-    <path d="M80 52 C68 50 60 40 62 28 C74 30 81 40 80 52"/><path d="M80 46 C90 42 98 32 96 22 C86 24 80 34 80 46"/>
-    <path d="M20 70 h8 M134 70 h8" opacity=".5"/>
+    <path class="soil" pathLength="1" d="M30 70 Q80 76 130 70"/><path class="stem" pathLength="1" d="M80 70 V40"/>
+    <path class="leaf leaf-left" d="M80 52 C68 50 60 40 62 28 C74 30 81 40 80 52"/><path class="leaf leaf-right" d="M80 46 C90 42 98 32 96 22 C86 24 80 34 80 46"/>
+    <path class="tufts" d="M20 70 h8 M134 70 h8" opacity=".5"/>
   </svg>
   <p class="empty-line"><%= line %></p>
   <% if block_given? %><p class="muted"><%= yield %></p><% end %>

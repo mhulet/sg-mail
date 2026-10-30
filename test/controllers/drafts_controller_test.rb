@@ -29,6 +29,8 @@ class DraftsControllerTest < ActionDispatch::IntegrationTest
       patch draft_path(draft, account_id: @semisto.id), params: { send: "Envoyer", draft: { body: "C'est noté, merci." } }
     end
     assert_equal "sending", with_account(@semisto) { draft.reload.status }
+    follow_redirect!
+    assert_select ".flourish[data-kind=sent] .plane" # l'avion en papier décolle
   end
 
   test "my signature and sender name for a mailbox" do

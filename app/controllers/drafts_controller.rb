@@ -64,6 +64,7 @@ class DraftsController < ApplicationController
     if @draft.save
       if sending
         SendDraftJob.perform_later(@draft)
+        flourish("sent")
         redirect_to(@draft.conversation ? conversation_path(@draft.conversation) : drafts_path, notice: "Envoi en cours depuis #{@draft.mailbox.display_name}.")
       else
         redirect_to edit_draft_path(@draft), notice: "Brouillon enregistré."

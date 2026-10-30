@@ -1,4 +1,4 @@
-<li id="<%= dom_id(task) %>" class="<%= "done" if task.done? %>">
+<li id="<%= dom_id(task) %>" class="<%= class_names(done: task.done?, "just-done": task.done? && flash[:just_done] == task.id) %>">
   <%= button_to task.done? ? "↺" : "✓", task_path(task, status: task.done? ? "open" : "done"), method: :patch, class: "link",
         title: task.done? ? "Rouvrir" : "Terminer" %>
   <span><%= task.title %></span>

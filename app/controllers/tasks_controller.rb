@@ -28,7 +28,9 @@ class TasksController < ApplicationController
 
   def update
     case params[:status]
-    when "done" then @task.complete!
+    when "done"
+      @task.complete!
+      flash[:just_done] = @task.id
     when "open" then @task.reopen!
     else
       return redirect_back_or_to(tasks_path, alert: @task.errors.full_messages.to_sentence) unless @task.update(task_params)
