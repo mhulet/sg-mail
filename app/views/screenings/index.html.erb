@@ -14,7 +14,6 @@
 <table class="screener">
   <% @pending.each do |conversation| %>
     <tr id="<%= dom_id(conversation) %>" data-controller="stamp">
-      <td class="who"><%= avatar(conversation.sender_display) %></td>
       <td class="sender">
         <strong><%= conversation.sender_display %></strong>
         <span class="muted address"><%= conversation.sender_address %></span>

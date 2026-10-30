@@ -52,7 +52,6 @@
 <% @messages.each do |message| %>
   <article id="<%= dom_id(message) %>" class="card">
     <header class="message-head">
-      <%= avatar(message.from_display) %>
       <p>
         <strong><%= message.from_display %></strong> <span class="muted">&lt;<%= message.from_address %>&gt;</span><br>
         <span class="muted">À : <%= message.to_addresses.join(", ") %><%= " · Cc : #{message.cc_addresses.join(", ")}" if message.cc_addresses.any? %></span>

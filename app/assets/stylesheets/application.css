@@ -243,17 +243,16 @@ form.bulk { display: flex; flex-wrap: wrap; gap: .3rem 1rem; align-items: center
 /* La liste des fils : chaque fil est une ligne à deux étages (qui · objet et aperçu), toute la ligne ouvre le fil. */
 table.conversations { box-shadow: var(--shadow); }
 table.conversations, table.conversations tbody { display: block; }
-table.conversations tr { display: grid; grid-template-columns: 1.4rem 38px minmax(0, 1fr) auto; gap: .05rem .9rem; align-items: center;
-  padding: .7rem 1.25rem .7rem .8rem; border-bottom: 1px solid var(--rule); position: relative; transition: background .15s ease, opacity .3s ease, transform .35s var(--ease); }
+table.conversations tr { display: grid; grid-template-columns: 1rem minmax(0, 1fr) auto; gap: .05rem .9rem; align-items: center;
+  padding: .7rem 1.25rem .7rem .6rem; border-bottom: 1px solid var(--rule); position: relative; transition: background .15s ease, opacity .3s ease, transform .35s var(--ease); }
 table.conversations tr:last-child { border-bottom: 0; }
 table.conversations td { border: 0; padding: 0; min-width: 0; }
 table.conversations td.select { grid-column: 1; grid-row: 1 / span 2; }
-table.conversations td.who { grid-column: 2; grid-row: 1 / span 2; align-self: start; }
-table.conversations td.sender { grid-column: 3; grid-row: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-table.conversations td.subject { grid-column: 3; grid-row: 2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--muted); font-size: .94rem; }
-table.conversations td.date { grid-column: 4; grid-row: 1; justify-self: end; font-size: .8rem; color: var(--faint); font-variant-numeric: tabular-nums; white-space: nowrap; }
-table.conversations td.mailbox { grid-column: 4; grid-row: 2; justify-self: end; display: flex; gap: .8rem; }
-table.conversations td.files { grid-column: 3; grid-row: 3; display: flex; align-items: center; gap: .4rem; margin-top: .35rem; min-width: 0; }
+table.conversations td.sender { grid-column: 2; grid-row: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+table.conversations td.subject { grid-column: 2; grid-row: 2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--muted); font-size: .94rem; }
+table.conversations td.date { grid-column: 3; grid-row: 1; justify-self: end; font-size: .8rem; color: var(--faint); font-variant-numeric: tabular-nums; white-space: nowrap; }
+table.conversations td.mailbox { grid-column: 3; grid-row: 2; justify-self: end; display: flex; gap: .8rem; }
+table.conversations td.files { grid-column: 2; grid-row: 3; display: flex; align-items: center; gap: .4rem; margin-top: .35rem; min-width: 0; }
 table.conversations tr:hover { background: var(--sheet-2); }
 table.conversations a { color: var(--text); text-decoration: none; }
 table.conversations td.subject a::after { content: ""; position: absolute; inset: 0; }
@@ -400,24 +399,23 @@ p.read-by { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; fon
 .screening { background: var(--screener-soft); border-color: transparent; display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; position: relative; overflow: hidden; }
 /* Une ligne par expéditeur : qui, l'objet, l'aperçu, une ligne chacun ; les boutons à droite (dessous sur téléphone). */
 table.screener, table.screener tbody { display: block; }
-table.screener tr { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; gap: .1rem .9rem; align-items: center;
-  padding: .75rem 1rem .75rem .9rem; border-bottom: 1px solid var(--rule); position: relative; }
+table.screener tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .1rem 1.2rem; align-items: center;
+  padding: .75rem 1rem .75rem 1.1rem; border-bottom: 1px solid var(--rule); position: relative; }
 table.screener tr:last-child { border-bottom: 0; }
 table.screener td { border: 0; padding: 0; min-width: 0; }
-table.screener td.who { grid-column: 1; grid-row: 1 / span 2; align-self: start; }
-table.screener td.sender { grid-column: 2; grid-row: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+table.screener td.sender { grid-column: 1; grid-row: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 table.screener td.sender .muted { font-size: .88rem; margin-left: .3rem; }
-table.screener td.subject { grid-column: 2; grid-row: 2; font-size: .94rem; }
+table.screener td.subject { grid-column: 1; grid-row: 2; font-size: .94rem; }
 table.screener td.subject > * { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 table.screener td.subject a { color: var(--text); font-weight: 550; text-decoration: none; }
 table.screener td.subject a:hover { text-decoration: underline; }
-table.screener td.decide { grid-column: 3; grid-row: 1 / span 2; display: flex; gap: .4rem; align-items: center; }
+table.screener td.decide { grid-column: 2; grid-row: 1 / span 2; display: flex; gap: .4rem; align-items: center; }
 td.address { overflow-wrap: anywhere; }
 @media (max-width: 820px) {
-  table.screener tr { grid-template-columns: 38px minmax(0, 1fr); padding: .75rem .9rem; }
+  table.screener tr { grid-template-columns: minmax(0, 1fr); padding: .75rem .9rem; }
   table.screener td.sender .address { display: block; margin-left: 0; overflow: hidden; text-overflow: ellipsis; }
-  table.screener td.subject { grid-column: 1 / -1; margin-top: .35rem; }
-  table.screener td.decide { grid-column: 1 / -1; grid-row: 3; margin-top: .6rem; gap: .3rem; }
+  table.screener td.subject { margin-top: .35rem; }
+  table.screener td.decide { grid-column: 1; grid-row: 3; margin-top: .6rem; gap: .3rem; }
   table.screener td.decide form { flex: 1 1 auto; }
   table.screener td.decide button { width: 100%; padding: .38rem .4rem; font-size: .85rem; }
   table.blocked-senders, table.blocked-senders tbody { display: block; }
@@ -594,21 +592,20 @@ dialog.shortcuts dd { margin: 0; }
   .filter-bar:not(.open) .filters { display: none; }
   .filter-bar .filters { margin-top: .5rem; gap: .35rem; }
   table.conversations { margin: 0 -1rem; width: auto; border-radius: 0; box-shadow: none; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
-  table.conversations tr { grid-template-columns: 0 40px minmax(0, 1fr) auto; gap: .1rem .8rem; padding: .75rem 1rem .75rem .25rem; }
+  table.conversations tr { grid-template-columns: 0 minmax(0, 1fr) auto; gap: .1rem .8rem; padding: .75rem 1rem .75rem .25rem; }
   table.conversations td.select input { display: none; }
   table.conversations td.mailbox { display: none; }
-  table.conversations td.who .avatar { --size: 40px; }
-  table.conversations td.subject { grid-column: 3 / -1; white-space: normal; }
+  table.conversations td.subject { grid-column: 2 / -1; white-space: normal; }
   table.conversations td.subject > a, table.conversations td.subject .snippet:not(.excerpt) { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   table.conversations td.subject .snippet:not(.excerpt) { margin-top: .05rem; font-size: .9rem; }
   table.conversations td.subject .snippet::before { content: none; }
-  table.conversations td.files { grid-column: 3 / -1; }
+  table.conversations td.files { grid-column: 2 / -1; }
   table.conversations tr.current::before { display: none; }
   form.bulk { display: none; }
   table:not(.conversations) { display: block; overflow-x: auto; }
   td.decide { white-space: normal; }
   .message-head { flex-wrap: wrap; }
-  .message-head time { margin-left: calc(38px + .8rem); width: 100%; }
+  .message-head time { margin-left: 0; width: 100%; }
 }
 
 /* Sans clavier ni souris, les raccourcis ne servent à rien. */
