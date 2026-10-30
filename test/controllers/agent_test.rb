@@ -85,6 +85,8 @@ class AgentTest < ActionDispatch::IntegrationTest
     results = @calls.last[:messages].select { |message| message[:role] == "user" }.drop(1).map { |message| message[:content].sole }
     assert_equal [ "toolu_1", "toolu_2" ], results.map { |block| block["tool_use_id"] }
     assert results.none? { |block| block["is_error"] }
+    replayed = @calls.last[:messages].select { |message| message[:role] == "assistant" }.flat_map { |message| message[:content] }
+    assert_equal [ %w[text type], %w[id input name type] ], replayed.map(&:keys).map(&:sort).uniq
 
     get agent_chat_path(chat, account_id: @semisto.id)
     assert_select ".bubble.agent", text: /la tâche est créée/
@@ -166,8 +168,10 @@ class AgentTest < ActionDispatch::IntegrationTest
     { "content" => [ { "type" => "text", "text" => text } ], "stop_reason" => "end_turn", "usage" => { "input_tokens" => 1000, "output_tokens" => 100 } }
   end
 
+  # Comme une vraie réponse : des champs en lecture seule que l'API refuse qu'on lui renvoie.
   def tool_reply(id, name, input)
-    { "content" => [ { "type" => "text", "text" => "Je regarde." }, { "type" => "tool_use", "id" => id, "name" => name, "input" => input } ],
+    { "content" => [ { "type" => "text", "text" => "Je regarde.", "citations" => nil },
+                     { "type" => "tool_use", "id" => id, "name" => name, "input" => input, "caller_" => { "type" => "direct" } } ],
       "stop_reason" => "tool_use", "usage" => { "input_tokens" => 1000, "output_tokens" => 50 } }
   end
 end
