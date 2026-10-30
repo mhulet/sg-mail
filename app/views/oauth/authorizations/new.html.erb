@@ -5,7 +5,8 @@
   et n'enverra un email que si tu le lui demandes.</p>
 <p class="muted">Connecté en tant que <%= Current.user.email_address %>. Retour vers <strong><%= URI.parse(@params[:redirect_uri]).host %></strong>.</p>
 
-<%= form_with url: oauth_authorization_path(account_id: nil), method: :post do |form| %>
+<%# Sans Turbo : la réponse est une redirection vers Claude, qu'un fetch ne peut pas suivre. %>
+<%= form_with url: oauth_authorization_path(account_id: nil), method: :post, data: { turbo: false } do |form| %>
   <% @params.each do |name, value| %>
     <%= hidden_field_tag name, value %>
   <% end %>
