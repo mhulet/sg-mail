@@ -1,6 +1,8 @@
 class SgMailMcp::ListTasks < SgMailMcp::Tool
   description "Tasks, by due date. scope mine (assigned to me, or created by me and unassigned) or all (every task I can see)."
   read_only!
+  locates conversation_id: Conversation
+  aggregates!
   input_schema(properties: {
     scope: { type: "string", enum: %w[mine all] },
     status: { type: "string", enum: %w[open done all] },

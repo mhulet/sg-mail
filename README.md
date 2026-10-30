@@ -179,7 +179,10 @@ sans action explicite.
   - **claude.ai** (connecteur personnalisé, adresse `https://<hôte>/mcp`) : serveur OAuth 2.1 intégré
     (`app/controllers/oauth/`) avec découverte (RFC 9728 et 8414), enregistrement dynamique (RFC 7591),
     PKCE S256, jeton d'accès d'une heure et rafraîchissement par rotation. À l'autorisation, la personne
-    choisit le client ; les connecteurs se déconnectent depuis « Jetons d'API ».
+    donne accès à tous ses clients (par défaut) ou à un seul ; les connecteurs se déconnectent depuis « Jetons d'API ».
+    Avec plusieurs clients (`SgMailMcp::Accounts`), chaque outil s'exécute client par client avec l'isolation
+    habituelle (RLS) : les listes rassemblent tous les clients et chaque élément porte son `account`,
+    `account_id` restreint à un client.
   - **Claude Code**, avec un jeton personnel :
 
   ```sh

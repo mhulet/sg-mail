@@ -5,7 +5,7 @@ class ApiTokensController < ApplicationController
   def index
     @api_tokens = tokens.order(created_at: :desc)
     @api_token = ApiToken.new
-    @connections = Oauth::Token.active.where(user: Current.user, account: Current.account).includes(:client)
+    @connections = Oauth::Token.active.covering(Current.account).where(user: Current.user).includes(:client)
       .group_by(&:client).transform_values { |tokens| tokens.filter_map(&:last_used_at).max || tokens.map(&:created_at).max }
   end
 

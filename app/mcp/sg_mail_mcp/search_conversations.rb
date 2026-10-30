@@ -12,6 +12,8 @@ class SgMailMcp::SearchConversations < SgMailMcp::Tool
     address prefix, mailbox:; prefix any operator with - to exclude, quote values with spaces (subject:"bon de commande").
   TEXT
   read_only!
+  locates mailbox_id: Mailbox
+  aggregates!
   input_schema(properties: {
     query: { type: "string" },
     box: { type: "string", enum: Screening::BUCKETS, description: "Without query; default imbox" },
@@ -28,5 +30,11 @@ class SgMailMcp::SearchConversations < SgMailMcp::Tool
     conversations = actions.conversations(query: query, box: box, stack: stack, mailbox_id: mailbox_id, unread: unread, mine: mine, before: before, limit: limit,
       archived: archived)
     { conversations: conversations.map { |conversation| serializer.conversation(conversation) } }
+  end
+
+  # Tous clients confondus : les plus récents d'abord, dans la limite demandée.
+  def self.combine(results, limit: 30, **)
+    conversations = super[:conversations].to_a.sort_by { |conversation| conversation[:last_message_at].to_s }.reverse
+    { conversations: conversations.first(limit.to_i.clamp(1, 100)) }
   end
 end

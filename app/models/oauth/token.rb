@@ -1,18 +1,20 @@
 # Jeton d'accès (une heure) et son jeton de rafraîchissement (renouvelé à chaque usage),
-# pour une personne dans un client.
+# pour une personne dans un client, ou dans tous ses clients (sans account).
 class Oauth::Token < ApplicationRecord
   ACCESS_TTL = 1.hour
   REFRESH_TTL = 30.days
 
   belongs_to :client, class_name: "Oauth::Client", foreign_key: :oauth_client_id, inverse_of: :tokens
   belongs_to :user
-  belongs_to :account
+  belongs_to :account, optional: true
 
   attr_reader :access_token, :refresh_token
 
   scope :active, -> { where(revoked_at: nil).where(refresh_expires_at: Time.current..) }
+  # Les jetons qui donnent accès à ce client : les siens et ceux de tous les clients.
+  scope :covering, ->(account) { where(account: [ account, nil ]) }
 
-  def self.issue!(client:, user:, account:)
+  def self.issue!(client:, user:, account: nil)
     token = new(client: client, user: user, account: account)
     token.send(:generate_secrets)
     token.save!

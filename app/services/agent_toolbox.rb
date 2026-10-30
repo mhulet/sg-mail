@@ -18,10 +18,11 @@ class AgentToolbox
     @context = { actions: MailActions.new(user, via: "agent"), serializer: ApiSerializer.new(user: user, base_url: base_url) }
   end
 
-  # Les définitions d'outils pour l'API Claude.
+  # Les définitions d'outils pour l'API Claude. L'agent travaille dans un seul client : pas d'account_id.
   def definitions
     TOOLS.values.map do |tool|
-      { name: tool.name_value, description: tool.description_value, input_schema: tool.input_schema_value.to_h.except(:"$schema") }
+      schema = tool.input_schema_value.to_h.except(:"$schema")
+      { name: tool.name_value, description: tool.description_value, input_schema: schema.merge(properties: schema[:properties].except(:account_id)) }
     end
   end
 

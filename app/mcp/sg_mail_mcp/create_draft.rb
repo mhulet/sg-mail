@@ -6,6 +6,7 @@ class SgMailMcp::CreateDraft < SgMailMcp::Tool
     Show the draft to the user; it can also be edited and sent from SG Mail (url).
   TEXT
   writes!
+  locates message_id: Message, mailbox_id: Mailbox
   input_schema(properties: {
     message_id: { type: "integer" },
     kind: { type: "string", enum: %w[reply reply_all forward] },

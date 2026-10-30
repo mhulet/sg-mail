@@ -1,6 +1,7 @@
 class SgMailMcp::Assign < SgMailMcp::Tool
   description "Assign a thread to someone who has access to its mailbox (ids from whoami), or unassign it with assignee_id null."
   writes!(idempotent: true)
+  locates conversation_id: Conversation
   input_schema(properties: {
     conversation_id: { type: "integer" },
     assignee_id: { type: [ "integer", "null" ] }

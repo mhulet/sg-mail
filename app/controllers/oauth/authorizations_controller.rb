@@ -1,5 +1,6 @@
 # Écran de consentement. La connexion passe par la page de connexion habituelle de SG Mail.
-# Une personne membre de plusieurs clients choisit celui que Claude pourra lire.
+# Une personne membre de plusieurs clients donne accès à tous (par défaut, y compris ceux qu'elle rejoindra)
+# ou à un seul.
 class Oauth::AuthorizationsController < ApplicationController
   before_action :set_request_params
   before_action :set_memberships
@@ -20,10 +21,12 @@ class Oauth::AuthorizationsController < ApplicationController
     return redirect_with(error: request_error) if request_error
     return redirect_with(error: "access_denied") unless params[:decision] == "approve"
 
-    membership = @memberships.find { |m| m.account_id == params[:sg_account_id].to_i } || (@memberships.first if @memberships.one?)
-    return redirect_with(error: "access_denied") unless membership
+    if @memberships.one? || params[:sg_account_id].present?
+      account = @memberships.find { |m| m.account_id == params[:sg_account_id].to_i }&.account || (@memberships.first.account if @memberships.one?)
+      return redirect_with(error: "access_denied") unless account
+    end
 
-    code = @client.authorization_codes.create!(user: Current.user, account: membership.account, redirect_uri: @params[:redirect_uri],
+    code = @client.authorization_codes.create!(user: Current.user, account: account, redirect_uri: @params[:redirect_uri],
       code_challenge: @params[:code_challenge], resource: @params[:resource])
     redirect_with(code: code.code)
   end
