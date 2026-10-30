@@ -61,8 +61,16 @@
     </header>
 
     <% if message.body_html.present? %>
-      <%# Bac à sable : pas de scripts, pas d'accès à la page SG Mail. %>
-      <iframe class="body" sandbox srcdoc="<%= message_body_html(message) %>" title="Contenu du message"></iframe>
+      <% email = email_document(message) %>
+      <div class="email" data-controller="email-frame">
+        <%# Bac à sable : aucun script ne s'y exécute ; la même origine sert seulement à ajuster la hauteur et à charger la police. %>
+        <iframe class="body<%= " designed" if email.designed? %>" sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+          srcdoc="<%= email.to_html %>" title="Contenu du message"
+          data-email-frame-target="frame" data-action="load->email-frame#fit"></iframe>
+        <% if email.quoted? %>
+          <button type="button" class="quote-toggle" data-action="email-frame#toggleQuote" aria-expanded="false" title="Afficher le texte cité">•••</button>
+        <% end %>
+      </div>
     <% else %>
       <pre class="body"><%= message.body_text %></pre>
     <% end %>

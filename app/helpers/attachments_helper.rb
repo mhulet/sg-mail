@@ -38,4 +38,9 @@ module AttachmentsHelper
       inline_image_path(InlineImagesController.token_for(message, CGI.unescape(Regexp.last_match(1))), account_id: nil)
     end
   end
+
+  # Le corps prêt pour l'iframe du fil, habillé aux couleurs de SG Mail (voir EmailDocument).
+  def email_document(message)
+    EmailDocument.new(message_body_html(message), font_url: asset_path("inter.woff2"))
+  end
 end
